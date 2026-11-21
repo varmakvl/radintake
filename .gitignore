@@ -1,0 +1,45 @@
+# --- Licensed / sensitive data: NEVER commit ---
+# IU Open-i is CC BY-NC-ND: rendered pages and raw downloads must not be published.
+data/
+!data/README.md
+renders/
+degraded/
+dicom/
+*.dcm
+!tests/**/fixtures/**/*.dcm
+*.docx
+.assignment*
+
+# Outputs
+out/
+runs/
+*.log
+!traces/final/**
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Secrets
+.env
+*.key
+
+# Models / weights
+models/
+*.safetensors
+*.bin
+*.pt
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

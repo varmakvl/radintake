@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radintake/cli_output.v1.json",
+  "title": "radintake batch CLI output (one per input file)",
+  "type": "object",
+  "required": ["schema_version", "input", "input_sha256", "input_type", "status", "trace_id"],
+  "properties": {
+    "schema_version": { "const": "cli_output.v1" },
+    "input": { "type": "string", "description": "Input file name relative to --in" },
+    "input_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "input_type": { "enum": ["dicom", "scan", "photo", "pdf", "tiff", "unknown"] },
+    "status": { "enum": ["ok", "needs_review", "error"] },
+    "trace_id": { "type": "string", "minLength": 1 },
+    "error": { "type": ["string", "null"] },
+    "n_pages": { "type": "integer", "minimum": 0 },
+    "report": {
+      "type": ["object", "null"],
+      "description": "Present for document inputs.",
+      "required": ["patient_name", "patient_id", "date_of_birth", "accession_number",
+                   "indication", "comparison", "findings", "impression"],
+      "properties": {
+        "patient_name": { "$ref": "#/$defs/field" },
+        "patient_id": { "$ref": "#/$defs/field" },
+        "date_of_birth": { "$ref": "#/$defs/field" },
+        "accession_number": { "$ref": "#/$defs/field" },
+        "exam_date": { "$ref": "#/$defs/field" },
+        "modality": { "$ref": "#/$defs/field" },
+        "indication": { "$ref": "#/$defs/field" },
+        "comparison": { "$ref": "#/$defs/field" },
+        "findings": { "$ref": "#/$defs/field" },
+        "impression": { "$ref": "#/$defs/field" }
+      }
+    },
+    "phi": {
+      "type": ["object", "null"],
+      "properties": {
+        "masked_artifacts": { "type": "array", "items": { "type": "string" },
+                              "description": "Paths (relative to --out) of PHI-masked page images / de-identified DICOM" },
+        "detections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "page"],
+            "properties": {
+              "type": { "type": "string" },
+              "page": { "type": "integer", "minimum": 1 },
+              "bbox": { "$ref": "#/$defs/bbox" },
+              "dicom_tag": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "dicom": {
+      "type": ["object", "null"],
+      "properties": {
+        "output_path": { "type": "string" },
+        "valid": { "type": "boolean" },
+        "header_tags_deidentified": { "type": "array", "items": { "type": "string" } },
+        "burned_in_regions": { "type": "array", "items": { "$ref": "#/$defs/bbox" } }
+      }
+    },
+    "flags": {
+      "type": "array",
+      "items": { "enum": ["low_confidence", "ungrounded_value", "omission", "schema_error",
+                          "prompt_injection_suspected", "phi_uncertain", "preprocess_failed", "timeout"] }
+    }
+  },
+  "$defs": {
+    "bbox": {
+      "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" },
+      "description": "[x0, y0, x1, y1] in ORIGINAL (unpreprocessed) page pixel coordinates"
+    },
+    "field": {
+      "type": "object",
+      "required": ["value", "confidence", "provenance"],
+      "properties": {
+        "value": { "type": ["string", "null"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "grounded": { "type": "boolean" },
+        "needs_review": { "type": "boolean" },
+        "provenance": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["page", "bbox"],
+            "properties": {
+              "page": { "type": "integer", "minimum": 1 },
+              "bbox": { "$ref": "#/$defs/bbox" },
+              "source": { "enum": ["ocr", "vlm", "hybrid"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}
