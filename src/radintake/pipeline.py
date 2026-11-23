@@ -5,8 +5,8 @@ input type under the planner budgets, writes ``<out_dir>/<input-name>.json`` val
 against ``schemas/cli_output.v1.json`` and returns that document. It never raises for a bad
 input: failures become ``status: "error"`` documents.
 
-Until the extraction lane lands, document inputs produce ``report: null`` and status
-``needs_review`` - that is expected at this stage.
+Document inputs get their ``report`` from the ``extract`` stage
+(:mod:`radintake.agents.extract`); a document with no report is ``needs_review``.
 """
 
 from __future__ import annotations

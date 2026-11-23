@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radintake/report.v1.json",
+  "title": "radintake structured radiology report (extraction output)",
+  "description": "The `report` block of cli_output.v1.json, produced by the extraction stage (OCR-first, VLM-first or hybrid) and annotated by the verifier. Every field carries its value, a confidence in [0, 1] and provenance: the page(s) and box(es) in ORIGINAL (unpreprocessed) page pixel coordinates it was read from. Mirrored by radintake.models.report.Report.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["patient_name", "patient_id", "date_of_birth", "accession_number",
+               "indication", "comparison", "findings", "impression"],
+  "properties": {
+    "patient_name": { "$ref": "#/$defs/field" },
+    "patient_id": { "$ref": "#/$defs/field" },
+    "date_of_birth": { "$ref": "#/$defs/field" },
+    "accession_number": { "$ref": "#/$defs/field" },
+    "exam_date": { "$ref": "#/$defs/field" },
+    "modality": { "$ref": "#/$defs/field" },
+    "indication": { "$ref": "#/$defs/field" },
+    "comparison": { "$ref": "#/$defs/field" },
+    "findings": { "$ref": "#/$defs/field" },
+    "impression": { "$ref": "#/$defs/field" }
+  },
+  "$defs": {
+    "bbox": {
+      "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" },
+      "description": "[x0, y0, x1, y1] in ORIGINAL (unpreprocessed) page pixel coordinates"
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["page", "bbox"],
+      "properties": {
+        "page": { "type": "integer", "minimum": 1 },
+        "bbox": { "$ref": "#/$defs/bbox" },
+        "source": { "enum": ["ocr", "vlm", "hybrid"] }
+      }
+    },
+    "untrusted_text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "provenance"],
+      "description": "Instruction-like text found inside a section, kept VERBATIM as data (never obeyed, never dropped) next to the section value. The verifier / injection detector reads it to raise prompt_injection_suspected.",
+      "properties": {
+        "text": { "type": "string" },
+        "reason": { "type": "string" },
+        "provenance": { "type": "array", "items": { "$ref": "#/$defs/provenance" } }
+      }
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "confidence", "provenance"],
+      "properties": {
+        "value": { "type": ["string", "null"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "provenance": { "type": "array", "items": { "$ref": "#/$defs/provenance" } },
+        "low_confidence": { "type": "boolean",
+                            "description": "Extraction could not read this field reliably (e.g. handwriting with no local re-reader)." },
+        "grounded": { "type": "boolean", "description": "Set by the verifier." },
+        "needs_review": { "type": "boolean", "description": "Set by the verifier." },
+        "untrusted_text": { "type": "array", "items": { "$ref": "#/$defs/untrusted_text" } }
+      }
+    }
+  }
+}

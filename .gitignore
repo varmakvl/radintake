@@ -34,6 +34,7 @@ dist/
 
 # Models / weights
 models/
+!src/radintake/models/
 *.safetensors
 *.bin
 *.pt

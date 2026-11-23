@@ -32,3 +32,9 @@ preprocess:               # rule thresholds for the preprocessing agent (numbers
   noise_sigma_max: 6.0
   contrast_min: 120.0
   blur_laplacian_min: 20.0
+
+extraction:
+  pipeline: ocr_first     # ocr_first | vlm_first | hybrid (radintake.agents.extract)
+  ocr_first:              # overrides radintake.agents.extract_ocr.DEFAULTS
+    heading_min_ratio: 85 # fuzzy match (0-100) for OCR-damaged section headings
+    low_conf_threshold: 0.5  # mean word confidence below this -> field low_confidence

@@ -79,7 +79,8 @@ def test_stage_timeout_flags_and_batch_continues(tmp_path, registry_guard):
         assert not list(v.iter_errors(doc))
         assert "timeout" in doc["flags"]
         assert doc["status"] == "needs_review"  # load succeeded -> partial, not error
-        assert doc["report"] is None  # the timed-out stage's result is discarded
+        # the timed-out stage's result is discarded (earlier stages, e.g. extract, may set a report)
+        assert "never" not in (doc["report"] or {})
         # every registered stage before slow_test (load, preprocess, phi, ...) ok, then the timeout
         expected = ["ok"] * (len(stages.plan_for("scan")) - 1) + ["timeout"]
         assert [s["status"] for s in _steps(tmp_path / "_traces", f"page_{i}.png")] == expected
