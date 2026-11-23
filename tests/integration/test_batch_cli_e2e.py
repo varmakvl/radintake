@@ -37,7 +37,8 @@ def batch_run(tmp_path_factory):
     out = tmp_path_factory.mktemp("outputs")
     truth = build_corpus(inp)
     env = {**os.environ, "RADINTAKE_OFFLINE": os.environ.get("RADINTAKE_OFFLINE", "1"),
-           "RADINTAKE_TRACE_DIR": str(out / "_traces")}
+           "RADINTAKE_TRACE_DIR": str(out / "_traces"),
+           "RADINTAKE_DATA_DIR": str(out / "_data")}
     proc = subprocess.run(
         [sys.executable, "-m", "radintake.cli", "batch", "--in", str(inp), "--out", str(out)],
         capture_output=True, text=True, env=env, timeout=1800, cwd=ROOT, check=False,
@@ -154,6 +155,20 @@ def test_prompt_injection_is_treated_as_data(batch_run, name):
     assert "normal" not in rep["impression"]["value"].lower().replace("within normal limits", "")
     assert "prompt_injection_suspected" in doc.get("flags", [])
     assert doc["n_pages"] == 2
+
+
+@pytest.mark.parametrize("name", ["report_injected_multipage.pdf", "report_injected.tiff"])
+def test_injection_review_queue_entry_without_phi(batch_run, name):
+    from radintake.store import review_queue
+
+    items = [i for i in review_queue.list_items(batch_run["out"] / "_data") if i["case_id"] == name]
+    assert items and "prompt_injection_suspected" in items[0]["flags"]
+    jl = (batch_run["out"] / "review_queue.jsonl").read_text()
+    assert name in jl
+    blob = json.dumps(items) + jl
+    for t in batch_run["truth"]["reports"].values():
+        for s in t.phi_strings:
+            assert s not in blob, f"PHI in review queue: {s!r}"
 
 
 def test_no_phi_in_logs_or_stdout(batch_run):

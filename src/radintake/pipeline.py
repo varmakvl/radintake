@@ -151,11 +151,28 @@ def process_file(path: str | Path, out_dir: str | Path, *, config: Config | None
             missing = doc["report"] is None if r.input_type in DOCUMENT_TYPES else doc["dicom"] is None
             if missing:  # nothing produced the main result yet -> a human must look
                 doc["status"] = "needs_review"
+        if doc["status"] == "needs_review":
+            _enqueue_review(doc, ctx, cfg, out_dir, write)
     except Exception as exc:  # noqa: BLE001 - last line of defence: never crash the batch
         doc["status"] = "error"
         doc["error"] = f"pipeline failure: {type(exc).__name__}"
         trace.event("error", error_type=type(exc).__name__)
     return _emit(doc, trace, out_dir, write)
+
+
+def _enqueue_review(doc: dict[str, Any], ctx: StageContext, cfg: Config, out_dir: Path, write: bool) -> None:
+    """Persist a needs_review case: ids, flags, reason codes and field NAMES only (no PHI/values)."""
+    try:
+        from radintake.store import review_queue
+
+        reasons = [str(r).split(":", 1)[0].strip() for r in ctx.data.get("review_reasons") or []]  # codes only
+        item = review_queue.add_item(doc["input"], flags=list(ctx.flags), reasons=reasons,
+                                     fields=list(ctx.data.get("review_fields") or []),
+                                     trace_id=doc["trace_id"], data_dir=cfg.data_dir)
+        if write:
+            review_queue.append_jsonl(out_dir, item)
+    except Exception as exc:  # noqa: BLE001 - the queue must never break a case
+        log.warning("review_queue_failed", error_type=type(exc).__name__)
 
 
 def _emit(doc: dict[str, Any], trace: CaseTrace, out_dir: Path, write: bool) -> dict[str, Any]:

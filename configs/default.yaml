@@ -48,3 +48,14 @@ extraction:
     cache_dir: null       # null -> <data_dir>/cache/vlm (responses keyed by input + prompt hash)
     max_tokens: 2000
     timeout_s: 60
+
+verify:                   # radintake.agents.verify (thresholds tuned later on dev)
+  ground_min_ratio: 90    # rapidfuzz partial_ratio for a value to count as present in the OCR text
+  box_margin_px: 40       # margin around a cited box when collecting its OCR words
+  low_conf_threshold: 0.5 # field confidence below this -> low_confidence + needs_review
+  id_patterns:            # patient_id / accession_number must match (re.match)
+    patient_id: '^[A-Za-z0-9][A-Za-z0-9._/\-]{1,39}$'
+    accession_number: '^[A-Za-z0-9][A-Za-z0-9._/\-]{1,39}$'
+
+injection:                # radintake.agents.injection (patterns extend the built-in list)
+  extra_patterns: []
