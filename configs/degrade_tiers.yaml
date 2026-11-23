@@ -1,0 +1,62 @@
+# Degradation tiers for synthetic report pages (loaded by data_prep.degrade).
+#
+# Every value given as [lo, hi] is sampled uniformly per page from a numpy Generator seeded
+# with the page seed (base_seed below unless the caller passes one). Every sampled value is
+# returned in the op list so the manifest can record and replay it.
+#
+# Geometric ops (rotate90, rotation_deg, skew_deg, perspective, scale, margin_px) are all
+# expressed as 3x3 homographies and composed into ONE matrix per page; the page is warped
+# once and the GT boxes are transformed with that same matrix.
+# Photometric ops (lighting, stamp, lines, blur, noise, jpeg) run afterwards in
+# degraded-image coordinates and never move content.
+
+base_seed: 140
+
+tiers:
+  clean_scan:
+    rotate90: {0: 1.0}            # quarter-turn (degrees) -> probability
+    rotation_deg: [-0.8, 0.8]     # small rotation about the page centre
+    skew_deg: [0.0, 0.0]          # horizontal shear angle
+    perspective: 0.0              # max corner jitter as a fraction of min(width, height)
+    scale: [0.9, 1.0]             # < 1 is a low-DPI downsample
+    margin_px: [0, 0]             # background border added around the page
+    background: [255, 255]        # fill value outside the page
+    lighting: [0.0, 0.04]         # max darkening of a linear gradient (0 = none)
+    shadow: [0.0, 0.0]            # extra darkening of a soft half-plane shadow
+    stamp_prob: 0.0
+    lines_prob: 0.0
+    blur_sigma: [0.0, 0.4]
+    noise_sigma: [0.0, 2.0]
+    jpeg_quality: [90, 95]
+
+  poor_scan:
+    rotate90: {0: 0.6, 90: 0.1, 180: 0.2, 270: 0.1}
+    rotation_deg: [-4.0, 4.0]
+    skew_deg: [-2.5, 2.5]
+    perspective: 0.01
+    scale: [0.5, 0.8]
+    margin_px: [0, 10]
+    background: [230, 255]
+    lighting: [0.05, 0.2]
+    shadow: [0.0, 0.0]
+    stamp_prob: 0.4
+    lines_prob: 0.5
+    blur_sigma: [0.5, 1.4]
+    noise_sigma: [4.0, 10.0]
+    jpeg_quality: [40, 70]
+
+  phone_photo:
+    rotate90: {0: 0.7, 90: 0.1, 180: 0.1, 270: 0.1}
+    rotation_deg: [-8.0, 8.0]
+    skew_deg: [-4.0, 4.0]
+    perspective: 0.06
+    scale: [0.6, 0.9]
+    margin_px: [20, 80]
+    background: [60, 140]         # desk / table behind the paper
+    lighting: [0.15, 0.4]
+    shadow: [0.1, 0.35]
+    stamp_prob: 0.2
+    lines_prob: 0.1
+    blur_sigma: [0.8, 2.0]
+    noise_sigma: [3.0, 8.0]
+    jpeg_quality: [50, 80]
