@@ -1,0 +1,33 @@
+{
+  "version": 3,
+  "provenance": {
+    "commit": "279d0f2a260a63a2aa7bf715d09f6fd91a9d5030",
+    "branch": "main",
+    "entry_count": 1
+  },
+  "entries": [
+    {
+      "id": "0f5d4c90-4dad-4cff-9469-638d1154ee61",
+      "type": "knowledge",
+      "title": "Planner ctx.cancelled is per-case and never cleared after a stage timeout",
+      "summary": "run_with_timeout sets StageContext.cancelled when a stage times out and never clears it, so later stages in the same case start with cancelled already set.",
+      "symbols": [
+        "run_with_timeout",
+        "Planner.run",
+        "StageContext"
+      ],
+      "source_files": [
+        "src/radintake/orchestrator/planner.py",
+        "src/radintake/orchestrator/stages.py",
+        "src/radintake/pipeline.py"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-23T07:30:12.806Z",
+      "source_file_hashes": {
+        "src/radintake/orchestrator/planner.py": "fe318d8dd4b2054c1ebbd62d0e0c2e39e240bb2c",
+        "src/radintake/orchestrator/stages.py": "186b1b6ab156b1c85c49807eed7b0c9be01a4819",
+        "src/radintake/pipeline.py": "3718409166cdec80ad9e98e9cd636ec99e6063e0"
+      }
+    }
+  ]
+}
