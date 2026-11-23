@@ -25,3 +25,10 @@ loader:
 
 logging:
   level: INFO
+
+preprocess:               # rule thresholds for the preprocessing agent (numbers recorded in traces)
+  deskew_min_deg: 0.3
+  deskew_max_deg: 15.0
+  noise_sigma_max: 6.0
+  contrast_min: 120.0
+  blur_laplacian_min: 20.0

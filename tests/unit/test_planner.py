@@ -80,7 +80,7 @@ def test_stage_timeout_flags_and_batch_continues(tmp_path, registry_guard):
         assert "timeout" in doc["flags"]
         assert doc["status"] == "needs_review"  # load succeeded -> partial, not error
         assert doc["report"] is None  # the timed-out stage's result is discarded
-        assert [s["status"] for s in _steps(tmp_path / "_traces", f"page_{i}.png")] == ["ok", "timeout"]
+        assert [s["status"] for s in _steps(tmp_path / "_traces", f"page_{i}.png")] == ["ok", "ok", "timeout"]  # load, preprocess, slow_test
 
 
 def test_failing_stage_is_retried_then_succeeds(tmp_path, registry_guard):
