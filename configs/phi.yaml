@@ -1,0 +1,45 @@
+# PHI agent (documents): label anchors, regex patterns and masking parameters.
+# Loaded by radintake.agents.phi; a `phi:` section in a --config YAML overrides these keys.
+# All regexes are Python `re` syntax, matched case-insensitively.
+
+# Layer 1 - layout anchors: a label on an OCR line; the value is the tokens to its RIGHT,
+# up to the next anchor label or the end of the line. `type` is the placeholder/detection type.
+anchors:
+  - type: PATIENT_NAME
+    pattern: '\b(?:patient\s*name|pt\.?\s*name|name\s+of\s+patient)\s*[:#.]?'
+  - type: PATIENT_ID
+    pattern: '\b(?:patient\s*id|pt\.?\s*id|patient\s*no\.?|medical\s*record\s*(?:no\.?|number)?)\s*[:#.]?'
+  - type: PATIENT_ID
+    pattern: '\bmrn\s*[:#.]|\bmrn(?=\s)'
+  - type: DATE_OF_BIRTH
+    pattern: '\b(?:date\s*of\s*birth|birth\s*date|d\.?o\.?b\.?)\s*[:#.]?'
+  - type: ACCESSION_NUMBER
+    pattern: '\b(?:accession|acc\.?)\s*(?:no\.?|number|num\.?|#)?\s*[:#.]?(?=\s|$)'
+
+# Layer 2 - regex over every token/sentence (IDs, accession formats, dates).
+regex:
+  - type: PATIENT_ID
+    pattern: '\bMRN[-#:]?\s?\d{4,}\b'
+  - type: ACCESSION_NUMBER
+    pattern: '\bACC(?:N)?[-#:]?\s?\d{4,}\b'
+  - type: ID
+    pattern: '\b\d{7,}\b'
+  - type: DATE
+    pattern: '\b(?:19|20)\d{2}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\d|3[01])\b'
+  - type: DATE
+    pattern: '\b(?:0?[1-9]|[12]\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.](?:19|20)?\d{2}\b'
+  - type: DATE
+    pattern: '\b(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\d|3[01])[-/.](?:19|20)?\d{2}\b'
+  - type: DATE
+    pattern: '\b\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+(?:19|20)\d{2}\b'
+  - type: DATE
+    pattern: '\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2},?\s+(?:19|20)\d{2}\b'
+
+# Layer 3 - names in free text. `ner: auto` uses Presidio (spaCy) when it imports offline,
+# else the lightweight honorific fallback below. `ner: fallback` forces the fallback.
+ner: auto
+honorifics: ['dr', 'doctor', 'prof', 'professor', 'mr', 'mrs', 'ms', 'miss', 'mx']
+
+mask:
+  pad_px: 6               # boxes are grown by this many pixels before filling (original coords)
+  fill: background        # "background" (page 95th percentile grey) or an integer 0..255
