@@ -68,3 +68,21 @@ _Add a brief overview of your project architecture_
 ## Conventions & Patterns
 
 _Add your project-specific conventions here_
+
+## 📂 Knowledge Bundle / OKF
+Architecture, contracts and procedures for this repository are documented in the OKF bundle at `okf/` (start at `okf/index.md`). Run OKF tools from the repo root. If nested bundles exist, use the closest parent `okf/` of the file you are working on. At session start, run `node C:/Users/kvlpv/.claude/skills/okf-lint/scripts/lint.js --drift`; if it reports drift, run `node C:/Users/kvlpv/.claude/skills/okf-maintain/scripts/maintain.js`.
+
+## ⚡ Pre-Work Grounding Gate (MANDATORY)
+Before answering questions about the system, planning, or editing:
+1. **Search:** `node C:/Users/kvlpv/.claude/skills/okf-query/scripts/query.js --search <keywords>` (or read `okf/index.md`).
+2. **Per-file context:** `node C:/Users/kvlpv/.claude/skills/okf-query/scripts/query.js --file <path[,path2,...]>` before analyzing or editing files (batch multiple paths in one comma-separated call); if nothing matches, search by module name.
+3. **Cite** the concept(s) you used, or state "OKF Check: no matching concept for <topic>".
+4. **Model-Tier Routing:** use the model's **High** setting for bootstrapping, architecture discovery and planning; switch to **Medium** once the plan is approved, for implementation and upkeep.
+
+## ⚡ Pre-Completion Verification Gate (MANDATORY)
+Before reporting work complete after changing code:
+1. **Semantic Concept & Source Binding Upkeep:** update affected concepts, or create one, when you change a schema, component, API, configuration or build/deploy step, or learn a durable constraint or pattern. Bind new or changed source files in the concept's `resource:`/`sources:` frontmatter, and add a dated line to `okf/log.md`.
+2. **Maintain:** `node C:/Users/kvlpv/.claude/skills/okf-maintain/scripts/maintain.js` (refreshes timestamps, the `## Not yet specified` frontier, `log.md` and `viz.html`).
+3. **Lint:** `node C:/Users/kvlpv/.claude/skills/okf-lint/scripts/lint.js --drift`. It must report 0 errors and 0 warnings (use `;` rather than `&&` when chaining commands in Windows PowerShell).
+
+<!-- okf-steering-version: 1.8.2 -->

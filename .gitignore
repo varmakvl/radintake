@@ -50,3 +50,6 @@ Thumbs.db
 *.db
 .beads-credential-key
 .claude/settings.local.json
+
+# Code-index cache (fleet code_graph)
+.gitnexus/
