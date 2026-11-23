@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import threading
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -55,7 +55,7 @@ def add_item(case_id: str, *, flags: list[str] | None = None, reasons: list[str]
     """Append one entry and return it. ``case_id`` is the case/input name (an id, not content)."""
     item = {"case_id": case_id, "trace_id": trace_id, "flags": sorted(set(flags or [])),
             "reasons": list(reasons or []), "fields": sorted(set(fields or [])),
-            "created_at": created_at or datetime.now(timezone.utc).isoformat(timespec="seconds")}
+            "created_at": created_at or datetime.now(UTC).isoformat(timespec="seconds")}
     with _lock:
         con = _connect(data_dir)
         try:

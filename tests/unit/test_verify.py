@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import copy
+import random
+from typing import ClassVar
 
 import numpy as np
 import pytest
-import random
 
 from radintake.agents.extract_ocr import OcrFirstExtractor, extract_pages, page_lines
 from radintake.agents.verify import PageOcr, load_params, verify_report
@@ -127,7 +128,7 @@ def test_value_grounded_by_whole_page_when_box_is_wrong():
 
 def test_load_params_merges_config():
     class C:
-        raw = {"verify": {"ground_min_ratio": 70, "id_patterns": {"patient_id": "^X$"}}}
+        raw: ClassVar = {"verify": {"ground_min_ratio": 70, "id_patterns": {"patient_id": "^X$"}}}
 
     p = load_params(C())
     assert p["ground_min_ratio"] == 70 and p["id_patterns"]["patient_id"] == "^X$"

@@ -210,7 +210,7 @@ def verify_stage(ctx: StageContext) -> dict[str, Any]:
             from radintake.models.report import Report
 
             out["report_model"] = Report.from_dict(res.report)
-        except Exception:  # noqa: BLE001 - the dict is the contract; the mirror is best effort
+        except Exception:  # noqa: BLE001, S110 - the dict is the contract; the mirror is best effort
             pass
     if res.reasons:
         out["review_reasons"] = [*(ctx.data.get("review_reasons") or []), *res.reasons]
