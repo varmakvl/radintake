@@ -3,7 +3,7 @@
   "provenance": {
     "commit": "279d0f2a260a63a2aa7bf715d09f6fd91a9d5030",
     "branch": "main",
-    "entry_count": 1
+    "entry_count": 2
   },
   "entries": [
     {
@@ -27,6 +27,28 @@
         "src/radintake/orchestrator/planner.py": "fe318d8dd4b2054c1ebbd62d0e0c2e39e240bb2c",
         "src/radintake/orchestrator/stages.py": "186b1b6ab156b1c85c49807eed7b0c9be01a4819",
         "src/radintake/pipeline.py": "3718409166cdec80ad9e98e9cd636ec99e6063e0"
+      }
+    },
+    {
+      "id": "b2cec46c-dda1-4600-83bc-ee80ebd57cd8",
+      "type": "knowledge",
+      "title": "Document PHI stage outputs and the only phi_masked=True producer",
+      "summary": "The phi stage (order 30) is the only producer of payloads stamped phi_masked=True: ctx.data['phi_masked_pages'] holds one MaskedPayload per page. It also leaves phi_vault, ocr_words and pages with words in ctx.data for the extract stage.",
+      "symbols": [
+        "phi_stage",
+        "mask_page",
+        "PhiVault",
+        "MaskedPayload"
+      ],
+      "source_files": [
+        "src/radintake/agents/phi.py",
+        "src/radintake/agents/phi_vault.py"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-23T11:28:00.510Z",
+      "source_file_hashes": {
+        "src/radintake/agents/phi.py": "8bbd89ad95eef361db4b1deb313c3f662ca1d247",
+        "src/radintake/agents/phi_vault.py": "ee1f6cdcc4415ebce48fdbca74db16e182524f28"
       }
     }
   ]
