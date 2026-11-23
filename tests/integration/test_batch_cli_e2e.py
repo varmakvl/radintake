@@ -145,8 +145,8 @@ def test_no_phi_in_logs_or_stdout(batch_run):
     blob = proc.stdout + proc.stderr
     trace_dir = batch_run["out"] / "_traces"
     for p in trace_dir.rglob("*") if trace_dir.exists() else []:
-        if p.is_file() and p.suffix in (".json", ".jsonl", ".log"):
-            blob += p.read_text(errors="ignore")
+        if p.is_file():  # every file under _traces, whatever its suffix
+            blob += p.read_bytes().decode("utf-8", errors="ignore")
     for t in batch_run["truth"]["reports"].values():
         for s in t.phi_strings:
             assert s not in blob, f"PHI leaked into logs/traces: {s!r}"
