@@ -13,6 +13,7 @@ and ``extraction`` metadata (counts / field names only) for the verifier. The tr
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Callable
 from functools import lru_cache
 from typing import Any
@@ -29,7 +30,21 @@ def _ocr_first(ctx: StageContext):
     return extract_ocr.run(ctx)
 
 
-PIPELINES: dict[str, Callable[[StageContext], Any]] = {"ocr_first": _ocr_first}
+def _vlm_first(ctx: StageContext):
+    from radintake.agents import extract_vlm
+
+    return extract_vlm.run(ctx)
+
+
+def _hybrid(ctx: StageContext):
+    from radintake.agents import extract_hybrid
+
+    return extract_hybrid.run(ctx)
+
+
+PIPELINES: dict[str, Callable[[StageContext], Any]] = {
+    "ocr_first": _ocr_first, "vlm_first": _vlm_first, "hybrid": _hybrid}
+PIPELINE_ENV = "RADINTAKE_EXTRACTION_PIPELINE"
 
 
 def register_pipeline(name: str, fn: Callable[[StageContext], Any]) -> None:
@@ -37,6 +52,10 @@ def register_pipeline(name: str, fn: Callable[[StageContext], Any]) -> None:
 
 
 def pipeline_name(cfg: Any) -> str:
+    """``RADINTAKE_EXTRACTION_PIPELINE`` env > config ``extraction.pipeline`` > ``ocr_first``."""
+    env = os.environ.get(PIPELINE_ENV, "").strip()
+    if env:
+        return env
     raw = getattr(cfg, "raw", None) or {}
     ext = raw.get("extraction") if isinstance(raw.get("extraction"), dict) else {}
     return str(ext.get("pipeline") or DEFAULT_PIPELINE)

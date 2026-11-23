@@ -38,3 +38,13 @@ extraction:
   ocr_first:              # overrides radintake.agents.extract_ocr.DEFAULTS
     heading_min_ratio: 85 # fuzzy match (0-100) for OCR-damaged section headings
     low_conf_threshold: 0.5  # mean word confidence below this -> field low_confidence
+  vlm:                    # vlm_first / hybrid (radintake.agents.extract_vlm, extract_hybrid)
+    model: vlm_api        # registry names in configs/models.yaml
+    local_model: vlm_local
+    align_min_ratio: 80   # fuzz.ratio a VLM value needs to snap to OCR words (else source vlm)
+    vlm_confidence: 0.9
+    unaligned_penalty: 0.5
+    hybrid_conf_threshold: 0.6  # hybrid: OCR section confidence below this -> VLM crop re-read
+    cache_dir: null       # null -> <data_dir>/cache/vlm (responses keyed by input + prompt hash)
+    max_tokens: 2000
+    timeout_s: 60

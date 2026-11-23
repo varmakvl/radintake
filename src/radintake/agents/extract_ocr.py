@@ -443,6 +443,8 @@ class ExtractionResult:
     lines: dict[int, list[Line]]
     meta: dict[str, Any]
     flags: set[str]
+    hits: dict[str, FieldHit] = field(default_factory=dict)
+    pages: dict[int, Page] = field(default_factory=dict)
 
 
 def extract_pages(pages: Sequence[Page], words_by_page: dict[int, Sequence[Any]], *,
@@ -473,7 +475,7 @@ def extract_pages(pages: Sequence[Page], words_by_page: dict[int, Sequence[Any]]
             "low_confidence_fields": sorted(n for n, f in fields.items() if f.low_confidence),
             "n_untrusted": sum(len(f.untrusted_text or []) for f in fields.values()),
             "handwriting_reader": "supplied" if reread is not None else "unavailable"}
-    return ExtractionResult(report, lines_by_page, meta, flags)
+    return ExtractionResult(report, lines_by_page, meta, flags, hits, page_map)
 
 
 def _reread_field(f: ReportField, hit: FieldHit, pages: dict[int, Page],
