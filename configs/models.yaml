@@ -1,0 +1,17 @@
+# Model registry: every model the pipeline may call. Recorded in every run manifest.
+# kind: local -> runs on this machine (allowed under RADINTAKE_OFFLINE=1)
+#       api   -> network call to an external provider (refused under RADINTAKE_OFFLINE=1,
+#                and only ever sent PHI-masked payloads)
+models:
+  ocr:
+    id: tesseract-5
+    kind: local
+  vlm_local:
+    id: microsoft/Florence-2-base
+    kind: local
+  vlm_api:
+    id: claude-sonnet-4-5
+    kind: api
+  embedder:
+    id: sentence-transformers/all-MiniLM-L6-v2
+    kind: local

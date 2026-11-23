@@ -1,0 +1,27 @@
+# radintake default configuration.
+# Precedence (lowest -> highest): this file < --config YAML < environment variables.
+# Environment overrides: RADINTAKE_OFFLINE, RADINTAKE_DATA_DIR, RADINTAKE_TRACE_DIR,
+# RADINTAKE_FORBID_MODEL_CALLS.
+
+seed: 140
+
+paths:
+  data_dir: data          # RADINTAKE_DATA_DIR
+  trace_dir: null         # RADINTAKE_TRACE_DIR; null -> <out>/_traces for the batch CLI
+
+runtime:
+  offline: false          # RADINTAKE_OFFLINE=1 -> local models only
+  forbid_model_calls: false  # RADINTAKE_FORBID_MODEL_CALLS=1 -> every model call raises (replay/re-score)
+
+budgets:
+  max_steps: 20           # max stages executed per case
+  stage_timeout_s: 300    # per-stage wall-clock timeout
+  retries: 1              # extra attempts per stage after the first failure
+  backoff_s: 0.5          # base backoff, doubled per retry
+  case_deadline_s: 900    # global wall-clock deadline per case
+
+loader:
+  pdf_dpi: 200            # PDF pages are rasterised at this DPI; page coords = raster pixels
+
+logging:
+  level: INFO

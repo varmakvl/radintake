@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radintake/trace.v1.json",
+  "title": "radintake trace event (one JSON object per line of <trace_dir>/<run_id>/<case_id>.jsonl)",
+  "description": "PHI-free: string payload values are 'sha256:<hex>' hashes unless their key is an identifier/enum key (see radintake.tracing.writer.SAFE_KEYS). The run manifest is described by $defs/manifest.",
+  "type": "object",
+  "required": ["schema_version", "run_id", "case_id", "seq", "ts", "t_ms", "kind", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "trace.v1" },
+    "run_id": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" },
+    "case_id": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" },
+    "seq": { "type": "integer", "minimum": 0 },
+    "ts": { "type": "string", "format": "date-time" },
+    "t_ms": { "type": "number", "minimum": 0 },
+    "kind": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "case_start | step | tool_call | model_call | decision | error | case_end | ..."
+    },
+    "data": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "model_call" } } },
+      "then": {
+        "properties": {
+          "data": {
+            "required": ["model_id", "prompt_id", "prompt_hash", "duration_ms"],
+            "properties": {
+              "model_id": { "type": "string" },
+              "prompt_id": { "type": "string" },
+              "prompt_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+              "duration_ms": { "type": "number", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "tool_call" } } },
+      "then": {
+        "properties": {
+          "data": {
+            "required": ["tool", "args", "duration_ms"],
+            "properties": {
+              "tool": { "type": "string" },
+              "args": { "type": "object" },
+              "duration_ms": { "type": "number", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "step" } } },
+      "then": {
+        "properties": {
+          "data": {
+            "required": ["stage", "status", "duration_ms"],
+            "properties": {
+              "stage": { "type": "string" },
+              "status": { "type": "string" },
+              "duration_ms": { "type": "number", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "case_start" } } },
+      "then": {
+        "properties": {
+          "data": {
+            "required": ["input_sha256"],
+            "properties": { "input_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "case_end" } } },
+      "then": {
+        "properties": {
+          "data": {
+            "required": ["status", "duration_ms"],
+            "properties": {
+              "status": { "type": "string" },
+              "duration_ms": { "type": "number", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "manifest": {
+      "type": "object",
+      "required": ["schema_version", "run_id", "created_at", "git_sha", "model_ids", "prompts",
+                   "tool_versions", "cases"],
+      "properties": {
+        "schema_version": { "const": "trace_manifest.v1" },
+        "run_id": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" },
+        "created_at": { "type": "string" },
+        "finished_at": { "type": "string" },
+        "git_sha": { "type": "string" },
+        "offline": { "type": ["boolean", "null"] },
+        "model_ids": { "type": "object", "additionalProperties": { "type": "string" } },
+        "models_called": { "type": "array", "items": { "type": "string" } },
+        "prompts": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        },
+        "tool_versions": { "type": "object", "additionalProperties": { "type": "string" } },
+        "extra": { "type": "object" },
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["case_id", "input_sha256", "file"],
+            "properties": {
+              "case_id": { "type": "string" },
+              "input_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "file": { "type": "string" },
+              "status": { "type": ["string", "null"] },
+              "duration_ms": { "type": ["number", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}
