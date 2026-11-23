@@ -128,6 +128,22 @@ def test_provenance_maps_to_original_page_coordinates(batch_run):
         assert max(iou(b, truth.boxes[f]) for b in boxes) >= 0.3, f
 
 
+def test_photo_provenance_maps_to_original_page_coordinates(batch_run):
+    """The rotated phone photo is read upright after preprocessing; its cited boxes must still be
+    in the photo's OWN pixel grid (IoU >= 0.3 with the truth boxes rotated like the photo)."""
+    from radintake.core.types import BBox, Transform
+
+    from .fixtures import PAGE_H, PAGE_W
+
+    truth = batch_run["truth"]["reports"]["report_photo_rot90.jpg"]
+    rep = _load(batch_run, "report_photo_rot90.jpg")["report"]
+    rot = Transform.rot90(1, PAGE_W, PAGE_H)  # degrade_photo: PIL rotate(90, expand=True)
+    for f in TEXT_FIELDS + ("patient_id", "accession_number"):
+        want = rot.map_box(truth.boxes[f])
+        boxes = [BBox.from_seq(p["bbox"]) for p in rep[f]["provenance"] if p["page"] == 1]
+        assert boxes and max(b.iou(want) for b in boxes) >= 0.3, f
+
+
 @pytest.mark.parametrize("name", ["report_injected_multipage.pdf", "report_injected.tiff"])
 def test_prompt_injection_is_treated_as_data(batch_run, name):
     truth = batch_run["truth"]["reports"][name]
