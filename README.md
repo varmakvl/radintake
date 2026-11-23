@@ -23,6 +23,19 @@ python -m venv .venv
 RADINTAKE_OFFLINE=1 .venv/Scripts/python -m pytest tests/integration -m integration -q
 ```
 
+## Run the service (Docker Compose)
+
+```bash
+docker compose up -d --build --wait      # CPU default; API on http://localhost:8000
+curl -fsS http://localhost:8000/health   # {"status":"ok",...}
+docker compose --profile ocr-gpu up -d --build --wait   # optional NVIDIA variant on :8001
+docker compose down
+```
+
+Data and traces live in the `radintake-data` volume (`/data`). API keys are read from the
+environment or an uncommitted `.env` file; the image contains no `data/`, renders or DICOM files.
+`requirements.lock` pins the dependencies (`uv pip compile pyproject.toml --extra dev --universal -o requirements.lock`).
+
 ## Batch CLI
 
 ```bash

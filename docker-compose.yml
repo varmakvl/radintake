@@ -1,0 +1,54 @@
+# One-command stack: docker compose up -d --build --wait   (API on http://localhost:8000)
+# API keys come from the environment / an uncommitted .env file only.
+services:
+  api:
+    build: .
+    image: radintake:latest
+    ports:
+      - "8000:8000"
+    environment:
+      RADINTAKE_OFFLINE: "${RADINTAKE_OFFLINE:-1}"
+      RADINTAKE_DATA_DIR: /data
+      RADINTAKE_TRACE_DIR: /data/traces
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+    volumes:
+      - radintake-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  # Optional GPU OCR/VLM variant: docker compose --profile ocr-gpu up -d --build --wait
+  api-gpu:
+    profiles: ["ocr-gpu"]
+    build: .
+    image: radintake:latest
+    ports:
+      - "8001:8000"
+    environment:
+      RADINTAKE_OFFLINE: "${RADINTAKE_OFFLINE:-1}"
+      RADINTAKE_DATA_DIR: /data
+      RADINTAKE_TRACE_DIR: /data/traces
+      NVIDIA_VISIBLE_DEVICES: all
+    volumes:
+      - radintake-data:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  radintake-data:
