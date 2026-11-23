@@ -6,6 +6,7 @@ models:
   ocr:
     id: tesseract-5
     kind: local
+    version: "5.x (pytesseract>=0.3.10; CPU, OEM 1 LSTM, PSM 6, OMP_THREAD_LIMIT=1)"
   vlm_local:
     id: microsoft/Florence-2-base
     kind: local

@@ -47,7 +47,7 @@ SAFE_KEYS = frozenset({
 _MAX_SAFE_LEN = 300
 
 _TOOL_DISTS = ("radintake", "numpy", "opencv-python-headless", "Pillow", "pydicom", "pypdfium2",
-               "rapidfuzz", "jsonschema", "structlog", "pydantic")
+               "rapidfuzz", "pytesseract", "jsonschema", "structlog", "pydantic")
 
 
 def hash_text(text: str) -> str:
