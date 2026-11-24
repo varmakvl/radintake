@@ -1,0 +1,970 @@
+{
+ "cases": [
+  {
+   "id": "D0002",
+   "ms": 4344.4,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0006",
+   "ms": 1861.6,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0009",
+   "ms": 6254.4,
+   "pages": 2,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0015",
+   "ms": 2432.7,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0020",
+   "ms": 2437.0,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0024",
+   "ms": 1940.3,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0027",
+   "ms": 2522.2,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0028",
+   "ms": 1386.8,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0030",
+   "ms": 3109.2,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0031",
+   "ms": 2036.1,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0033",
+   "ms": 2777.5,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0034",
+   "ms": 2528.1,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0037",
+   "ms": 3190.7,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0038",
+   "ms": 4232.9,
+   "pages": 2,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0041",
+   "ms": 2632.3,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0051",
+   "ms": 5097.1,
+   "pages": 2,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0053",
+   "ms": 2455.9,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0054",
+   "ms": 4192.6,
+   "pages": 2,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0057",
+   "ms": 4523.5,
+   "pages": 2,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0058",
+   "ms": 2678.4,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0059",
+   "ms": 3031.3,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0060",
+   "ms": 2725.7,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0062",
+   "ms": 4069.0,
+   "pages": 2,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0063",
+   "ms": 1566.0,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0066",
+   "ms": 3796.5,
+   "pages": 2,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0067",
+   "ms": 3655.1,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0069",
+   "ms": 2340.2,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0072",
+   "ms": 2070.2,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0074",
+   "ms": 2342.8,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0076",
+   "ms": 4444.4,
+   "pages": 2,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0077",
+   "ms": 4185.7,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0080",
+   "ms": 1973.5,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0086",
+   "ms": 2361.4,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0087",
+   "ms": 2203.0,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0088",
+   "ms": 2512.4,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0091",
+   "ms": 1641.8,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0096",
+   "ms": 3678.9,
+   "pages": 2,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0097",
+   "ms": 2828.7,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0098",
+   "ms": 3536.1,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0108",
+   "ms": 1677.0,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0112",
+   "ms": 4841.9,
+   "pages": 2,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0113",
+   "ms": 4662.1,
+   "pages": 2,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0115",
+   "ms": 2411.6,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0116",
+   "ms": 2274.8,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0119",
+   "ms": 1496.1,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0122",
+   "ms": 2572.8,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0124",
+   "ms": 3937.3,
+   "pages": 2,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0131",
+   "ms": 4599.3,
+   "pages": 2,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0133",
+   "ms": 1750.1,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0135",
+   "ms": 3016.1,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0136",
+   "ms": 6112.2,
+   "pages": 2,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0137",
+   "ms": 2034.0,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0140",
+   "ms": 2143.9,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0141",
+   "ms": 1456.1,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0155",
+   "ms": 2250.6,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0161",
+   "ms": 2606.4,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0162",
+   "ms": 4444.1,
+   "pages": 2,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0163",
+   "ms": 2619.0,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0165",
+   "ms": 2976.7,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0166",
+   "ms": 3816.2,
+   "pages": 2,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0167",
+   "ms": 1484.1,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0172",
+   "ms": 2491.8,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0175",
+   "ms": 4231.0,
+   "pages": 2,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0178",
+   "ms": 4698.2,
+   "pages": 2,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0182",
+   "ms": 3685.5,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0184",
+   "ms": 1501.2,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0190",
+   "ms": 1699.4,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0193",
+   "ms": 2482.9,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0196",
+   "ms": 3800.5,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0199",
+   "ms": 3040.6,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0201",
+   "ms": 2667.3,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0206",
+   "ms": 3429.8,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0212",
+   "ms": 1788.0,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0222",
+   "ms": 1646.0,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0223",
+   "ms": 3116.4,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0229",
+   "ms": 4836.5,
+   "pages": 2,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0234",
+   "ms": 3236.7,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0236",
+   "ms": 3236.9,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0238",
+   "ms": 3853.6,
+   "pages": 2,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0239",
+   "ms": 2237.1,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0240",
+   "ms": 1824.0,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0243",
+   "ms": 2097.2,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0245",
+   "ms": 4635.6,
+   "pages": 2,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0247",
+   "ms": 2232.8,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0248",
+   "ms": 3245.9,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0251",
+   "ms": 4049.1,
+   "pages": 2,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0255",
+   "ms": 5387.2,
+   "pages": 2,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0260",
+   "ms": 2614.3,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0261",
+   "ms": 3931.5,
+   "pages": 2,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0262",
+   "ms": 2794.0,
+   "pages": 2,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0263",
+   "ms": 1987.8,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0264",
+   "ms": 2894.6,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0274",
+   "ms": 5491.4,
+   "pages": 2,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0276",
+   "ms": 3024.7,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0278",
+   "ms": 2542.4,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0281",
+   "ms": 2506.5,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0286",
+   "ms": 2292.0,
+   "pages": 1,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0289",
+   "ms": 3176.3,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0290",
+   "ms": 4003.9,
+   "pages": 2,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0300",
+   "ms": 1935.5,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0302",
+   "ms": 4375.1,
+   "pages": 2,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0303",
+   "ms": 1545.8,
+   "pages": 1,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0304",
+   "ms": 3147.3,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0308",
+   "ms": 2749.0,
+   "pages": 2,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0310",
+   "ms": 3792.2,
+   "pages": 2,
+   "tier": "poor_scan"
+  },
+  {
+   "id": "D0314",
+   "ms": 2420.8,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0315",
+   "ms": 4938.4,
+   "pages": 2,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0316",
+   "ms": 4451.5,
+   "pages": 2,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0322",
+   "ms": 2927.1,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0324",
+   "ms": 3677.8,
+   "pages": 2,
+   "tier": "clean_scan"
+  },
+  {
+   "id": "D0326",
+   "ms": 2118.4,
+   "pages": 1,
+   "tier": "phone_photo"
+  },
+  {
+   "id": "D0330",
+   "ms": 2112.4,
+   "pages": 1,
+   "tier": "poor_scan"
+  }
+ ],
+ "dicom_cases": [
+  {
+   "id": "DICOM_001",
+   "ms": 1306.4,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_002",
+   "ms": 756.3,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_003",
+   "ms": 951.2,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_004",
+   "ms": 671.9,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_005",
+   "ms": 792.3,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_006",
+   "ms": 156.7,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_007",
+   "ms": 722.9,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_008",
+   "ms": 752.0,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_009",
+   "ms": 584.4,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_010",
+   "ms": 125.8,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_011",
+   "ms": 219.5,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_012",
+   "ms": 992.8,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_013",
+   "ms": 321.1,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_014",
+   "ms": 1537.2,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_015",
+   "ms": 1519.0,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_016",
+   "ms": 695.8,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_017",
+   "ms": 928.2,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_018",
+   "ms": 694.4,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_019",
+   "ms": 1943.3,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_020",
+   "ms": 619.5,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_021",
+   "ms": 1445.2,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_022",
+   "ms": 1940.0,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_023",
+   "ms": 1214.8,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_024",
+   "ms": 1913.8,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_025",
+   "ms": 858.0,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_026",
+   "ms": 304.9,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_027",
+   "ms": 268.1,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_028",
+   "ms": 308.0,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_029",
+   "ms": 274.0,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_030",
+   "ms": 265.8,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_031",
+   "ms": 277.9,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_032",
+   "ms": 283.9,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_033",
+   "ms": 1145.3,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_034",
+   "ms": 1686.1,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_035",
+   "ms": 291.9,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_036",
+   "ms": 1118.6,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_037",
+   "ms": 335.8,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_038",
+   "ms": 234.9,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_039",
+   "ms": 393.3,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_040",
+   "ms": 224.3,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_041",
+   "ms": 2263.8,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_042",
+   "ms": 401.0,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_043",
+   "ms": 988.6,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_044",
+   "ms": 1282.4,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_045",
+   "ms": 1056.4,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_046",
+   "ms": 343.4,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_047",
+   "ms": 1064.0,
+   "pages": 1,
+   "tier": "dicom"
+  },
+  {
+   "id": "DICOM_048",
+   "ms": 297.9,
+   "pages": 1,
+   "tier": "dicom"
+  }
+ ],
+ "gpu_peak_mib": 0,
+ "gpu_baseline_mib": 0,
+ "model_calls": 0,
+ "wall_s": 388.9
+}

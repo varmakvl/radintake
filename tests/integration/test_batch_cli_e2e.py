@@ -37,7 +37,8 @@ def batch_run(tmp_path_factory):
     out = tmp_path_factory.mktemp("outputs")
     truth = build_corpus(inp)
     env = {**os.environ, "RADINTAKE_OFFLINE": os.environ.get("RADINTAKE_OFFLINE", "1"),
-           "RADINTAKE_TRACE_DIR": str(out / "_traces")}
+           "RADINTAKE_TRACE_DIR": str(out / "_traces"),
+           "RADINTAKE_DATA_DIR": str(out / "_data")}
     proc = subprocess.run(
         [sys.executable, "-m", "radintake.cli", "batch", "--in", str(inp), "--out", str(out)],
         capture_output=True, text=True, env=env, timeout=1800, cwd=ROOT, check=False,
@@ -128,6 +129,22 @@ def test_provenance_maps_to_original_page_coordinates(batch_run):
         assert max(iou(b, truth.boxes[f]) for b in boxes) >= 0.3, f
 
 
+def test_photo_provenance_maps_to_original_page_coordinates(batch_run):
+    """The rotated phone photo is read upright after preprocessing; its cited boxes must still be
+    in the photo's OWN pixel grid (IoU >= 0.3 with the truth boxes rotated like the photo)."""
+    from radintake.core.types import BBox, Transform
+
+    from .fixtures import PAGE_H, PAGE_W
+
+    truth = batch_run["truth"]["reports"]["report_photo_rot90.jpg"]
+    rep = _load(batch_run, "report_photo_rot90.jpg")["report"]
+    rot = Transform.rot90(1, PAGE_W, PAGE_H)  # degrade_photo: PIL rotate(90, expand=True)
+    for f in TEXT_FIELDS + ("patient_id", "accession_number"):
+        want = rot.map_box(truth.boxes[f])
+        boxes = [BBox.from_seq(p["bbox"]) for p in rep[f]["provenance"] if p["page"] == 1]
+        assert boxes and max(b.iou(want) for b in boxes) >= 0.3, f
+
+
 @pytest.mark.parametrize("name", ["report_injected_multipage.pdf", "report_injected.tiff"])
 def test_prompt_injection_is_treated_as_data(batch_run, name):
     truth = batch_run["truth"]["reports"][name]
@@ -140,13 +157,27 @@ def test_prompt_injection_is_treated_as_data(batch_run, name):
     assert doc["n_pages"] == 2
 
 
+@pytest.mark.parametrize("name", ["report_injected_multipage.pdf", "report_injected.tiff"])
+def test_injection_review_queue_entry_without_phi(batch_run, name):
+    from radintake.store import review_queue
+
+    items = [i for i in review_queue.list_items(batch_run["out"] / "_data") if i["case_id"] == name]
+    assert items and "prompt_injection_suspected" in items[0]["flags"]
+    jl = (batch_run["out"] / "review_queue.jsonl").read_text()
+    assert name in jl
+    blob = json.dumps(items) + jl
+    for t in batch_run["truth"]["reports"].values():
+        for s in t.phi_strings:
+            assert s not in blob, f"PHI in review queue: {s!r}"
+
+
 def test_no_phi_in_logs_or_stdout(batch_run):
     proc = batch_run["proc"]
     blob = proc.stdout + proc.stderr
     trace_dir = batch_run["out"] / "_traces"
     for p in trace_dir.rglob("*") if trace_dir.exists() else []:
-        if p.is_file() and p.suffix in (".json", ".jsonl", ".log"):
-            blob += p.read_text(errors="ignore")
+        if p.is_file():  # every file under _traces, whatever its suffix
+            blob += p.read_bytes().decode("utf-8", errors="ignore")
     for t in batch_run["truth"]["reports"].values():
         for s in t.phi_strings:
             assert s not in blob, f"PHI leaked into logs/traces: {s!r}"

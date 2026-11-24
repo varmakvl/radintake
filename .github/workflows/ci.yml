@@ -17,7 +17,7 @@ jobs:
           python-version: "3.11"
           cache: pip
       - name: System packages
-        run: sudo apt-get update && sudo apt-get install -y fonts-dejavu-core
+        run: sudo apt-get update && sudo apt-get install -y fonts-dejavu-core tesseract-ocr tesseract-ocr-eng
       - name: Install
         run: |
           if [ -f requirements.lock ]; then pip install -r requirements.lock; fi
@@ -29,5 +29,6 @@ jobs:
       - name: Integration tests (end-to-end, offline)
         run: pytest tests/integration -m integration -q --timeout=1800
       - name: Eval regression gate
-        if: hashFiles('eval/baseline.json') != ''
+        # runs even when the unit tests fail, so a regression shows both signals
+        if: (success() || failure()) && hashFiles('eval/baseline.json') != ''
         run: python -m radintake.eval.gate --subset ci

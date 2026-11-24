@@ -1,10 +1,11 @@
 # --- Licensed / sensitive data: NEVER commit ---
 # IU Open-i is CC BY-NC-ND: rendered pages and raw downloads must not be published.
-data/
-!data/README.md
-renders/
-degraded/
-dicom/
+# Root-anchored: an unanchored `data/` also hid okf/data/ (the bundle's data concepts).
+/data/
+!/data/README.md
+/renders/
+/degraded/
+/dicom/
 *.dcm
 !tests/**/fixtures/**/*.dcm
 *.docx
@@ -14,6 +15,7 @@ dicom/
 out/
 runs/
 *.log
+*.err
 !traces/final/**
 
 # Python
@@ -34,6 +36,7 @@ dist/
 
 # Models / weights
 models/
+!src/radintake/models/
 *.safetensors
 *.bin
 *.pt
@@ -49,3 +52,9 @@ Thumbs.db
 *.db
 .beads-credential-key
 .claude/settings.local.json
+
+# Code-index cache (fleet code_graph)
+.gitnexus/
+
+# report output: shows licensed IU pages and synthetic PHI (local only)
+/docs/report/out/

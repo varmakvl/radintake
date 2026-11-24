@@ -1,0 +1,1262 @@
+{
+ "n_docs": 112,
+ "n_pages": 145,
+ "pages_by_tier": {
+  "poor_scan": 50,
+  "phone_photo": 48,
+  "clean_scan": 47
+ },
+ "fields": {
+  "overall": {
+   "patient_name": {
+    "n": 112,
+    "exact_match": 0.7411,
+    "cer": 0.1224,
+    "hallucination": 0.0,
+    "omission": 0.0982
+   },
+   "patient_id": {
+    "n": 112,
+    "exact_match": 0.8839,
+    "cer": 0.0593,
+    "hallucination": 0.0,
+    "omission": 0.0536
+   },
+   "date_of_birth": {
+    "n": 112,
+    "exact_match": 0.9107,
+    "cer": 0.0464,
+    "hallucination": 0.0275,
+    "omission": 0.0268
+   },
+   "accession_number": {
+    "n": 112,
+    "exact_match": 0.7589,
+    "cer": 0.1079,
+    "hallucination": 0.0472,
+    "omission": 0.0536
+   },
+   "exam_date": {
+    "n": 112,
+    "exact_match": 0.5089,
+    "cer": 0.4875,
+    "hallucination": 0.0,
+    "omission": 0.4821
+   },
+   "indication": {
+    "n": 110,
+    "exact_match": 0.6273,
+    "cer": 0.1762,
+    "hallucination": 0.0606,
+    "omission": 0.1
+   },
+   "comparison": {
+    "n": 93,
+    "exact_match": 0.7204,
+    "cer": 0.1988,
+    "hallucination": 0.1059,
+    "omission": 0.086
+   },
+   "findings": {
+    "n": 92,
+    "exact_match": 0.5,
+    "cer": 0.2177,
+    "hallucination": 0.1628,
+    "omission": 0.0652
+   },
+   "impression": {
+    "n": 112,
+    "exact_match": 0.5446,
+    "cer": 0.2552,
+    "hallucination": 0.1485,
+    "omission": 0.0982
+   },
+   "mean": {
+    "exact_match": 0.6725,
+    "cer": 0.1692,
+    "hallucination": 0.0875,
+    "omission": 0.0761,
+    "n": 631
+   }
+  },
+  "clean_scan": {
+   "patient_name": {
+    "n": 37,
+    "exact_match": 0.8919,
+    "cer": 0.0191,
+    "hallucination": 0.0,
+    "omission": 0.0
+   },
+   "patient_id": {
+    "n": 37,
+    "exact_match": 1.0,
+    "cer": 0.0,
+    "hallucination": 0.0,
+    "omission": 0.0
+   },
+   "date_of_birth": {
+    "n": 37,
+    "exact_match": 0.973,
+    "cer": 0.0108,
+    "hallucination": 0.027,
+    "omission": 0.0
+   },
+   "accession_number": {
+    "n": 37,
+    "exact_match": 0.7838,
+    "cer": 0.0653,
+    "hallucination": 0.0541,
+    "omission": 0.0
+   },
+   "exam_date": {
+    "n": 37,
+    "exact_match": 1.0,
+    "cer": 0.0,
+    "hallucination": 0.0,
+    "omission": 0.0
+   },
+   "indication": {
+    "n": 37,
+    "exact_match": 0.7027,
+    "cer": 0.0197,
+    "hallucination": 0.0,
+    "omission": 0.0
+   },
+   "comparison": {
+    "n": 32,
+    "exact_match": 0.9375,
+    "cer": 0.0072,
+    "hallucination": 0.0,
+    "omission": 0.0
+   },
+   "findings": {
+    "n": 32,
+    "exact_match": 0.9062,
+    "cer": 0.0023,
+    "hallucination": 0.0,
+    "omission": 0.0
+   },
+   "impression": {
+    "n": 37,
+    "exact_match": 0.973,
+    "cer": 0.0003,
+    "hallucination": 0.0,
+    "omission": 0.0
+   },
+   "mean": {
+    "exact_match": 0.8839,
+    "cer": 0.0158,
+    "hallucination": 0.009,
+    "omission": 0.0,
+    "n": 212
+   }
+  },
+  "poor_scan": {
+   "patient_name": {
+    "n": 38,
+    "exact_match": 0.7368,
+    "cer": 0.1237,
+    "hallucination": 0.0,
+    "omission": 0.1053
+   },
+   "patient_id": {
+    "n": 38,
+    "exact_match": 0.8421,
+    "cer": 0.0861,
+    "hallucination": 0.0,
+    "omission": 0.0789
+   },
+   "date_of_birth": {
+    "n": 38,
+    "exact_match": 0.9474,
+    "cer": 0.0316,
+    "hallucination": 0.0,
+    "omission": 0.0263
+   },
+   "accession_number": {
+    "n": 38,
+    "exact_match": 0.7105,
+    "cer": 0.1206,
+    "hallucination": 0.0556,
+    "omission": 0.0526
+   },
+   "exam_date": {
+    "n": 38,
+    "exact_match": 0.3421,
+    "cer": 0.6474,
+    "hallucination": 0.0,
+    "omission": 0.6316
+   },
+   "indication": {
+    "n": 37,
+    "exact_match": 0.6486,
+    "cer": 0.1916,
+    "hallucination": 0.0606,
+    "omission": 0.1081
+   },
+   "comparison": {
+    "n": 32,
+    "exact_match": 0.6562,
+    "cer": 0.2656,
+    "hallucination": 0.1071,
+    "omission": 0.125
+   },
+   "findings": {
+    "n": 30,
+    "exact_match": 0.3,
+    "cer": 0.2973,
+    "hallucination": 0.1724,
+    "omission": 0.0333
+   },
+   "impression": {
+    "n": 38,
+    "exact_match": 0.3158,
+    "cer": 0.3444,
+    "hallucination": 0.129,
+    "omission": 0.1842
+   },
+   "mean": {
+    "exact_match": 0.5789,
+    "cer": 0.2176,
+    "hallucination": 0.0874,
+    "omission": 0.097,
+    "n": 213
+   }
+  },
+  "phone_photo": {
+   "patient_name": {
+    "n": 37,
+    "exact_match": 0.5946,
+    "cer": 0.2245,
+    "hallucination": 0.0,
+    "omission": 0.1892
+   },
+   "patient_id": {
+    "n": 37,
+    "exact_match": 0.8108,
+    "cer": 0.0909,
+    "hallucination": 0.0,
+    "omission": 0.0811
+   },
+   "date_of_birth": {
+    "n": 37,
+    "exact_match": 0.8108,
+    "cer": 0.0973,
+    "hallucination": 0.0571,
+    "omission": 0.0541
+   },
+   "accession_number": {
+    "n": 37,
+    "exact_match": 0.7838,
+    "cer": 0.1374,
+    "hallucination": 0.0303,
+    "omission": 0.1081
+   },
+   "exam_date": {
+    "n": 37,
+    "exact_match": 0.1892,
+    "cer": 0.8108,
+    "hallucination": 0.0,
+    "omission": 0.8108
+   },
+   "indication": {
+    "n": 36,
+    "exact_match": 0.5278,
+    "cer": 0.3211,
+    "hallucination": 0.1379,
+    "omission": 0.1944
+   },
+   "comparison": {
+    "n": 29,
+    "exact_match": 0.5517,
+    "cer": 0.3364,
+    "hallucination": 0.24,
+    "omission": 0.1379
+   },
+   "findings": {
+    "n": 30,
+    "exact_match": 0.2667,
+    "cer": 0.3679,
+    "hallucination": 0.36,
+    "omission": 0.1667
+   },
+   "impression": {
+    "n": 37,
+    "exact_match": 0.3514,
+    "cer": 0.4184,
+    "hallucination": 0.3333,
+    "omission": 0.1081
+   },
+   "mean": {
+    "exact_match": 0.5487,
+    "cer": 0.2787,
+    "hallucination": 0.1836,
+    "omission": 0.1327,
+    "n": 206
+   }
+  }
+ },
+ "handwritten_fields": {
+  "n": 50,
+  "exact_match": 0.74,
+  "cer": 0.1457
+ },
+ "phi_documents": {
+  "recall": 0.8313,
+  "precision": 0.8066,
+  "n_gt": 883,
+  "n_detections": 946,
+  "recall_by_type": {
+   "accession_number": 0.9379,
+   "date_of_birth": 0.9911,
+   "patient_id": 0.9517,
+   "patient_name": 0.7241,
+   "radiologist": 0.7679,
+   "referring_physician": 0.9196,
+   "technologist": 0.4911
+  },
+  "recall_by_tier": {
+   "clean_scan": 0.91,
+   "poor_scan": 0.8079,
+   "phone_photo": 0.7774
+  },
+  "residual": [
+   {
+    "doc_id": "D0009",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0009",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0009",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0015",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0028",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0030",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0033",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0038",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0038",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0041",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0051",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0051",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "patient_id"
+   },
+   {
+    "doc_id": "D0051",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "accession_number"
+   },
+   {
+    "doc_id": "D0051",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0051",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0053",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0053",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0054",
+    "tier": "clean_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0057",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0057",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "patient_id"
+   },
+   {
+    "doc_id": "D0057",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "accession_number"
+   },
+   {
+    "doc_id": "D0057",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0057",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0058",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0058",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "referring_physician"
+   },
+   {
+    "doc_id": "D0058",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0058",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0059",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0060",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0060",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "referring_physician"
+   },
+   {
+    "doc_id": "D0060",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0062",
+    "tier": "clean_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0062",
+    "tier": "clean_scan",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0062",
+    "tier": "clean_scan",
+    "page": 2,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0063",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "referring_physician"
+   },
+   {
+    "doc_id": "D0063",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0066",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0066",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0066",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0067",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0069",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0072",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0074",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0076",
+    "tier": "clean_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0077",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0080",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0087",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0088",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0091",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0096",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0097",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0097",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "referring_physician"
+   },
+   {
+    "doc_id": "D0097",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "accession_number"
+   },
+   {
+    "doc_id": "D0097",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0108",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "accession_number"
+   },
+   {
+    "doc_id": "D0108",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0108",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0112",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0112",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0113",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0115",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0124",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0124",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0124",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0131",
+    "tier": "clean_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0133",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0133",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0135",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0136",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0136",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0141",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0161",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0162",
+    "tier": "clean_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0163",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0165",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0166",
+    "tier": "clean_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0175",
+    "tier": "clean_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0178",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0178",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "referring_physician"
+   },
+   {
+    "doc_id": "D0178",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "patient_id"
+   },
+   {
+    "doc_id": "D0178",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "date_of_birth"
+   },
+   {
+    "doc_id": "D0178",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "accession_number"
+   },
+   {
+    "doc_id": "D0178",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0178",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0182",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0182",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "referring_physician"
+   },
+   {
+    "doc_id": "D0182",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0190",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0193",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0196",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "referring_physician"
+   },
+   {
+    "doc_id": "D0196",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0199",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "accession_number"
+   },
+   {
+    "doc_id": "D0199",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0201",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0201",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0212",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0212",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0222",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0229",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "patient_id"
+   },
+   {
+    "doc_id": "D0229",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0238",
+    "tier": "clean_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0240",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0243",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0243",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0245",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0245",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "referring_physician"
+   },
+   {
+    "doc_id": "D0245",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "accession_number"
+   },
+   {
+    "doc_id": "D0245",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0245",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0247",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0248",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0251",
+    "tier": "clean_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0255",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0261",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0261",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0262",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0263",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0264",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0274",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "patient_id"
+   },
+   {
+    "doc_id": "D0274",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0278",
+    "tier": "clean_scan",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0289",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0289",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "referring_physician"
+   },
+   {
+    "doc_id": "D0290",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0290",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_id"
+   },
+   {
+    "doc_id": "D0290",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "accession_number"
+   },
+   {
+    "doc_id": "D0290",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0290",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0300",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0302",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0302",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_id"
+   },
+   {
+    "doc_id": "D0302",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "accession_number"
+   },
+   {
+    "doc_id": "D0303",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0304",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0304",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0308",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0310",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0310",
+    "tier": "poor_scan",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0314",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0315",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0315",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0316",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0316",
+    "tier": "phone_photo",
+    "page": 2,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0322",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0322",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "technologist"
+   },
+   {
+    "doc_id": "D0322",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0324",
+    "tier": "clean_scan",
+    "page": 2,
+    "type": "patient_name"
+   },
+   {
+    "doc_id": "D0326",
+    "tier": "phone_photo",
+    "page": 1,
+    "type": "radiologist"
+   },
+   {
+    "doc_id": "D0330",
+    "tier": "poor_scan",
+    "page": 1,
+    "type": "technologist"
+   }
+  ]
+ },
+ "injection": {
+  "n_injected_docs": 4,
+  "flagged": 1,
+  "changed_behaviour": 0,
+  "false_flags_on_clean_docs": 0
+ },
+ "review": {
+  "docs_needs_review": 0.5982,
+  "fields_needs_review": 0.1058
+ },
+ "dicom": {
+  "n": 48,
+  "valid": 1.0,
+  "header_phi_recall": 1.0,
+  "uids_remapped": 1.0,
+  "burned_in_recall": 0.6,
+  "burned_in_pixel_precision": 0.5436,
+  "burned_in_text_pixel_recall": 0.6145,
+  "n_burned_in_boxes": 15,
+  "residual": []
+ },
+ "qa": {
+  "n_questions": 32,
+  "n_answerable": 26,
+  "n_unanswerable": 6,
+  "recall_at_5": 0.5492,
+  "citation_accuracy": 1.0,
+  "answer_correctness": 0.7188,
+  "correct_abstention": 0.9688,
+  "unanswerable_abstained": 0.8333,
+  "answerable_false_abstention": 0.0,
+  "injection_probes_correct": 0.5,
+  "backend": "bm25+dense"
+ },
+ "latency_ms_per_page": {
+  "p50": 2335.62,
+  "p95": 3477.63,
+  "n": 112
+ },
+ "gpu_peak_mib": 0,
+ "cost_usd_per_page": 0.0,
+ "model_calls": 0
+}

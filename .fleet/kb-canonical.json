@@ -1,0 +1,121 @@
+{
+  "version": 3,
+  "provenance": {
+    "commit": "279d0f2a260a63a2aa7bf715d09f6fd91a9d5030",
+    "branch": "main",
+    "entry_count": 5
+  },
+  "entries": [
+    {
+      "id": "0f5d4c90-4dad-4cff-9469-638d1154ee61",
+      "type": "knowledge",
+      "title": "Planner ctx.cancelled is per-case and never cleared after a stage timeout",
+      "summary": "run_with_timeout sets StageContext.cancelled when a stage times out and never clears it, so later stages in the same case start with cancelled already set.",
+      "symbols": [
+        "run_with_timeout",
+        "Planner.run",
+        "StageContext"
+      ],
+      "source_files": [
+        "src/radintake/orchestrator/planner.py",
+        "src/radintake/orchestrator/stages.py",
+        "src/radintake/pipeline.py"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-23T07:30:12.806Z",
+      "source_file_hashes": {
+        "src/radintake/orchestrator/planner.py": "fe318d8dd4b2054c1ebbd62d0e0c2e39e240bb2c",
+        "src/radintake/orchestrator/stages.py": "186b1b6ab156b1c85c49807eed7b0c9be01a4819",
+        "src/radintake/pipeline.py": "3718409166cdec80ad9e98e9cd636ec99e6063e0"
+      }
+    },
+    {
+      "id": "3a2bb149-2971-42ad-afe4-9128f5105362",
+      "type": "knowledge",
+      "title": "DICOM de-id does not register original UIDs with the log scrubber",
+      "summary": "dicom_deid._register_value skips UI, SQ and binary VRs, so original StudyInstanceUID/SOPInstanceUID values are remapped in the file but never added to radintake.logging's PHI scrubber.",
+      "symbols": [
+        "_register_value",
+        "deidentify_header",
+        "UidRemapper"
+      ],
+      "source_files": [
+        "src/radintake/agents/dicom_deid.py",
+        "src/radintake/logging.py"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-23T11:52:03.798Z",
+      "source_file_hashes": {
+        "src/radintake/agents/dicom_deid.py": "9906b5648d352b3ba7db003b95772f5f19c5245f",
+        "src/radintake/logging.py": "5c61023d729fcc2aee9e1cbc7359c44a7c937071"
+      }
+    },
+    {
+      "id": "418ffd41-3c50-4258-9cbb-2ff7c464761a",
+      "type": "knowledge",
+      "title": "Extract stage contract: report.v1, untrusted_text, pipelines and fallback",
+      "summary": "The extract stage (order 40) emits a report.v1 dict to ctx.data['report'] plus report_model and extraction meta. Instruction-like sentences are moved out of values into field.untrusted_text. vlm_first and hybrid fall back to OCR-first offline and record an extraction_fallback trace event.",
+      "symbols": [
+        "extract_stage",
+        "extract_pages",
+        "OcrFirstExtractor",
+        "snap",
+        "vlm_text_field",
+        "fallback"
+      ],
+      "source_files": [
+        "src/radintake/agents/extract.py",
+        "src/radintake/agents/extract_ocr.py",
+        "src/radintake/agents/extract_vlm.py",
+        "src/radintake/agents/extract_hybrid.py",
+        "schemas/report.v1.json"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-23T11:52:03.598Z",
+      "source_file_hashes": {
+        "schemas/report.v1.json": "64bbbd39fc1baaf73e53296ef5010bba857b9cfa",
+        "src/radintake/agents/extract.py": "70f09b88d0143a4c4da43d3609d3c528720d1f50",
+        "src/radintake/agents/extract_hybrid.py": "a6c87f2a6ef674f279c3e4735810717177319cf9",
+        "src/radintake/agents/extract_ocr.py": "7cb40fbc3916faad75db0267792b397b09c298b4",
+        "src/radintake/agents/extract_vlm.py": "c875a54e7cb6799d29be867359a5f0f4f412c224"
+      }
+    },
+    {
+      "id": "90369461-28c3-4e49-9169-6da18d0f37fc",
+      "type": "learning",
+      "title": "The 'models/' gitignore rule silently ignores src/radintake/models",
+      "summary": "The weights rule 'models/' in .gitignore matched src/radintake/models, so new package files there went untracked until a '!src/radintake/models/' negation was added.",
+      "symbols": [],
+      "source_files": [
+        ".gitignore"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-23T11:52:03.702Z",
+      "source_file_hashes": {
+        ".gitignore": "7fa27996bc3682d8a48b721f69c1e1e75bbfaabe"
+      }
+    },
+    {
+      "id": "b2cec46c-dda1-4600-83bc-ee80ebd57cd8",
+      "type": "knowledge",
+      "title": "Document PHI stage outputs and the only phi_masked=True producer",
+      "summary": "The phi stage (order 30) is the only producer of payloads stamped phi_masked=True: ctx.data['phi_masked_pages'] holds one MaskedPayload per page. It also leaves phi_vault, ocr_words and pages with words in ctx.data for the extract stage.",
+      "symbols": [
+        "phi_stage",
+        "mask_page",
+        "PhiVault",
+        "MaskedPayload"
+      ],
+      "source_files": [
+        "src/radintake/agents/phi.py",
+        "src/radintake/agents/phi_vault.py"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-23T11:28:00.510Z",
+      "source_file_hashes": {
+        "src/radintake/agents/phi.py": "8bbd89ad95eef361db4b1deb313c3f662ca1d247",
+        "src/radintake/agents/phi_vault.py": "ee1f6cdcc4415ebce48fdbca74db16e182524f28"
+      }
+    }
+  ]
+}

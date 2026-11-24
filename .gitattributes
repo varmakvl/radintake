@@ -1,0 +1,9 @@
+# Normalise line endings in the repository (files were a mix of LF and CRLF written on Windows).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.dcm binary
+*.npz binary
+*.pdf binary
+*.tiff binary
+*.ttf binary

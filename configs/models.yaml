@@ -1,0 +1,28 @@
+# Model registry: every model the pipeline may call. Recorded in every run manifest.
+# All models are open source and run on this machine (no paid API, no budget).
+# kind: local -> runs on this machine (allowed under RADINTAKE_OFFLINE=1)
+#       api   -> network call to an external provider (refused under RADINTAKE_OFFLINE=1);
+#                none is configured, the guard stays so one can never be added silently.
+# backend (VLM / LLM only): ollama -> local Ollama server (OLLAMA_HOST, default http://127.0.0.1:11434)
+#                           transformers -> in-process Hugging Face model (weights must already be cached)
+# Hardware budget: RTX 3050 Laptop, 4 GB VRAM. Tesseract runs on CPU so the GPU is left to the VLM.
+models:
+  ocr:
+    id: tesseract-5
+    kind: local
+    version: "5.x (pytesseract>=0.3.10; CPU, OEM 1 LSTM, PSM 6, OMP_THREAD_LIMIT=1)"
+  vlm_page:               # VLM-first page reading + hybrid crop re-reads; only ever sent PHI-masked images.
+    id: qwen2.5vl:3b      # Qwen2.5-VL-3B-Instruct, Q4_K_M via Ollama (~3.2 GB); Apache-2.0 family
+    kind: local
+    backend: ollama
+  vlm_local:              # crop-transcription fallback when Ollama is not running (<OCR> task only).
+    id: microsoft/Florence-2-base   # ~0.23B params, MIT; used only when transformers is installed AND the
+    kind: local                     # weights are already in the local HF cache (never downloaded at run time)
+    backend: transformers
+  llm_answer:             # optional one-line answer summaries over verified, cited quotes (QA agent).
+    id: qwen2.5:3b
+    kind: local
+    backend: ollama
+  embedder:
+    id: sentence-transformers/all-MiniLM-L6-v2
+    kind: local

@@ -1,0 +1,137 @@
+# DICOM de-identification profile (PS3.15 Annex E, Basic Application Confidentiality Profile,
+# Table E.1-1, no retain-dates / retain-UIDs options). Loaded by radintake.agents.dicom_deid;
+# a `dicom_deid:` section in a --config YAML overrides keys.
+#
+# Actions:  X = remove   Z = replace with zero-length value   D = replace with a dummy of the
+#           same VR      U = remap UID consistently (salted hash, same input -> same output
+#           within one process)      K = keep
+# Fail-safe rules applied AFTER the table (see agents/dicom_deid.py):
+#   * any other PN (person name) element anywhere in the dataset -> Z
+#   * any other UI element whose value is not a DICOM-registered UID (1.2.840.10008.*) -> U
+#   * private tags removed unless their (creator, element offset) is in private_safe_list
+#   * sequences are processed recursively
+
+actions:
+  # --- patient identity
+  PatientName: Z
+  PatientID: Z
+  IssuerOfPatientID: X
+  OtherPatientIDs: X
+  OtherPatientIDsSequence: X
+  OtherPatientNames: X
+  PatientBirthName: X
+  PatientMotherBirthName: X
+  PatientBirthDate: Z
+  PatientBirthTime: X
+  PatientSex: Z
+  PatientAge: X
+  PatientSize: X
+  PatientWeight: X
+  PatientAddress: X
+  PatientTelephoneNumbers: X
+  PatientInsurancePlanCodeSequence: X
+  PatientReligiousPreference: X
+  PatientComments: X
+  PatientState: X
+  EthnicGroup: X
+  Occupation: X
+  MilitaryRank: X
+  BranchOfService: X
+  MedicalRecordLocator: X
+  CountryOfResidence: X
+  RegionOfResidence: X
+  AdditionalPatientHistory: X
+  PregnancyStatus: X
+  ResponsiblePerson: X
+  ResponsibleOrganization: X
+  # --- study / visit identifiers and dates
+  AccessionNumber: Z
+  StudyID: Z
+  StudyDate: Z
+  StudyTime: Z
+  SeriesDate: X
+  SeriesTime: X
+  AcquisitionDate: X
+  AcquisitionTime: X
+  AcquisitionDateTime: X
+  ContentDate: Z
+  ContentTime: Z
+  InstanceCreationDate: X
+  InstanceCreationTime: X
+  StudyDescription: X
+  SeriesDescription: X
+  AdmittingDiagnosesDescription: X
+  AdmissionID: X
+  ImageComments: X
+  RequestAttributesSequence: X
+  RequestedProcedureID: X
+  ScheduledProcedureStepID: X
+  PerformedProcedureStepID: X
+  PerformedProcedureStepDescription: X
+  PerformedProcedureStepStartDate: X
+  PerformedProcedureStepStartTime: X
+  ReferencedPatientSequence: X
+  ReferencedStudySequence: X
+  ReferencedPerformedProcedureStepSequence: X
+  ReasonForStudy: X
+  RequestingService: X
+  # --- people and places
+  ReferringPhysicianName: Z
+  ReferringPhysicianAddress: X
+  ReferringPhysicianTelephoneNumbers: X
+  PerformingPhysicianName: X
+  NameOfPhysiciansReadingStudy: X
+  PhysiciansOfRecord: X
+  RequestingPhysician: X
+  OperatorsName: X
+  InstitutionName: X
+  InstitutionAddress: X
+  InstitutionalDepartmentName: X
+  StationName: X
+  DeviceSerialNumber: X
+  ProtocolName: X
+  # --- UIDs (consistent remap keeps studies/series linked)
+  StudyInstanceUID: U
+  SeriesInstanceUID: U
+  SOPInstanceUID: U
+  FrameOfReferenceUID: U
+  SynchronizationFrameOfReferenceUID: U
+  ReferencedSOPInstanceUID: U
+  ReferencedFrameOfReferenceUID: U
+  StorageMediaFileSetUID: U
+  IrradiationEventUID: U
+  ConcatenationUID: U
+  DimensionOrganizationUID: U
+
+# Fail-safe additions (beyond Table E.1-1 rows above), found by the dev evaluation against the TCIA
+# curated twins: keyword prefixes removed wherever they appear, and named device / procedure items.
+# (Any DA/DT element not named above is also removed, and overlay groups 60xx are dropped - see
+# agents/dicom_deid.py.)
+remove_keyword_prefixes: [ClinicalTrial, ScheduledProcedureStep, Admitting, Curve, Overlay, DateOfLast]
+extra_actions:
+  ContributingEquipmentSequence: X
+  ProcedureCodeSequence: X
+  RequestedProcedureCodeSequence: X
+  PlateID: X
+  DetectorID: X
+  GantryID: X
+  SecondaryCaptureDeviceID: X
+  CassetteID: X
+  StudyReadDate: X
+
+# Private elements kept: list of {creator: <Private Creator string>, element: <hex offset 00-FF>}.
+# Empty by default: no private tag is known safe for this pipeline.
+private_safe_list: []
+
+deidentification_method: "radintake dicom_deid: PS3.15 Basic Application Confidentiality Profile; Clean Pixel Data (OCR-located burned-in text filled inside boxes)"
+
+burned_in:
+  pad_px: 4               # grow each text box by this many pixels (must stay <= 15)
+  threshold: 0.9          # burned-in text candidates: display intensity >= threshold * max
+  min_conf: 0.3           # OCR word confidence (0..1) needed to accept a text region
+  ocr_scale: 2            # upscale factor for OCR on the binarised text mask
+  # Text kept on the image: standard radiographic markers carry no identity (TCIA's curated set keeps
+  # them too). A burned-in text line is redacted unless every confident word on it is in this list.
+  safe_text: [L, R, LT, RT, LEFT, RIGHT, PA, AP, LAT, LATERAL, OBL, OBLIQUE, PORTABLE, UPRIGHT, SEMI-UPRIGHT,
+              SUPINE, ERECT, PRONE, DECUBITUS, STANDING, SITTING, INSP, EXP, INSPIRATION, EXPIRATION,
+              CC, MLO, ML, LM, XCCL, SPOT, MAG, AXIAL, SAG, COR, CORONAL, SAGITTAL]

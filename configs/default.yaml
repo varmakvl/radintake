@@ -1,0 +1,64 @@
+# radintake default configuration.
+# Precedence (lowest -> highest): this file < --config YAML < environment variables.
+# Environment overrides: RADINTAKE_OFFLINE, RADINTAKE_DATA_DIR, RADINTAKE_TRACE_DIR,
+# RADINTAKE_FORBID_MODEL_CALLS.
+
+seed: 140
+
+paths:
+  data_dir: data          # RADINTAKE_DATA_DIR
+  trace_dir: null         # RADINTAKE_TRACE_DIR; null -> <out>/_traces for the batch CLI
+
+runtime:
+  offline: false          # RADINTAKE_OFFLINE=1 -> local models only
+  forbid_model_calls: false  # RADINTAKE_FORBID_MODEL_CALLS=1 -> every model call raises (replay/re-score)
+
+budgets:
+  max_steps: 20           # max stages executed per case
+  stage_timeout_s: 300    # per-stage wall-clock timeout
+  retries: 1              # extra attempts per stage after the first failure
+  backoff_s: 0.5          # base backoff, doubled per retry
+  case_deadline_s: 900    # global wall-clock deadline per case
+
+loader:
+  pdf_dpi: 200            # PDF pages are rasterised at this DPI; page coords = raster pixels
+
+logging:
+  level: INFO
+
+preprocess:               # rule thresholds for the preprocessing agent (numbers recorded in traces)
+  deskew_min_deg: 0.3
+  deskew_max_deg: 15.0
+  noise_sigma_max: 6.0
+  contrast_min: 120.0
+  blur_laplacian_min: 20.0
+
+extraction:
+  pipeline: ocr_first     # ocr_first | vlm_first | hybrid (radintake.agents.extract)
+  ocr_first:              # overrides radintake.agents.extract_ocr.DEFAULTS
+    heading_min_ratio: 85 # fuzzy match (0-100) for OCR-damaged section headings
+    low_conf_threshold: 0.5  # mean word confidence below this -> field low_confidence
+  vlm:                    # vlm_first / hybrid (radintake.agents.extract_vlm, extract_hybrid)
+    model: vlm_page       # registry names in configs/models.yaml (open-source, local via Ollama)
+    local_model: vlm_local
+    align_min_ratio: 80   # fuzz.ratio a VLM value needs to snap to OCR words (else source vlm)
+    vlm_confidence: 0.9
+    unaligned_penalty: 0.5
+    hybrid_conf_threshold: 0.6  # hybrid: OCR section confidence below this -> VLM crop re-read
+    cache_dir: null       # null -> <data_dir>/cache/vlm (responses keyed by input + prompt hash)
+    max_tokens: 2000
+    timeout_s: 180        # local 3B VLM on a 4 GB GPU (partly CPU-offloaded) can take tens of seconds
+    max_image_side: 1100  # pages are downscaled before the VLM: 1700x2200 = ~4k image tokens (64 s, reply
+                          # truncated); 850x1100 = ~1.2k tokens (4.5 s, same text). Boxes are scaled back.
+    num_ctx: 8192         # Ollama context window (default 4096 is too small for a page + prompt + reply)
+
+verify:                   # radintake.agents.verify (thresholds tuned later on dev)
+  ground_min_ratio: 90    # rapidfuzz partial_ratio for a value to count as present in the OCR text
+  box_margin_px: 40       # margin around a cited box when collecting its OCR words
+  low_conf_threshold: 0.5 # field confidence below this -> low_confidence + needs_review
+  id_patterns:            # patient_id / accession_number must match (re.match)
+    patient_id: '^[A-Za-z0-9][A-Za-z0-9._/\-]{1,39}$'
+    accession_number: '^[A-Za-z0-9][A-Za-z0-9._/\-]{1,39}$'
+
+injection:                # radintake.agents.injection (patterns extend the built-in list)
+  extra_patterns: []
