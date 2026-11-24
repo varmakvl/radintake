@@ -7,7 +7,7 @@ tags: [extraction, ocr, vlm, hybrid, provenance, report-schema, agent]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T10:31:35.389Z
+  at: 2026-11-24T11:48:24.228Z
 sources:
   - src/radintake/agents/extract.py
   - src/radintake/agents/extract_ocr.py
@@ -46,6 +46,16 @@ fuzzy-snapped to OCR words (`align_min_ratio` 80) -> source `hybrid`, else sourc
 below `hybrid_conf_threshold` (0.6) or required sections OCR could not find.
 
 VLM calls go through the [Guarded Model Client & VLM Client](/subsystems/model-client-guard.md).
+
+# Lessons from the first dev run (2026-11-24)
+
+- Header values end at an unknown `Label:` token or a column gap (> 2.5x line height): two-column
+  headers ("Patient Name: ...   Referring: Dr. X") had made patient-name EM 0.
+- Sections end at technologist notes / addenda (`stop_patterns`): the note had been swallowed into
+  the impression (impression EM 0).
+- Shaded table header rows do not OCR, so `exam_fallback` takes exam date / modality from header-block
+  dates (not the DOB) and modality codes - layout-agnostic, which matters for the hidden test.
+Net on a 30-doc dev sample: mean EM 0.44 -> 0.64, hallucination 0.29 -> 0.12.
 
 # Open decision
 

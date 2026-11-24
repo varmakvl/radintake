@@ -4,6 +4,9 @@ Newest changes recorded chronologically.
 
 
 ## 2026-11-24
+- Extraction fixes driven by the first dev run: header column-gap / label stops, section stop markers for technologist notes, exam-date fallback, credential-name PHI rule + referring anchor, and preprocessing reordered to dewarp -> flat-field illumination -> orientation -> deskew. 30-doc dev sample: mean EM 0.44 -> 0.64, phone photos 0.07 -> 0.43, PHI recall 0.60 -> 0.83. CI baseline ratcheted.
+- Synchronized timestamp for 6 drifted concept(s): data/coordinate-contract.md, operations/configuration.md, playbooks/delivery-plan-and-status.md, subsystems/extraction-agent.md, subsystems/phi-agent.md, subsystems/preprocessing-agent.md.
+- Synchronized workspace frontier mapping in `index.md` (+2 new, -0 removed, 43 already listed; 45 undocumented files mapped).
 - Synchronized workspace frontier mapping in `index.md` (+0 new, -1 removed, 43 already listed; 43 undocumented files mapped).
 - Synchronized workspace frontier mapping in `index.md` (+2 new, -0 removed, 42 already listed; 44 undocumented files mapped).
 - Evaluation harness: `radintake.eval` (metrics, run, rescore, gate, versions, golden_qa); PHI-free score records; `eval/VERSIONS.lock`, `eval/baseline.json`, `eval/golden_qa.jsonl` (32 questions). Hallucination threshold set to partial_ratio 80 after a unit test showed 90 counted one-character OCR misreads as hallucinations.

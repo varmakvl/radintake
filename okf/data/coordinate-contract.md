@@ -7,7 +7,7 @@ tags: [coordinates, bbox, transform, homography, provenance]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-23T17:39:22Z
+  at: 2026-11-24T11:48:24.228Z
 sources:
   - src/radintake/core/types.py
   - src/radintake/tools/loader.py

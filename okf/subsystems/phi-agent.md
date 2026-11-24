@@ -7,7 +7,7 @@ tags: [phi, privacy, masking, de-identification, agent, trust-boundary]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-23T17:39:22Z
+  at: 2026-11-24T11:48:24.228Z
 sources:
   - src/radintake/agents/phi.py
   - src/radintake/agents/phi_vault.py
@@ -27,7 +27,9 @@ the [Guarded Model Client](/subsystems/model-client-guard.md) refuses every othe
    `Date of Birth`, `Accession`); the value is the tokens to its right up to the next label. Gives
    typed header fields. The same anchors drive header extraction in the [Extraction Agent](/subsystems/extraction-agent.md).
 2. **Regex** — MRN / accession / date formats anywhere on the page.
-3. **NER fallback** — person names in free text.
+3. **Names** — honorific ("Dr. X") and credential sign-off rules ("First Last, MD", "G. Rodriguez, RT")
+   always run; Presidio NER is added when installed. A `REFERRING_PHYSICIAN` anchor covers "Referring:".
+   (Technologist names had recall 0 before the credential rule learned `RT` and initials.)
 Uncertain spans raise `phi_uncertain` (case -> review).
 
 # Masking and the vault
