@@ -34,6 +34,7 @@ reports and DICOM. Start with the [System Overview](/overview.md); the delivery 
 - [Configuration](/operations/configuration.md) — YAML + env precedence, budgets, thresholds, model registry, offline mode.
 - [Deployment](/operations/deployment.md) — Dockerfile, Compose stack, deploy runbook, pinned lockfile.
 - [CI & Test Strategy](/operations/ci-and-test-strategy.md) — Unit tests, end-to-end integration contract, GitHub Actions, sprint playbooks.
+- [Step Inspector](/operations/step-inspector.md) — Dump every step's input/output (OCR, masking, VLM, extraction, DICOM) for a file; index.html viewer.
 - [Evaluation Harness](/operations/evaluation-harness.md) — PHI-free score records, re-scorable runs, version lock, synthetic CI gate, MeSH golden QA.
 
 ## Playbooks

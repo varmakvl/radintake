@@ -38,8 +38,10 @@ well the higher priorities are done.
 | rad-beb.11 | Final run, report, README | not started (README partly updated) | — |
 | rad-beb.12 | LoRA bonus | not planned in detail | — |
 
-Verified on 2026-11-23: 160 unit tests pass, 2 skipped (Tesseract not on PATH). The integration
-suite was not run in this review.
+Dev numbers (OCR-first, 218 docs, 2026-11-24 after fixes): report-field mean EM 0.66 (clean 0.90, poor
+0.57, photo 0.50), CER 0.17, hallucination 0.09, omission 0.08; document PHI recall 0.81 / precision
+0.80; DICOM valid 1.0, header PHI recall 0.87, burned-in recall 0.13; p50 2.4 s/page. CI: 20/21
+integration tests pass on Linux; the remaining one needs retrieval.
 
 # The key gap
 

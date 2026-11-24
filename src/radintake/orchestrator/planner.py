@@ -76,6 +76,20 @@ def run_with_timeout(fn, ctx: StageContext, timeout_s: float) -> Any:
     return box.get("result")
 
 
+def _inspect(name: str, ctx: StageContext, updates: dict[str, Any] | None, t0: float) -> None:
+    """Hand a finished stage to the step inspector when RADINTAKE_INSPECT_DIR is set (debug only)."""
+    import os
+
+    if not os.environ.get("RADINTAKE_INSPECT_DIR"):
+        return
+    try:
+        from radintake.inspect import dump_stage
+
+        dump_stage(name, ctx, updates, round((time.perf_counter() - t0) * 1000.0, 3))
+    except Exception as exc:  # noqa: BLE001 - inspection must never change the case outcome
+        log.warning("inspect_failed", stage=name, error_type=type(exc).__name__)
+
+
 def _merge(ctx: StageContext, updates: dict[str, Any] | None) -> None:
     if not updates:
         return
@@ -124,6 +138,7 @@ class Planner:
                     updates = run_with_timeout(stage.fn, ctx, budget)
                     _merge(ctx, updates)
                     status, err = "ok", None
+                    _inspect(stage.name, ctx, updates, t0)
                 except StageTimeout as exc:
                     status, err = "timeout", _short(exc)
                 except Exception as exc:  # noqa: BLE001 - recorded, never propagated

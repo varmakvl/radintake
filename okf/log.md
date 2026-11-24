@@ -4,6 +4,8 @@ Newest changes recorded chronologically.
 
 
 ## 2026-11-24
+- Synchronized timestamp for 1 drifted concept(s): subsystems/orchestrator.md.
+- Added the step inspector (`python -m radintake.inspect`, planner hook `_inspect`). Full dev re-run after the extraction fixes: mean EM 0.47 -> 0.66 (photos 0.18 -> 0.50), PHI recall 0.63 -> 0.81, precision 0.61 -> 0.80, injected pages flagged 5 -> 8 of 11.
 - Extraction fixes driven by the first dev run: header column-gap / label stops, section stop markers for technologist notes, exam-date fallback, credential-name PHI rule + referring anchor, and preprocessing reordered to dewarp -> flat-field illumination -> orientation -> deskew. 30-doc dev sample: mean EM 0.44 -> 0.64, phone photos 0.07 -> 0.43, PHI recall 0.60 -> 0.83. CI baseline ratcheted.
 - Synchronized timestamp for 6 drifted concept(s): data/coordinate-contract.md, operations/configuration.md, playbooks/delivery-plan-and-status.md, subsystems/extraction-agent.md, subsystems/phi-agent.md, subsystems/preprocessing-agent.md.
 - Synchronized workspace frontier mapping in `index.md` (+2 new, -0 removed, 43 already listed; 45 undocumented files mapped).
