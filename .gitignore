@@ -15,6 +15,7 @@
 out/
 runs/
 *.log
+*.err
 !traces/final/**
 
 # Python

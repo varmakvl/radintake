@@ -32,7 +32,7 @@ well the higher priorities are done.
 | rad-beb.5 | PHI (documents + DICOM) | built | [Document PHI Agent](/subsystems/phi-agent.md), [DICOM De-id](/subsystems/dicom-deid-agent.md) |
 | rad-beb.6 | Extraction (OCR / VLM / hybrid) | all three built; evidence-based comparison pending | [Extraction Agent](/subsystems/extraction-agent.md) |
 | rad-beb.7 | Verifier + review queue | built | [Verifier](/subsystems/verifier-agent.md) |
-| rad-beb.8 | Tracing, eval harness, CI gate | trace writer built; eval harness not started | [Evaluation Harness](/operations/evaluation-harness.md) |
+| rad-beb.8 | Tracing, eval harness, CI gate | built 2026-11-24 (metrics, runs, rescore, version lock, CI gate, golden QA); error analysis + intentional red commit pending | [Evaluation Harness](/operations/evaluation-harness.md) |
 | rad-beb.9 | Retrieval / QA | not started | [Retrieval / QA Agent](/subsystems/retrieval-qa-agent.md) |
 | rad-beb.10 | Deployment | API, Compose, lockfile built; not smoke-tested here | [Deployment](/operations/deployment.md) |
 | rad-beb.11 | Final run, report, README | not started (README partly updated) | — |

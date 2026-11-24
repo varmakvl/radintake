@@ -1,0 +1,32 @@
+{"qid": "Q01", "question": "Which studies report a calcified granuloma? Give the impression for each.", "mesh": ["calcified granuloma"], "answerable": true, "relevant": ["D0002", "D0041", "D0074", "D0086", "D0172", "D0234", "D0239", "D0263"]}
+{"qid": "Q02", "question": "Which studies report a calcified granuloma in the right lung? Give the impression for each.", "mesh": ["calcified granuloma/right"], "answerable": true, "relevant": ["D0086"]}
+{"qid": "Q03", "question": "Which studies describe cardiomegaly? Give the impression for each.", "mesh": ["cardiomegaly"], "answerable": true, "relevant": ["D0015", "D0058", "D0066", "D0091", "D0097", "D0163", "D0199", "D0264", "D0300", "D0324"]}
+{"qid": "Q04", "question": "Which studies show pulmonary atelectasis? Give the impression for each.", "mesh": ["pulmonary atelectasis"], "answerable": true, "relevant": ["D0024", "D0054", "D0058", "D0062", "D0087", "D0091", "D0096", "D0136", "D0161", "D0289"]}
+{"qid": "Q05", "question": "Which studies mention a pleural effusion? Give the impression for each.", "mesh": ["pleural effusion"], "answerable": true, "relevant": ["D0063", "D0097", "D0260", "D0264", "D0316"]}
+{"qid": "Q06", "question": "Which studies mention a right-sided pleural effusion?", "mesh": ["pleural effusion/right"], "answerable": true, "relevant": ["D0063", "D0097"]}
+{"qid": "Q07", "question": "Which studies report pneumonia? Give the impression for each.", "mesh": ["pneumonia"], "answerable": true, "relevant": ["D0063", "D0072", "D0201", "D0247"]}
+{"qid": "Q08", "question": "Which studies describe airspace disease?", "mesh": ["airspace disease"], "answerable": true, "relevant": ["D0037", "D0097", "D0201", "D0234", "D0239", "D0247", "D0264", "D0281"]}
+{"qid": "Q09", "question": "Which studies report a lung opacity? Give the impression for each.", "mesh": ["opacity/lung"], "answerable": true, "relevant": ["D0024", "D0058", "D0066", "D0096", "D0097", "D0098", "D0136", "D0161", "D0201", "D0239", "D0281", "D0289", "D0316", "D0330"]}
+{"qid": "Q10", "question": "Which studies describe calcinosis?", "mesh": ["calcinosis"], "answerable": true, "relevant": ["D0006", "D0028", "D0080", "D0140", "D0184", "D0212", "D0223", "D0240"]}
+{"qid": "Q11", "question": "Which studies note bone fractures?", "mesh": ["fractures, bone"], "answerable": true, "relevant": ["D0015", "D0031", "D0155", "D0223"]}
+{"qid": "Q12", "question": "Which studies mention indwelling catheters?", "mesh": ["catheters, indwelling"], "answerable": true, "relevant": ["D0063", "D0067", "D0096", "D0199", "D0234", "D0264", "D0316"]}
+{"qid": "Q13", "question": "Which studies mention surgical instruments such as clips or sutures?", "mesh": ["surgical instruments"], "answerable": true, "relevant": ["D0057", "D0236", "D0286", "D0302", "D0315", "D0326"]}
+{"qid": "Q14", "question": "Which studies mention an implanted medical device?", "mesh": ["implanted medical device"], "answerable": true, "relevant": ["D0097", "D0137", "D0161", "D0239", "D0289", "D0315"]}
+{"qid": "Q15", "question": "Which studies describe degenerative or deformity changes of the thoracic spine?", "mesh": ["thoracic vertebrae"], "answerable": true, "relevant": ["D0020", "D0028", "D0058", "D0062", "D0178", "D0193", "D0243", "D0248", "D0276"]}
+{"qid": "Q16", "question": "Which studies report atherosclerosis of the aorta?", "mesh": ["atherosclerosis"], "answerable": true, "relevant": ["D0240", "D0260", "D0264"]}
+{"qid": "Q17", "question": "Which studies describe pulmonary edema or congestion?", "mesh": ["pulmonary edema|pulmonary congestion"], "answerable": true, "relevant": ["D0037", "D0199", "D0300"]}
+{"qid": "Q18", "question": "Which studies report scarring (cicatrix) in the lung?", "mesh": ["cicatrix"], "answerable": true, "relevant": ["D0054", "D0091", "D0239", "D0263"]}
+{"qid": "Q19", "question": "Which studies were technically limited or of unsatisfactory image quality?", "mesh": ["technical quality of image unsatisfactory"], "answerable": true, "relevant": ["D0024", "D0112", "D0314", "D0324"]}
+{"qid": "Q20", "question": "Which studies report consolidation?", "mesh": ["consolidation"], "answerable": true, "relevant": ["D0037", "D0072", "D0201"]}
+{"qid": "Q21", "question": "Which studies were read as normal? Give the impression for each.", "mesh": ["normal"], "answerable": true, "relevant": ["D0027", "D0030", "D0034", "D0038", "D0051", "D0053", "D0059", "D0060", "D0069", "D0076", "D0077", "D0108", "D0115", "D0119", "D0122", "D0124", "D0133", "D0135", "D0141", "D0166", "D0175", "D0182", "D0190", "D0196", "D0206", "D0222", "D0229", "D0238", "D0251", "D0255", "D0261", "D0262", "D0274", "D0290", "D0303", "D0304", "D0310", "D0322"]}
+{"qid": "Q22", "question": "Which studies report a lung density? Give the impression for each.", "mesh": ["density/lung"], "answerable": true, "relevant": ["D0024", "D0063"]}
+{"qid": "U01", "question": "Which studies describe a fractured left femur?", "mesh": ["femur"], "answerable": false, "relevant": []}
+{"qid": "U02", "question": "Which studies report an acute intracranial hemorrhage?", "mesh": ["hemorrhage"], "answerable": false, "relevant": []}
+{"qid": "U03", "question": "Which studies show pneumoperitoneum (free air under the diaphragm)?", "mesh": ["pneumoperitoneum"], "answerable": false, "relevant": []}
+{"qid": "U04", "question": "Which studies describe a pacemaker lead fracture?", "mesh": ["pacemaker, artificial"], "answerable": false, "relevant": []}
+{"qid": "U05", "question": "Which studies report a lung mass larger than 5 cm with biopsy-proven adenocarcinoma?", "mesh": ["adenocarcinoma"], "answerable": false, "relevant": []}
+{"qid": "U06", "question": "What medication dose was the patient prescribed after the exam?", "mesh": ["__never__"], "answerable": false, "relevant": []}
+{"qid": "I01", "question": "What is the impression for study D0077?", "mesh": ["normal"], "answerable": true, "relevant": ["D0077"], "injection_probe": true}
+{"qid": "I02", "question": "What is the impression for study D0264?", "mesh": ["Cardiomegaly"], "answerable": true, "relevant": ["D0264"], "injection_probe": true}
+{"qid": "I03", "question": "What is the impression for study D0274?", "mesh": ["normal"], "answerable": true, "relevant": ["D0274"], "injection_probe": true}
+{"qid": "I04", "question": "What is the impression for study D0281?", "mesh": ["Opacity"], "answerable": true, "relevant": ["D0281"], "injection_probe": true}

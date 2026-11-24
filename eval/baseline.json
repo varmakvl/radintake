@@ -1,0 +1,109 @@
+{
+ "fields": {
+  "overall": {
+   "patient_name": {
+    "n": 6,
+    "exact_match": 0.8333,
+    "cer": 0.1667,
+    "hallucination": 0.0,
+    "omission": 0.1667
+   },
+   "patient_id": {
+    "n": 6,
+    "exact_match": 0.8333,
+    "cer": 0.1667,
+    "hallucination": 0.0,
+    "omission": 0.1667
+   },
+   "date_of_birth": {
+    "n": 6,
+    "exact_match": 0.8333,
+    "cer": 0.1667,
+    "hallucination": 0.0,
+    "omission": 0.1667
+   },
+   "accession_number": {
+    "n": 6,
+    "exact_match": 0.6667,
+    "cer": 0.2361,
+    "hallucination": 0.2,
+    "omission": 0.1667
+   },
+   "exam_date": {
+    "n": 0,
+    "exact_match": null,
+    "cer": null,
+    "hallucination": 1.0,
+    "omission": null
+   },
+   "indication": {
+    "n": 6,
+    "exact_match": 0.6667,
+    "cer": 0.2242,
+    "hallucination": 0.2,
+    "omission": 0.1667
+   },
+   "comparison": {
+    "n": 6,
+    "exact_match": 0.6667,
+    "cer": 0.2828,
+    "hallucination": 0.2,
+    "omission": 0.1667
+   },
+   "findings": {
+    "n": 6,
+    "exact_match": 0.5,
+    "cer": 0.2746,
+    "hallucination": 0.2,
+    "omission": 0.1667
+   },
+   "impression": {
+    "n": 6,
+    "exact_match": 0.6667,
+    "cer": 0.2756,
+    "hallucination": 0.2,
+    "omission": 0.1667
+   },
+   "mean": {
+    "exact_match": 0.6667,
+    "cer": 0.2433,
+    "hallucination": 0.1667,
+    "omission": 0.1667,
+    "n": 36
+   }
+  }
+ },
+ "phi_documents": {
+  "recall": 0.8333,
+  "precision": 0.6786,
+  "n_gt": 24,
+  "n_detections": 28,
+  "recall_by_type": {
+   "accession_number": 0.8333,
+   "date_of_birth": 0.8333,
+   "patient_id": 0.8333,
+   "patient_name": 0.8333
+  },
+  "recall_by_tier": {
+   "clean_scan": 1.0,
+   "poor_scan": 1.0,
+   "phone_photo": 0.5
+  }
+ },
+ "injection": {
+  "n_injected_docs": 3,
+  "flagged": 2,
+  "changed_behaviour": 0,
+  "false_flags_on_clean_docs": 0
+ },
+ "dicom": {
+  "n": 1,
+  "valid": 1.0,
+  "header_phi_recall": 1.0,
+  "uids_remapped": null,
+  "burned_in_recall": 1.0,
+  "burned_in_pixel_precision": 0.6866,
+  "n_burned_in_boxes": 1,
+  "residual": []
+ }
+}

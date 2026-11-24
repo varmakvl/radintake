@@ -34,7 +34,7 @@ reports and DICOM. Start with the [System Overview](/overview.md); the delivery 
 - [Configuration](/operations/configuration.md) — YAML + env precedence, budgets, thresholds, model registry, offline mode.
 - [Deployment](/operations/deployment.md) — Dockerfile, Compose stack, deploy runbook, pinned lockfile.
 - [CI & Test Strategy](/operations/ci-and-test-strategy.md) — Unit tests, end-to-end integration contract, GitHub Actions, sprint playbooks.
-- [Evaluation Harness](/operations/evaluation-harness.md) — Metrics, golden QA, offline re-scoring and the CI regression gate (not built yet).
+- [Evaluation Harness](/operations/evaluation-harness.md) — PHI-free score records, re-scorable runs, version lock, synthetic CI gate, MeSH golden QA.
 
 ## Playbooks
 - [Delivery Plan & Status](/playbooks/delivery-plan-and-status.md) — Priority order, bead map, what is done, what remains, open risks.
@@ -78,3 +78,4 @@ reports and DICOM. Start with the [System Overview](/overview.md); the delivery 
 - `src/radintake/tools/__init__.py` — Undocumented codebase file.
 - `src/radintake/tracing/__init__.py` — Undocumented codebase file.
 - `tests/__init__.py` — Undocumented codebase file.
+- `.beads/backup/42agn4dmpivajo8vaojao343volvvlt3.darc` — Undocumented codebase file.

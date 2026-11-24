@@ -4,6 +4,9 @@ Newest changes recorded chronologically.
 
 
 ## 2026-11-24
+- Synchronized workspace frontier mapping in `index.md` (+0 new, -1 removed, 43 already listed; 43 undocumented files mapped).
+- Synchronized workspace frontier mapping in `index.md` (+2 new, -0 removed, 42 already listed; 44 undocumented files mapped).
+- Evaluation harness: `radintake.eval` (metrics, run, rescore, gate, versions, golden_qa); PHI-free score records; `eval/VERSIONS.lock`, `eval/baseline.json`, `eval/golden_qa.jsonl` (32 questions). Hallucination threshold set to partial_ratio 80 after a unit test showed 90 counted one-character OCR misreads as hallucinations.
 - Synchronized timestamp for 1 drifted concept(s): operations/ci-and-test-strategy.md.
 - Priority 1 data work: IU download fixed (gzip check) and audited; 330 docs rendered with Playwright (seed-140 Faker identities, 42% handwritten pages, 15 injected docs, 82 multi-page); 3 tiers x 4 formats with homography-exact GT; MinHash dedup + StratifiedGroupKFold split (golden 112 docs / 145 pages, hash-locked); DICOM GT from 1,629 TCIA evaluation/curated pairs, 48 selected incl. all 6 burned-in. Data Preparation and Dataset Split concepts promoted to stable; subject_key decision (patient = uploader) recorded in api-service.
 - Synchronized timestamp for 3 drifted concept(s): operations/configuration.md, subsystems/extraction-agent.md, subsystems/model-client-guard.md.

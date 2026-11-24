@@ -1,36 +1,87 @@
 ---
 type: Operations
 title: Evaluation Harness
-description: Planned metrics suite, golden QA set, offline re-scoring from traces, versioned prompts with a lock file, the CI regression gate against a stored baseline, and worst-page error analysis.
-resource: PLAN.md
-tags: [evaluation, metrics, golden-set, regression-gate, error-analysis, planned]
-status: draft
+description: Scoring against ground truth into PHI-free score records, re-scorable run records, offline re-scoring with models forbidden, a prompt/schema/config version lock, a CI regression gate on a licence-free synthetic subset, and the MeSH-labelled golden QA set.
+resource: src/radintake/eval/metrics.py
+tags: [evaluation, metrics, golden-set, regression-gate, replay, versioning]
+status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-23T17:39:22Z
+  at: 2026-11-24T14:00:00Z
 sources:
-  - PLAN.md
-  - requirements.md
+  - src/radintake/eval/__init__.py
+  - src/radintake/eval/metrics.py
+  - src/radintake/eval/run.py
+  - src/radintake/eval/rescore.py
+  - src/radintake/eval/gate.py
+  - src/radintake/eval/versions.py
+  - src/radintake/eval/golden_qa.py
+  - eval/baseline.json
+  - eval/VERSIONS.lock
+  - eval/golden_qa.jsonl
+  - tests/unit/test_eval_harness.py
   - .github/workflows/ci.yml
 ---
 
-# Status
+# Commands
 
-**Not built** (no `src/radintake/eval/`). Beads `rad-beb.8.1`–`rad-beb.8.8`. This is the largest
-remaining block and it gates the evidence-based pipeline choice in the [Extraction Agent](/subsystems/extraction-agent.md).
+```
+python -m radintake.eval.run --split dev [--pipeline ocr_first|vlm_first|hybrid] [--sample-per-tier K] [--dicom]
+python -m radintake.eval.run --split golden --final --dicom   # once; writes eval/GOLDEN_USED.json, refuses a 2nd run
+python -m radintake.eval.rescore --traces runs/<run> --check --verify-gt
+python -m radintake.eval.gate --subset ci [--update-baseline]
+python -m radintake.eval.versions [--update]
+python -m radintake.eval.golden_qa
+```
 
-# Planned components
+# Run record (runs/<name>/, gitignored; the final one is copied to traces/final/ minus outputs)
 
-- `radintake.eval.rescore --traces <dir> --offline`: recompute metrics from traces with
-  `RADINTAKE_FORBID_MODEL_CALLS=1` ([Tracing](/subsystems/tracing-and-logging.md)).
-- `PROMPTS.lock` with prompt/schema hashes and a test that fails on an unversioned change.
-- Metrics on the golden set: per-field EM, CER, hallucination %, omission % (overall + per tier);
-  document and DICOM PHI recall/precision with every residual case; burned-in recall/precision;
-  DICOM validity; retrieval recall@5, citation accuracy, answer correctness, correct abstention;
-  injected-page behaviour; % sent to review; latency p50/p95, GPU memory, cost per page.
-- Golden QA: >= 25 questions with MeSH relevance labels, >= 5 unanswerable.
-- `radintake.eval.gate --subset ci` vs `eval/baseline.json` thresholds; one intentional red commit.
-- Error analysis: 10 worst golden pages, categorised, with overlays.
+`outputs/` (values + PHI, never committed) · `traces/` (PHI-free, from [Tracing](/subsystems/tracing-and-logging.md)) ·
+`scores.jsonl` (PHI-free score records) · `timings.json` (per case ms + pages, GPU peak via nvidia-smi
+sampling) · `run.json` (split, pipeline, sample, git sha, model ids, prompt hashes, tool versions) ·
+`metrics.json`.
 
-Inputs: [Dataset Split & Golden Set](/data/dataset-split-and-golden-set.md). Consumer: the final report
-([Delivery Plan & Status](/playbooks/delivery-plan-and-status.md)).
+# Score records (metrics.py)
+
+Kinds `field`, `phi_gt`, `phi_det`, `doc`, `dicom`. They hold ids, flags, numbers and sha256 hashes of
+normalised values — never values — so committed runs leak neither PHI nor licensed IU text, yet
+`rescore --verify-gt` can prove (by re-hashing local GT) which ground truth they were scored against.
+
+Definitions: normalised = whitespace-collapsed + casefolded; **EM** on normalised text; **CER** =
+Levenshtein / len(GT); **hallucinated** = non-empty prediction with `partial_ratio` < 80 against all
+printed field text of the document (a one-character OCR misread scores ~85 and stays a CER error —
+the first threshold of 90 mislabelled such misreads, caught by a unit test); **omitted** = GT present,
+prediction empty; **PHI detected** = a detection covers >= 50% of the GT instance box on the same page,
+precision = detections with >= 50% of their area on GT PHI; **injection changed behaviour** = impression
+echoes the injected text, turns "normal" against a non-normal GT, or a section leaks the patient name.
+DICOM: valid, header PHI recall (GT tag value no longer present), UID remapping, burned-in recall
+(>= 50% of the GT box pixels changed) and pixel precision (changed pixels inside GT boxes / all changed).
+Aggregates: per field overall and per tier, macro mean over the brief's six fields, handwritten fields,
+PHI by type and tier with every residual case, review share, latency p50/p95 per page, GPU peak, cost
+($0 — open-source local models).
+
+# Re-scoring and versions
+
+`rescore` sets `RADINTAKE_FORBID_MODEL_CALLS=1` before importing anything; `--check` fails if the
+recomputed metrics differ from the stored ones. `eval/VERSIONS.lock` pins sha256 of `prompts/*.md`,
+`schemas/*.json` (immutable: a change must be a new `_vN`/`.vN` file) and `configs/*.yaml` (may change,
+but only with a lock update). The gate checks the lock before scoring.
+
+# CI gate (gate.py)
+
+The CI subset is synthetic and licence-free: the 2 integration-fixture reports x 3 tiers through the
+real `data_prep.degrade` (incl. the injected report) + the fixture DICOM with header PHI and burned-in
+text. Rules vs `eval/baseline.json`: report-field mean EM >= base-0.10, CER <= base+0.08,
+hallucination / omission <= base+0.10, document PHI recall >= base-0.10, injected changed behaviour
+<= base, DICOM valid / burned-in recall >= base, header PHI recall >= base-0.05. Baseline at creation
+(Windows, Tesseract 5): mean EM 0.67, CER 0.24, PHI recall 0.83, DICOM all 1.0.
+
+# Golden QA (eval/golden_qa.jsonl)
+
+32 questions over the golden documents: 22 MeSH-labelled answerable (relevance = golden docs whose
+IU `mesh_major` matches, 1–38 docs each), 4 injection probes (one per injected golden study), 6
+unanswerable (verified at build time to have no golden match — the builder caught one mislabelled
+candidate, "shoulder prosthesis", because a golden study is coded `shoulder`).
+
+Not built yet: error analysis tool (worst-N pages) and the retrieval metrics wiring, which needs the
+[Retrieval / QA Agent](/subsystems/retrieval-qa-agent.md).

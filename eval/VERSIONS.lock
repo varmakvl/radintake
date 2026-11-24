@@ -1,0 +1,17 @@
+{
+ "configs": {
+  "default.yaml": "3e6e284f40c152812aa622a115a3ef2103b0fbe7a611ea3963bc1245a8e44173",
+  "degrade_tiers.yaml": "c77d1c5791fecad0e32f51ddb3be331d56a2b5858da666d124d646eb926dfac1",
+  "dicom_profile.yaml": "458058024cb10b1e45bdc3ff0086e5732af5a487d84893675228986b95e132cf",
+  "models.yaml": "7f4104fd3f37e6d8ef354bead1b0617e8b2619bcaf5442eb21015206944ee9ac",
+  "phi.yaml": "95f19287a99331460353a8d1380c3a11544675a7f1ea1a50daddbdd5fd607b0f"
+ },
+ "prompts": {
+  "extraction_v1.md": "acec0a1f2e255798c19f334b846142108a64f27863fb2c2661cd5b4c71fab1cc"
+ },
+ "schemas": {
+  "cli_output.v1.json": "03d1ef3b296d7889e5ebc3bceb88f251f52e5915f158472cc71d53b12996472b",
+  "report.v1.json": "ea3db349853f4d9da2a01fe17152138acfcf75043ba829c14503317fd0aaeff1",
+  "trace.v1.json": "c80415ed08332ee00d1294fc81a05d542335436e436695baaf52586bc151a1b9"
+ }
+}
