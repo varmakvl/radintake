@@ -15,6 +15,9 @@ anchors:
     pattern: '\b(?:date\s*of\s*birth|birth\s*date|d\.?o\.?b\.?)\s*[:#.]?'
   - type: ACCESSION_NUMBER
     pattern: '\b(?:accession|acc\.?)\s*(?:no\.?|number|num\.?|#)?\s*[:#.]?(?=\s|$)'
+  # clinician labels: their values are PHI too, and the label ends a patient value on the same line
+  - type: REFERRING_PHYSICIAN
+    pattern: '\b(?:referring|ordering)(?:\s+(?:physician|provider|doctor|md))?\s*:'
 
 # Layer 2 - regex over every token/sentence (IDs, accession formats, dates).
 regex:

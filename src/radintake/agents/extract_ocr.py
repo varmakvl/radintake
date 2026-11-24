@@ -80,7 +80,15 @@ DEFAULT_UNTRUSTED_PATTERNS: list[str] = [
 DEFAULT_STOP_PATTERNS: list[str] = [
     r"^(?:electronically\s+)?signed\b", r"^dictated\b", r"^transcribed\b", r"^reported\s+by\b",
     r"^(?:attending\s+)?radiologist\s*:", r"^end\s+of\s+report\b",
+    # technologist / tech notes and addenda are not part of the clinical section above them
+    r"^tech(?:nologist|nician)?\.?\s*(?:note|notes|comments?|remarks?)\b", r"^addendum\b",
 ]
+# Exam-details fallback when the table header row is unreadable (e.g. shaded header cells):
+# the header block's dates that are not the date of birth, and known modality codes.
+_DATE_TOKEN = re.compile(r"^(?:\d{1,2}[/.-]\d{1,2}[/.-](?:19|20)?\d{2}|(?:19|20)\d{2}[/.-]\d{1,2}[/.-]\d{1,2})$")
+_MODALITIES = {"CR", "DX", "CT", "MR", "MRI", "US", "NM", "PT", "MG", "XR", "RF", "OT"}
+# a token that is itself a "Label:" (e.g. "Referring:") ends the value of the label before it
+_LABEL_TOKEN = re.compile(r"^[A-Za-z][A-Za-z.]{1,24}:$")
 _PAGE_FURNITURE = re.compile(r"^\s*page\s+\d+(?:\s*(?:of|/)\s*\d+)?\s*[-–—:|.]?\s*", re.IGNORECASE)
 _LABEL = re.compile(r"^\s*([A-Za-z][A-Za-z/&'() ]{1,40}?)\s*:")
 _BORDER = re.compile(r"^[|¦_~=]+$")
@@ -261,16 +269,37 @@ class OcrFirstExtractor:
         for i, (_, end, f) in enumerate(kept):
             stop = kept[i + 1][0] if i + 1 < len(kept) else len(text)
             vals: list[Token] = []
+            h = line.height
             for (a, b), t in zip(offs, line.tokens, strict=True):
                 if b <= end or a >= stop:
                     continue
                 txt = t.text[max(0, end - a):] if a < end else t.text
                 txt = txt.lstrip(" \t:#.")
-                if txt:
-                    vals.append(Token(txt, t.bbox, t.conf, t.page, t.eol))
+                if not txt:
+                    continue
+                # the value ends at an unknown "Label:" token or a column gap (two-column headers,
+                # e.g. "Patient Name: Doe, Jane      Referring: Dr. X")
+                if vals and (_LABEL_TOKEN.match(txt) or t.bbox.x0 - vals[-1].bbox.x1 > 2.5 * h):
+                    break
+                vals.append(Token(txt, t.bbox, t.conf, t.page, t.eol))
             if vals:
                 out.append((f, vals))
         return out
+
+    def exam_fallback(self, lines: list[Line], consumed: set[int], hits: dict[str, FieldHit]) -> None:
+        """Exam date / modality from the header block when no readable table header gave them."""
+        first_head = next((i for i, ln in enumerate(lines) if self.heading_of(ln)), len(lines))
+        dob = {t.text for t in (hits.get("date_of_birth").tokens if hits.get("date_of_birth") else [])}
+        page1 = lines[0].page if lines else 1
+        for i, ln in enumerate(lines[:first_head]):
+            if i in consumed or ln.page != page1:
+                continue
+            for t in ln.tokens:
+                txt = t.text.strip(".,;:()")
+                if "exam_date" not in hits and _DATE_TOKEN.match(txt) and txt not in dob:
+                    hits["exam_date"] = FieldHit([Token(txt, t.bbox, t.conf, t.page, t.eol)], 0.75)
+                if "modality" not in hits and txt.upper() in _MODALITIES and txt.isupper():
+                    hits["modality"] = FieldHit([Token(txt, t.bbox, t.conf, t.page, t.eol)], 0.75)
 
     def is_stop(self, text: str) -> bool:
         return any(rx.search(text) for rx in self.stops)
@@ -353,6 +382,8 @@ class OcrFirstExtractor:
                 consumed.add(i)
                 for f, toks in hh:
                     hits.setdefault(f, FieldHit(toks, self.p["header_mapping_conf"]))
+
+        self.exam_fallback(lines, consumed, hits)
 
         # letterhead lines above the first heading on page 1 are page furniture when repeated
         first_head = next((i for i, ln in enumerate(lines) if self.heading_of(ln)), len(lines))

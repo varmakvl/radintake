@@ -3,30 +3,30 @@
   "overall": {
    "patient_name": {
     "n": 6,
-    "exact_match": 0.8333,
-    "cer": 0.1667,
+    "exact_match": 1.0,
+    "cer": 0.0,
     "hallucination": 0.0,
-    "omission": 0.1667
+    "omission": 0.0
    },
    "patient_id": {
     "n": 6,
-    "exact_match": 0.8333,
-    "cer": 0.1667,
+    "exact_match": 1.0,
+    "cer": 0.0,
     "hallucination": 0.0,
-    "omission": 0.1667
+    "omission": 0.0
    },
    "date_of_birth": {
     "n": 6,
-    "exact_match": 0.8333,
-    "cer": 0.1667,
+    "exact_match": 1.0,
+    "cer": 0.0,
     "hallucination": 0.0,
-    "omission": 0.1667
+    "omission": 0.0
    },
    "accession_number": {
     "n": 6,
-    "exact_match": 0.6667,
-    "cer": 0.2361,
-    "hallucination": 0.2,
+    "exact_match": 0.8333,
+    "cer": 0.1667,
+    "hallucination": 0.0,
     "omission": 0.1667
    },
    "exam_date": {
@@ -38,61 +38,61 @@
    },
    "indication": {
     "n": 6,
-    "exact_match": 0.6667,
-    "cer": 0.2242,
-    "hallucination": 0.2,
-    "omission": 0.1667
+    "exact_match": 0.8333,
+    "cer": 0.1333,
+    "hallucination": 0.0,
+    "omission": 0.0
    },
    "comparison": {
     "n": 6,
-    "exact_match": 0.6667,
-    "cer": 0.2828,
-    "hallucination": 0.2,
+    "exact_match": 0.8333,
+    "cer": 0.1667,
+    "hallucination": 0.0,
     "omission": 0.1667
    },
    "findings": {
     "n": 6,
-    "exact_match": 0.5,
-    "cer": 0.2746,
-    "hallucination": 0.2,
-    "omission": 0.1667
+    "exact_match": 0.6667,
+    "cer": 0.1211,
+    "hallucination": 0.0,
+    "omission": 0.0
    },
    "impression": {
     "n": 6,
-    "exact_match": 0.6667,
-    "cer": 0.2756,
-    "hallucination": 0.2,
+    "exact_match": 0.8333,
+    "cer": 0.1667,
+    "hallucination": 0.0,
     "omission": 0.1667
    },
    "mean": {
-    "exact_match": 0.6667,
-    "cer": 0.2433,
-    "hallucination": 0.1667,
-    "omission": 0.1667,
+    "exact_match": 0.8333,
+    "cer": 0.1258,
+    "hallucination": 0.0,
+    "omission": 0.0833,
     "n": 36
    }
   }
  },
  "phi_documents": {
-  "recall": 0.8333,
-  "precision": 0.6786,
+  "recall": 0.9583,
+  "precision": 0.5938,
   "n_gt": 24,
-  "n_detections": 28,
+  "n_detections": 32,
   "recall_by_type": {
    "accession_number": 0.8333,
-   "date_of_birth": 0.8333,
-   "patient_id": 0.8333,
-   "patient_name": 0.8333
+   "date_of_birth": 1.0,
+   "patient_id": 1.0,
+   "patient_name": 1.0
   },
   "recall_by_tier": {
    "clean_scan": 1.0,
    "poor_scan": 1.0,
-   "phone_photo": 0.5
+   "phone_photo": 0.875
   }
  },
  "injection": {
   "n_injected_docs": 3,
-  "flagged": 2,
+  "flagged": 3,
   "changed_behaviour": 0,
   "false_flags_on_clean_docs": 0
  },

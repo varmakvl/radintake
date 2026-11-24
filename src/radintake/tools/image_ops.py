@@ -164,3 +164,22 @@ def denoise(img: np.ndarray, strength: float = 7.0) -> np.ndarray:
 def clahe(img: np.ndarray, clip: float = 2.0, tile: int = 8) -> np.ndarray:
     g = to_gray(img)
     return cv2.createCLAHE(clipLimit=clip, tileGridSize=(tile, tile)).apply(g)
+
+
+def _background(g: np.ndarray, k: int = 31, sigma: float = 15.0) -> np.ndarray:
+    """Paper background estimate: closing removes dark text strokes, a wide blur smooths the rest."""
+    bg = cv2.morphologyEx(g, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k)))
+    return cv2.GaussianBlur(bg, (0, 0), sigma)
+
+
+def illumination_unevenness(img: np.ndarray) -> float:
+    """p95 - p5 of the background estimate (grey levels): ~1 for a flat scan, 30-70 for a lit photo."""
+    bg = _background(to_gray(img))
+    return float(np.percentile(bg, 95) - np.percentile(bg, 5))
+
+
+def flatten_illumination(img: np.ndarray, white: float = 235.0) -> np.ndarray:
+    """Flat-field correction: divide by the background so one global OCR threshold works again."""
+    g = to_gray(img)
+    out = np.clip(g.astype(np.float32) / np.maximum(_background(g), 1.0) * white, 0, 255).astype(np.uint8)
+    return out

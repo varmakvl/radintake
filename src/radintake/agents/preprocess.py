@@ -6,8 +6,10 @@ latency, nondeterminism and a PHI exposure surface for no accuracy gain.
 
 Policy (in order, each step only if its metric demands it)::
 
-    orientation (OCR tool)  -> rotate by 90/180/270 (lossless)
     page quad detected      -> 4-point perspective dewarp (photos)
+    background unevenness   -> flat-field illumination correction (lighting gradient, shadow)
+      > illumination_uneven_max
+    orientation (OCR tool)  -> rotate by 90/180/270 (lossless), judged on the flat, even page
     |skew| > deskew_min_deg -> rotate by the measured skew
     noise > noise_sigma_max -> non-local-means denoise
     contrast < contrast_min -> CLAHE
@@ -37,6 +39,7 @@ DEFAULTS: dict[str, Any] = {
     "noise_sigma_max": 6.0,      # Immerkaer sigma above which denoise runs
     "contrast_min": 120.0,       # p95-p5 grey range below which CLAHE runs
     "blur_laplacian_min": 20.0,  # recorded as a quality flag only (no sharpening)
+    "illumination_uneven_max": 20.0,  # background p95-p5 grey levels above which flat-field runs
     "quad_min_area": 0.25,
     "quad_max_area": 0.97,
     "quad_min_bg_contrast": 0.6,
@@ -94,7 +97,24 @@ def preprocess_page(page: Page, *, params: dict[str, Any] | None = None,
         record("flag_blur", "laplacian_var_below_min", laplacian_var=m0["laplacian_var"],
                threshold=p["blur_laplacian_min"])
 
-    # 1. orientation
+    # 1. dewarp (photos: a page quad on a darker background) - before orientation, so the
+    #    orientation check sees a flat page rather than a skewed photo
+    quad = ops.find_page_quad(cur.image, min_area=p["quad_min_area"], max_area=p["quad_max_area"],
+                              min_bg_contrast=p["quad_min_bg_contrast"])
+    if quad is not None:
+        img, t = ops.dewarp(cur.image, quad)
+        cur = cur.with_image(img, t)
+        record("dewarp", "page_quad_found", out_w=img.shape[1], out_h=img.shape[0])
+
+    # 2. uneven lighting / shadows (photos): Tesseract binarises with one global threshold, so a
+    #    lighting gradient turns half the page into noise. Photometric only - geometry unchanged.
+    uneven = ops.illumination_unevenness(cur.image)
+    if uneven > p["illumination_uneven_max"]:
+        cur = cur.with_image(ops.flatten_illumination(cur.image), Transform.identity())
+        record("flatten_illumination", "background_uneven", unevenness=uneven,
+               threshold=p["illumination_uneven_max"])
+
+    # 3. orientation
     rot = int(orient_fn(cur.image)) % 360
     if rot in (90, 180, 270):
         img, t = ops.rotate_cw(cur.image, rot)
@@ -103,15 +123,7 @@ def preprocess_page(page: Page, *, params: dict[str, Any] | None = None,
     else:
         record("keep_orientation", "orientation_upright", degrees_cw=0)
 
-    # 2. dewarp (photos: a page quad on a darker background)
-    quad = ops.find_page_quad(cur.image, min_area=p["quad_min_area"], max_area=p["quad_max_area"],
-                              min_bg_contrast=p["quad_min_bg_contrast"])
-    if quad is not None:
-        img, t = ops.dewarp(cur.image, quad)
-        cur = cur.with_image(img, t)
-        record("dewarp", "page_quad_found", out_w=img.shape[1], out_h=img.shape[0])
-
-    # 3. deskew
+    # 3b. deskew
     ang = ops.skew_angle(cur.image, max_angle=p["deskew_max_deg"])
     if abs(ang) > p["deskew_min_deg"]:
         img, t = ops.deskew(cur.image, ang)

@@ -132,9 +132,10 @@ class PhiDetector:
         hon = "|".join(re.escape(h) for h in p.get("honorifics") or [])
         name = r"[A-Z][a-zA-Z'\-]+(?:\s+[A-Z]\.)?(?:\s+[A-Z][a-zA-Z'\-]+){0,2}"
         self._honorific = re.compile(rf"\b(?i:{hon})\.?\s+(?P<name>{name})") if hon else None
+        # "First Last, MD" / "First M. Last, RT" / "G. Rodriguez, RT" (clinician sign-offs)
         self._credential = re.compile(
-            r"\b(?P<name>[A-Z][a-zA-Z'\-]+(?:\s+[A-Z]\.)?\s+[A-Z][a-zA-Z'\-]+),?\s+"
-            r"(?:MD|M\.D\.|DO|PhD|RN|NP|PA-C)\b")
+            r"(?P<name>\b(?:[A-Z]\.\s*|[A-Z][a-zA-Z'\-]+(?:\s+[A-Z]\.)?\s+)[A-Z][a-zA-Z'\-]+),?\s+"
+            r"(?:MD|M\.D\.|DO|PhD|RN|NP|PA-C|RT|R\.T\.|RRT|ARRT|RT\(R\))(?![A-Za-z])")
         mode = str(p.get("ner", "auto")).lower()
         self.ner_backend = "presidio" if mode == "auto" and _presidio() is not None else "fallback"
 
@@ -164,11 +165,12 @@ class PhiDetector:
         return [Span(m.start(), m.end(), t, "regex") for t, rx in self.regex for m in rx.finditer(text)]
 
     def ner_spans(self, text: str) -> list[Span]:
+        out: list[Span] = []
         if self.ner_backend == "presidio":
             eng = _presidio()
             res = eng.analyze(text=text, entities=["PERSON"], language="en") if eng else []
-            return [Span(r.start, r.end, "PERSON", "ner") for r in res if r.score >= 0.6]
-        out: list[Span] = []
+            out += [Span(r.start, r.end, "PERSON", "ner") for r in res if r.score >= 0.6]
+        # honorific / credential rules always run: NER models miss "G. Rodriguez, RT"-style sign-offs
         for rx in (self._honorific, self._credential):
             if rx is None:
                 continue
