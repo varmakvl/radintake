@@ -7,7 +7,7 @@ tags: [extraction, ocr, vlm, hybrid, provenance, report-schema, agent]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-23T17:39:22Z
+  at: 2026-11-24T10:26:13.955Z
 sources:
   - src/radintake/agents/extract.py
   - src/radintake/agents/extract_ocr.py
@@ -37,10 +37,10 @@ until the next heading. Confidence = mean word confidence; below `low_conf_thres
 Provenance = union of word boxes mapped to original coordinates ([Coordinate Contract](/data/coordinate-contract.md)).
 
 **VLM-first** (`extract_vlm.py`). OCR-first still supplies header and table fields locally. Each
-PHI-masked page goes to the VLM with `prompts/extraction_v1.md` (JSON-constrained); placeholders are
+PHI-masked page goes to the local Qwen2.5-VL-3B (Ollama) with `prompts/extraction_v1.md` (JSON-constrained); placeholders are
 restored from the vault locally; instruction-like sentences move to `untrusted_text`; values are
 fuzzy-snapped to OCR words (`align_min_ratio` 80) -> source `hybrid`, else source `vlm` with
-`unaligned_penalty`. Offline or no VLM -> falls back to OCR-first.
+`unaligned_penalty`. No VLM available (Ollama not running, e.g. CI) -> falls back to OCR-first.
 
 **Hybrid** (`extract_hybrid.py`). OCR-first everywhere; the VLM re-reads only crops of sections
 below `hybrid_conf_threshold` (0.6) or required sections OCR could not find.
@@ -59,4 +59,4 @@ the [Evaluation Harness](/operations/evaluation-harness.md), neither of which ex
 - Header fields (name, ID, DOB, accession) are extracted locally; never send them to a VLM.
 - Every field needs provenance with page >= 1 and a non-degenerate box in original coordinates.
 - `models/report.py` and `schemas/report.v1.json` must stay in step (unit-tested).
-- `configs/models.yaml` still names `claude-sonnet-4-5` for `vlm_api`; update the model id before the comparison run.
+- Expect the local VLM to be slow (tens of seconds per page on 4 GB); hybrid limits VLM calls to weak sections, so latency is part of the comparison.

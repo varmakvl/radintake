@@ -32,8 +32,8 @@ def _env(monkeypatch, tmp_path):
     monkeypatch.delenv("RADINTAKE_OFFLINE", raising=False)
     monkeypatch.delenv("RADINTAKE_FORBID_MODEL_CALLS", raising=False)
     monkeypatch.delenv("RADINTAKE_EXTRACTION_PIPELINE", raising=False)
-    monkeypatch.delenv(vc.API_KEY_ENV, raising=False)
     monkeypatch.setattr(vc, "local_available", lambda model_id: False)  # no real local VLM in tests
+    monkeypatch.setattr(vc, "ollama_available", lambda model_id, timeout_s=2.0: False)
     yield
     rlog.clear_phi()
 
@@ -238,7 +238,7 @@ def page_box():
 
 def test_api_model_refused_offline_before_backend(tmp_path, monkeypatch):
     monkeypatch.setenv("RADINTAKE_OFFLINE", "1")
-    client = MockVlm({"page": _page_reply()}, tmp_path, kind="api", model_id="claude-sonnet-4-5")
+    client = MockVlm({"page": _page_reply()}, tmp_path, kind="api", model_id="some-remote-model")
     with pytest.raises(OfflineViolation):
         client.call(_masked(_page(1)), prompt_id=extract_vlm.PROMPT_ID, prompt="p", task="page")
     assert client.seen == []
@@ -247,7 +247,6 @@ def test_api_model_refused_offline_before_backend(tmp_path, monkeypatch):
 @pytest.mark.parametrize("pipeline", ["hybrid", "vlm_first"])
 def test_offline_falls_back_to_ocr_first_and_records_it(tmp_path, monkeypatch, pipeline):
     monkeypatch.setenv("RADINTAKE_OFFLINE", "1")
-    monkeypatch.setenv(vc.API_KEY_ENV, "sk-ant-should-not-be-used")
     monkeypatch.setenv("RADINTAKE_EXTRACTION_PIPELINE", pipeline)
     calls = []
     monkeypatch.setattr(VlmClient, "_invoke", lambda *a, **k: calls.append(1))
@@ -258,30 +257,28 @@ def test_offline_falls_back_to_ocr_first_and_records_it(tmp_path, monkeypatch, p
     assert out["extraction"]["pipeline"] == pipeline and out["extraction"]["fallback"] == "ocr_first"
     ev = _events(trace, "extraction_fallback")
     assert ev and ev[0]["data"]["mode"] == pipeline
-    assert ev[0]["data"]["reason"] == "offline_api_unavailable_no_local_vlm"
+    assert ev[0]["data"]["reason"] == "no_local_vlm_available"
     assert out["report"]["findings"]["value"] == "Clear lungs bilaterally."  # the OCR-first value
 
 
 # --------------------------------------------------------------------------- trace / cache / api
 def test_vlm_call_traced_with_model_prompt_latency_usage_cost_and_no_secrets(tmp_path, monkeypatch, capsys):
-    secret = "sk-ant-TEST-SECRET-0123456789"
-    monkeypatch.setenv(vc.API_KEY_ENV, secret)
     ctx, trace = _stage_ctx(tmp_path)
-    client = MockVlm({"page": _page_reply()}, tmp_path, model_id="claude-sonnet-4-5")
+    client = MockVlm({"page": _page_reply()}, tmp_path, model_id="qwen2.5vl:3b")
     extract_vlm.run(ctx, client=client)
     trace.close("ok")
     (ev,) = _events(trace, "model_call")
     d = ev["data"]
-    assert d["model_id"] == "claude-sonnet-4-5" and d["prompt_id"] == "extraction_v1"
+    assert d["model_id"] == "qwen2.5vl:3b" and d["prompt_id"] == "extraction_v1"
     assert d["prompt_hash"] == prompt_hash(extract_vlm.render_prompt("page"))
     assert d["duration_ms"] >= 0 and d["status"] == "ok" and d["cache_hit"] is False
     assert d["input_tokens"] == 1000 and d["output_tokens"] == 200
-    assert d["cost_usd"] == pytest.approx((1000 * 3.0 + 200 * 15.0) / 1e6)
+    assert d["cost_usd"] == 0.0  # open-source local model: no per-token price
     assert d["payload_hash"].startswith("sha256:") and d["output_hash"].startswith("sha256:")
     manifest = json.loads(trace.writer.manifest_path.read_text(encoding="utf-8"))
     assert manifest["prompts"]["extraction_v1"] == d["prompt_hash"]
     blob = trace.path.read_text(encoding="utf-8") + json.dumps(manifest) + "".join(capsys.readouterr())
-    for s in (secret, *PHI, "heart size"):
+    for s in (*PHI, "heart size"):
         assert s not in blob
 
 
@@ -298,9 +295,7 @@ def test_identical_call_is_served_from_cache(tmp_path):
     assert (tmp_path / "vlm_cache" / f"{key}.json").is_file()
 
 
-def test_api_backend_sends_masked_png_with_env_key_and_parses_usage(tmp_path, monkeypatch):
-    secret = "sk-ant-TEST-SECRET-abc"
-    monkeypatch.setenv(vc.API_KEY_ENV, secret)
+def test_ollama_backend_sends_masked_png_and_parses_usage(tmp_path, monkeypatch):
     sent = {}
 
     class Resp(io.BytesIO):
@@ -311,38 +306,47 @@ def test_api_backend_sends_masked_png_with_env_key_and_parses_usage(tmp_path, mo
             return False
 
     def fake_urlopen(req, timeout):
-        sent["headers"] = dict(req.header_items())
+        sent["url"] = req.full_url
         sent["body"] = json.loads(req.data.decode("utf-8"))
-        reply = {"content": [{"type": "text", "text": "```json\n" + json.dumps(_page_reply()) + "\n```"}],
-                 "usage": {"input_tokens": 1500, "output_tokens": 300}}
+        reply = {"message": {"role": "assistant", "content": json.dumps(_page_reply())},
+                 "prompt_eval_count": 1500, "eval_count": 300}
         return Resp(json.dumps(reply).encode("utf-8"))
 
     monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    monkeypatch.setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
     tw = TraceWriter(tmp_path / "_traces")
     trace = tw.start_case("doc.png", "0" * 64)
-    client = VlmClient("claude-sonnet-4-5", config=load_config(), trace=trace, cache_dir=tmp_path / "c")
+    client = VlmClient("qwen2.5vl:3b", config=load_config(), trace=trace, cache_dir=tmp_path / "c")
+    assert client.backend == "ollama" and client.kind == "local"
     resp = client.call(_masked(_page(1)), prompt_id="extraction_v1", prompt="P", task="page")
     trace.close("ok")
     assert resp.data["fields"]["findings"]["value"] == FINDINGS
-    assert resp.usage == {"input_tokens": 1500, "output_tokens": 300}
-    assert resp.cost_usd == pytest.approx((1500 * 3 + 300 * 15) / 1e6)
-    assert sent["headers"]["X-api-key"] == secret
+    assert resp.usage == {"input_tokens": 1500, "output_tokens": 300} and resp.cost_usd == 0.0
+    assert sent["url"] == "http://127.0.0.1:11434/api/chat"
     body = sent["body"]
-    assert body["model"] == "claude-sonnet-4-5" and body["temperature"] == 0
-    img = body["messages"][0]["content"][0]
-    assert img["type"] == "image" and img["source"]["media_type"] == "image/png"
-    assert secret not in trace.path.read_text(encoding="utf-8")
+    assert body["model"] == "qwen2.5vl:3b" and body["options"]["temperature"] == 0 and body["format"] == "json"
+    msg = body["messages"][0]
+    assert msg["content"] == "P" and len(msg["images"]) == 1
 
 
-def test_select_vlm_never_picks_api_offline(monkeypatch):
-    monkeypatch.setenv(vc.API_KEY_ENV, "k")
-    client, why = vc.select_vlm(load_config(), task="page")
-    assert client is not None and client.kind == "api" and why == "api"
+def test_ollama_model_is_allowed_offline(tmp_path, monkeypatch):
+    """Every configured model is local: offline mode must not block the Ollama VLM."""
     monkeypatch.setenv("RADINTAKE_OFFLINE", "1")
-    assert vc.select_vlm(load_config(), task="page") == (None, "offline_api_unavailable_no_local_vlm")
+    client = MockVlm({"page": _page_reply()}, tmp_path, model_id="qwen2.5vl:3b")
+    client.call(_masked(_page(1)), prompt_id=extract_vlm.PROMPT_ID, prompt="p", task="page")
+    assert len(client.seen) == 1
+
+
+def test_select_vlm_prefers_ollama_then_florence_for_crops(monkeypatch):
+    assert vc.select_vlm(load_config(), task="page") == (None, "no_local_vlm_available")
     monkeypatch.setattr(vc, "local_available", lambda model_id: True)
     client, why = vc.select_vlm(load_config(), task="crop")
-    assert why == "local" and client.kind == "local"
+    assert why == "local" and client.backend == "transformers"
+    assert vc.select_vlm(load_config(), task="page") == (None, "no_local_vlm_available")
+    monkeypatch.setattr(vc, "ollama_available", lambda model_id, timeout_s=2.0: model_id == "qwen2.5vl:3b")
+    monkeypatch.setenv("RADINTAKE_OFFLINE", "1")  # local models stay allowed offline
+    client, why = vc.select_vlm(load_config(), task="page")
+    assert why == "ollama" and client.model_id == "qwen2.5vl:3b" and client.kind == "local"
     monkeypatch.setenv("RADINTAKE_FORBID_MODEL_CALLS", "1")
     assert vc.select_vlm(load_config(), task="crop") == (None, "model_calls_forbidden")
 

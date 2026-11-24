@@ -43,7 +43,8 @@ def test_config_reads_yaml_and_env(monkeypatch, tmp_path):
     cfg = load_config()
     assert cfg.offline is False and cfg.forbid_model_calls is False
     assert cfg.pdf_dpi == 200 and cfg.budgets.max_steps > 0
-    assert cfg.model("vlm_api").kind == "api" and cfg.model("ocr").kind == "local"
+    assert cfg.model("ocr").kind == "local"
+    assert all(m.kind == "local" for m in cfg.models.values())  # open-source, no paid API
 
     monkeypatch.setenv("RADINTAKE_OFFLINE", "1")
     monkeypatch.setenv("RADINTAKE_FORBID_MODEL_CALLS", "true")
@@ -129,7 +130,7 @@ def test_client_raises_when_model_calls_forbidden(monkeypatch):
 def test_client_refuses_api_models_offline(monkeypatch):
     monkeypatch.setenv("RADINTAKE_OFFLINE", "1")
     with pytest.raises(OfflineViolation):
-        _EchoClient("vlm_api").call(_masked(), prompt_id="p")
+        _EchoClient("some-remote-model", kind="api").call(_masked(), prompt_id="p")  # guard kept for any API model
     assert _EchoClient("ocr").call(_masked(), prompt_id="p") == {"text": "ok"}  # local still fine
 
 

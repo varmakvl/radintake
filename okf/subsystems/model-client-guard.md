@@ -1,17 +1,19 @@
 ---
 type: Subsystem
 title: Guarded Model Client & VLM Client
-description: Single choke point for every model call - refuses calls in replay mode, refuses API models offline, refuses payloads not masked by the PHI agent, then caches, times, costs and traces the call.
+description: Single choke point for every model call - refuses calls in replay mode, refuses API models offline, refuses payloads not masked by the PHI agent, then caches, times and traces the call; all models are open source and local (Ollama or in-process).
 resource: src/radintake/tools/model_client.py
 tags: [model-client, vlm, phi, offline, cache, cost, trust-boundary]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-23T17:39:22Z
+  at: 2026-11-24T10:26:13.955Z
 sources:
   - src/radintake/tools/model_client.py
   - src/radintake/tools/vlm_client.py
   - configs/models.yaml
+  - configs/default.yaml
+  - tests/unit/test_extract_vlm_hybrid.py
   - prompts/extraction_v1.md
   - tests/unit/test_core_contracts.py
 ---
@@ -29,15 +31,36 @@ Subclasses implement `_invoke` only.
 
 Adds a response cache keyed by `sha256(model id + payload hash + prompt hash)` under
 `<data_dir>/cache/vlm` (replays are free; a cache hit still requires a masked payload), JSON
-parsing, crop payloads for the hybrid pipeline, per-call cost from `usd_per_mtok_in/out`, and
-`select_vlm` (API model, or local Florence-2-base only if weights are already cached — never
-downloaded at run time).
+parsing, crop payloads for the hybrid pipeline, and token usage in the trace. Backends, chosen per
+model by `backend:` in the registry:
 
-Models (`configs/models.yaml`): `ocr` tesseract-5 (local), `vlm_local` Florence-2-base (local, fits
-4 GB), `vlm_api` (API key from `ANTHROPIC_API_KEY` only), `embedder` MiniLM (local).
+- `ollama` — `POST {OLLAMA_HOST}/api/chat` with the masked PNG, `format: json`, temperature 0,
+  fixed seed. `ollama_available` only checks `/api/tags`; it never pulls a model.
+- `transformers` — Florence-2-base in process, `<OCR>` crop transcription only, weights must
+  already be in the HF cache (never downloaded at run time).
+
+`select_vlm(task)`: the Ollama page VLM for any task, else Florence-2 for crops, else `None`
+(callers fall back to OCR-first — this is what CI does).
+
+# Decision: open-source, local models only (2026-11-24)
+
+No paid API and no budget. Registry (`configs/models.yaml`), sized for a 4 GB RTX 3050:
+
+| Name | Model | Runs on |
+|---|---|---|
+| `ocr` | Tesseract 5 | CPU |
+| `vlm_page` | Qwen2.5-VL-3B (`qwen2.5vl:3b`, Q4 via Ollama, ~3.2 GB) | GPU, partly CPU-offloaded |
+| `vlm_local` | Florence-2-base (0.23B) | GPU/CPU, crop fallback |
+| `llm_answer` | Qwen2.5-3B (`qwen2.5:3b`, Ollama) | GPU |
+| `embedder` | all-MiniLM-L6-v2 | CPU |
+
+Cost per page is $0 in API terms; the report gives GPU-seconds and peak GPU memory instead. PHI
+masking is still enforced before the VLM even though it is local: the guard does not depend on
+where a model runs. The `api` kind and its offline refusal stay in the base class so a remote
+model can never be added silently.
 
 # Guardrails & Anti-Regression Checklist
 
-- Every model call goes through this class — OCR, VLM, embedder, judge.
-- The `vlm_api` id is currently `claude-sonnet-4-5`; refresh it to a current model before measured runs.
-- Keys come from the environment only; never from config files committed to git.
+- Every model call goes through this class — OCR, VLM, embedder, answer LLM.
+- Never let the client trigger `ollama pull` or a Hugging Face download at run time.
+- Local VLM calls can take tens of seconds: `extraction.vlm.timeout_s` is 180.

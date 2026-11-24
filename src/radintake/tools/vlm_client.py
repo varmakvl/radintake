@@ -10,10 +10,11 @@ refused under ``RADINTAKE_FORBID_MODEL_CALLS=1``, and refused for an ``api`` mod
   a cache hit is not a model call and still requires a masked payload;
 * **trace** per call: model id + kind, prompt id + hash, payload/output hashes, latency, token
   usage, cost (USD, from ``configs/models.yaml`` pricing) and ``cache_hit`` - never content;
-* **backends**: ``api`` = Anthropic Messages API over HTTPS (key from the ``ANTHROPIC_API_KEY``
-  environment variable only, registered with the log scrubber, never traced); ``local`` = a small
-  local VLM via ``transformers`` (Florence-2-base, crop transcription only) when it is installed
-  and its weights are already cached - otherwise :func:`local_available` is False.
+* **backends** (all local and open source, chosen per model by ``backend`` in ``configs/models.yaml``):
+  ``ollama`` = a local Ollama server (``OLLAMA_HOST``, default ``http://127.0.0.1:11434``) serving
+  Qwen2.5-VL-3B for page reading and crop re-reads; ``transformers`` = Florence-2-base in process,
+  crop transcription only, when it is installed and its weights are already cached. No paid API is
+  used; a model of kind ``api`` would still be refused offline by the base guard.
 
 Use :func:`select_vlm` to get the client the run may use (or ``None`` plus the reason).
 """
@@ -34,7 +35,6 @@ from typing import Any
 import numpy as np
 
 from radintake.config import REPO_ROOT, Config, env_flag, load_config
-from radintake.logging import register_phi
 from radintake.tools.model_client import (
     MaskedPayload,
     ModelClient,
@@ -45,14 +45,13 @@ from radintake.tools.model_client import (
 )
 from radintake.tracing.writer import CaseTrace
 
-API_KEY_ENV = "ANTHROPIC_API_KEY"
-API_URL = "https://api.anthropic.com/v1/messages"
-API_VERSION = "2023-06-01"
+OLLAMA_HOST_ENV = "OLLAMA_HOST"
+OLLAMA_DEFAULT = "http://127.0.0.1:11434"
 PROMPTS_DIR = REPO_ROOT / "prompts"
 
 
 class VlmUnavailable(RuntimeError):
-    """No usable backend (no API key, or local model not installed / not cached)."""
+    """No usable backend (Ollama not running / model not pulled, local model not cached)."""
 
 
 @dataclass
@@ -72,7 +71,7 @@ def vlm_params(cfg: Config) -> dict[str, Any]:
     raw = cfg.raw or {}
     ext = raw.get("extraction") if isinstance(raw.get("extraction"), dict) else {}
     v = ext.get("vlm") if isinstance(ext.get("vlm"), dict) else {}
-    return {"model": "vlm_api", "local_model": "vlm_local", "max_tokens": 2000, "timeout_s": 60.0,
+    return {"model": "vlm_page", "local_model": "vlm_local", "max_tokens": 2000, "timeout_s": 180.0,
             "cache_dir": None, **v}
 
 
@@ -133,6 +132,7 @@ class VlmClient(ModelClient):
         spec = _model_spec_raw(self.config, self.model_id)
         self.price_in = float(spec.get("usd_per_mtok_in", 0.0) or 0.0)
         self.price_out = float(spec.get("usd_per_mtok_out", 0.0) or 0.0)
+        self.backend = str(spec.get("backend") or ("ollama" if ":" in self.model_id else "transformers"))
 
     # -- cache --------------------------------------------------------------------------
     def cache_key(self, payload: Any, prompt: str) -> str:
@@ -200,35 +200,36 @@ class VlmClient(ModelClient):
         return (usage.get("input_tokens", 0) * self.price_in + usage.get("output_tokens", 0) * self.price_out) / 1e6
 
     def _invoke(self, payload: Any, prompt: str, **kwargs: Any) -> VlmResponse:
-        if self.kind == "api":
-            return self._invoke_api(payload, prompt, **kwargs)
+        if self.backend == "ollama":
+            return self._invoke_ollama(payload, prompt, **kwargs)
         return self._invoke_local(payload, prompt, **kwargs)
 
     # -- backends -----------------------------------------------------------------------
-    def _invoke_api(self, payload: Any, prompt: str, **kwargs: Any) -> VlmResponse:
+    def _invoke_ollama(self, payload: Any, prompt: str, **kwargs: Any) -> VlmResponse:
+        """Local Ollama ``/api/chat``: masked PNG + prompt in, JSON reply out (temperature 0)."""
+        import urllib.error
         import urllib.request
 
-        key = os.environ.get(API_KEY_ENV)
-        if not key:
-            raise VlmUnavailable(f"{API_KEY_ENV} is not set")
-        register_phi(key)  # defence in depth: a key that slipped into a log line is redacted
         data = payload.data if isinstance(payload, MaskedPayload) else payload["data"]
-        content: list[dict[str, Any]] = [{"type": "image", "source": {
-            "type": "base64", "media_type": "image/png", "data": _png_b64(data["image"])}}]
-        content.append({"type": "text", "text": prompt})
-        body = json.dumps({"model": self.model_id, "max_tokens": self.max_tokens, "temperature": 0,
-                           "messages": [{"role": "user", "content": content}]}).encode("utf-8")
-        req = urllib.request.Request(API_URL, data=body, method="POST", headers={
-            "x-api-key": key, "anthropic-version": API_VERSION, "content-type": "application/json"})
-        with urllib.request.urlopen(req, timeout=self.timeout_s) as r:
-            out = json.loads(r.read().decode("utf-8"))
-        text = "".join(c.get("text", "") for c in out.get("content", []) if c.get("type") == "text")
-        u = out.get("usage") or {}
-        usage = {"input_tokens": int(u.get("input_tokens", 0)), "output_tokens": int(u.get("output_tokens", 0))}
+        body = json.dumps({
+            "model": self.model_id, "stream": False, "format": "json",
+            "options": {"temperature": 0, "seed": int(self.config.seed), "num_predict": self.max_tokens},
+            "messages": [{"role": "user", "content": prompt, "images": [_png_b64(data["image"])]}],
+        }).encode("utf-8")
+        req = urllib.request.Request(f"{ollama_host()}/api/chat", data=body, method="POST",
+                                     headers={"content-type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout_s) as r:
+                out = json.loads(r.read().decode("utf-8"))
+        except urllib.error.URLError as exc:
+            raise VlmUnavailable(f"Ollama not reachable at {ollama_host()}: {exc.reason}") from exc
+        text = (out.get("message") or {}).get("content", "")
+        usage = {"input_tokens": int(out.get("prompt_eval_count", 0) or 0),
+                 "output_tokens": int(out.get("eval_count", 0) or 0)}
         return VlmResponse(parse_json(text), usage, self.cost(usage))
 
     def _invoke_local(self, payload: Any, prompt: str, **kwargs: Any) -> VlmResponse:
-        """Florence-2 ``<OCR>`` on a crop -> ``{"text": ...}``. Page-level field JSON is API-only."""
+        """Florence-2 ``<OCR>`` on a crop -> ``{"text": ...}``. Page-level field JSON needs the Ollama VLM."""
         if kwargs.get("task") != "crop":
             raise VlmUnavailable("local VLM supports crop transcription only")
         model, processor, device = _local_model(self.model_id)
@@ -277,24 +278,49 @@ def _local_model(model_id: str):
     return _LOCAL[model_id]
 
 
+def ollama_host() -> str:
+    host = os.environ.get(OLLAMA_HOST_ENV) or OLLAMA_DEFAULT
+    if not host.startswith("http"):
+        host = "http://" + host
+    return host.rstrip("/")
+
+
+def ollama_available(model_id: str, timeout_s: float = 2.0) -> bool:
+    """True when a local Ollama server answers and ``model_id`` is pulled (no download is ever started)."""
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(f"{ollama_host()}/api/tags", timeout=timeout_s) as r:
+            tags = json.loads(r.read().decode("utf-8"))
+    except Exception:  # noqa: BLE001 - server down / unreachable -> unavailable
+        return False
+    names = {m.get("name") for m in tags.get("models", [])} | {m.get("model") for m in tags.get("models", [])}
+    return model_id in names or f"{model_id}:latest" in names
+
+
+def backend_available(spec: Any, raw: dict[str, Any]) -> bool:
+    backend = raw.get("backend") or ("ollama" if ":" in spec.id else "transformers")
+    if spec.kind != "local":
+        return False  # no paid / remote API is used by this project
+    return ollama_available(spec.id) if backend == "ollama" else local_available(spec.id)
+
+
 def select_vlm(cfg: Config | None = None, trace: CaseTrace | None = None, *,
                task: str = "page") -> tuple[VlmClient | None, str]:
     """The VLM client this run may use for ``task`` (``page`` | ``crop``), or ``(None, reason)``.
 
-    Offline (``RADINTAKE_OFFLINE=1``) the API model is never chosen; the local VLM is used if it is
-    installed and cached (crop task only), otherwise ``None`` - callers fall back to OCR-first.
+    Order: the page VLM (Ollama, Qwen2.5-VL) for any task; for ``crop`` only, the in-process
+    Florence-2 fallback. Every model is local, so offline mode does not change the choice. ``None``
+    means callers fall back to OCR-first (CI and machines without Ollama).
     """
     cfg = cfg or load_config()
     if env_flag("RADINTAKE_FORBID_MODEL_CALLS", cfg.forbid_model_calls):
         return None, "model_calls_forbidden"
     p = vlm_params(cfg)
-    offline = env_flag("RADINTAKE_OFFLINE", cfg.offline)
-    api = cfg.model(p["model"])
+    page = cfg.model(p["model"])
     local = cfg.model(p["local_model"])
-    if not offline and api is not None and os.environ.get(API_KEY_ENV):
-        return VlmClient(api.id, api.kind, config=cfg, trace=trace), "api"
-    if local is not None and task == "crop" and local_available(local.id):
+    if page is not None and backend_available(page, _model_spec_raw(cfg, page.id)):
+        return VlmClient(page.id, page.kind, config=cfg, trace=trace), "ollama"
+    if local is not None and task == "crop" and backend_available(local, _model_spec_raw(cfg, local.id)):
         return VlmClient(local.id, "local", config=cfg, trace=trace), "local"
-    if offline:
-        return None, "offline_api_unavailable_no_local_vlm"
-    return None, "no_api_key_no_local_vlm"
+    return None, "no_local_vlm_available"

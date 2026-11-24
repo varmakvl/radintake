@@ -7,7 +7,7 @@ tags: [config, yaml, environment, offline, budgets, models]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-23T17:39:22Z
+  at: 2026-11-24T10:26:13.955Z
 sources:
   - src/radintake/config.py
   - configs/default.yaml
@@ -30,7 +30,7 @@ sources:
 | `RADINTAKE_FORBID_MODEL_CALLS=1` | every model call raises; used for re-scoring from traces |
 | `RADINTAKE_DATA_DIR` | case store, review queue, VLM cache |
 | `RADINTAKE_TRACE_DIR` | trace output root |
-| `ANTHROPIC_API_KEY` | key for `vlm_api` (environment only) |
+| `OLLAMA_HOST` | local Ollama server for the VLM and answer LLM (default `http://127.0.0.1:11434`; Compose uses `host.docker.internal`) |
 | `TESSERACT_CMD` | Tesseract binary when not on PATH |
 
 # Key settings (`configs/default.yaml`)

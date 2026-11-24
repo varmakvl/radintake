@@ -1,5 +1,5 @@
 # One-command stack: docker compose up -d --build --wait   (API on http://localhost:8000)
-# API keys come from the environment / an uncommitted .env file only.
+# All models are local and open source: the VLM runs in Ollama on the host (OLLAMA_HOST).
 services:
   api:
     build: .
@@ -10,8 +10,9 @@ services:
       RADINTAKE_OFFLINE: "${RADINTAKE_OFFLINE:-1}"
       RADINTAKE_DATA_DIR: /data
       RADINTAKE_TRACE_DIR: /data/traces
-      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
-      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OLLAMA_HOST: "${OLLAMA_HOST:-http://host.docker.internal:11434}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - radintake-data:/data
     healthcheck:
@@ -34,6 +35,9 @@ services:
       RADINTAKE_DATA_DIR: /data
       RADINTAKE_TRACE_DIR: /data/traces
       NVIDIA_VISIBLE_DEVICES: all
+      OLLAMA_HOST: "${OLLAMA_HOST:-http://host.docker.internal:11434}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - radintake-data:/data
     deploy:

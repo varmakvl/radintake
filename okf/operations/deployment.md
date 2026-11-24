@@ -7,7 +7,7 @@ tags: [deployment, docker, compose, healthcheck, lockfile]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-23T17:39:22Z
+  at: 2026-11-24T10:26:13.955Z
 sources:
   - Dockerfile
   - .dockerignore
@@ -27,8 +27,9 @@ docker compose down
 ```
 
 The image installs `tesseract-ocr`; data and traces live in the `radintake-data` volume (`/data`).
-API keys come from the environment or an uncommitted `.env`; the image contains no data, renders or
-DICOM. Dependencies pinned in `requirements.lock` (`uv pip compile pyproject.toml --extra dev --universal`).
+No API keys: the VLM and answer LLM run in Ollama on the host, reached through `OLLAMA_HOST`
+(`host.docker.internal` via `extra_hosts: host-gateway`). Without Ollama the service still works
+with OCR-first extraction. The image contains no data, renders or DICOM. Dependencies pinned in `requirements.lock` (`uv pip compile pyproject.toml --extra dev --universal`).
 
 `deploy.md` is the runbook the fleet sprint's deployer follows (venv install + Compose + smoke test).
 Service details: [API Service](/subsystems/api-service.md).

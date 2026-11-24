@@ -8,7 +8,7 @@ status: stable
 stale_after: 2026-12-07T00:00:00Z
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-23T17:39:22Z
+  at: 2026-11-24T00:00:00Z
 sources:
   - PLAN.md
   - requirements.md
@@ -51,7 +51,8 @@ the critical path.
 # Open risks and decisions
 
 - TCIA Pseudo-PHI-DICOM download may need the NBIA Data Retriever (manual step).
-- `vlm_api` model id in `configs/models.yaml` is outdated.
+- Decided 2026-11-24: open-source local models only (Qwen2.5-VL-3B via Ollama, Florence-2 fallback, Qwen2.5-3B for answers); no vector database; decoded data in SQLite. Deadline 2026-12-02; LoRA bonus dropped.
+- TCIA DICOM download is being done by the user via NBIA Data Retriever into `data/tcia/`; IU reports are fetched by script (the Open-i URL works again).
 - Extraction pipeline choice is provisional (`ocr_first`).
 - Tesseract PATH on the dev machine.
 - Uncommitted `data_prep/` files and a modified `.beads/issues.jsonl` sit in the working tree.

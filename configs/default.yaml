@@ -39,7 +39,7 @@ extraction:
     heading_min_ratio: 85 # fuzzy match (0-100) for OCR-damaged section headings
     low_conf_threshold: 0.5  # mean word confidence below this -> field low_confidence
   vlm:                    # vlm_first / hybrid (radintake.agents.extract_vlm, extract_hybrid)
-    model: vlm_api        # registry names in configs/models.yaml
+    model: vlm_page       # registry names in configs/models.yaml (open-source, local via Ollama)
     local_model: vlm_local
     align_min_ratio: 80   # fuzz.ratio a VLM value needs to snap to OCR words (else source vlm)
     vlm_confidence: 0.9
@@ -47,7 +47,7 @@ extraction:
     hybrid_conf_threshold: 0.6  # hybrid: OCR section confidence below this -> VLM crop re-read
     cache_dir: null       # null -> <data_dir>/cache/vlm (responses keyed by input + prompt hash)
     max_tokens: 2000
-    timeout_s: 60
+    timeout_s: 180        # local 3B VLM on a 4 GB GPU (partly CPU-offloaded) can take tens of seconds
 
 verify:                   # radintake.agents.verify (thresholds tuned later on dev)
   ground_min_ratio: 90    # rapidfuzz partial_ratio for a value to count as present in the OCR text
