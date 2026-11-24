@@ -6,7 +6,7 @@
 # up to the next anchor label or the end of the line. `type` is the placeholder/detection type.
 anchors:
   - type: PATIENT_NAME
-    pattern: '\b(?:patient\s*name|pt\.?\s*name|name\s+of\s+patient)\s*[:#.]?'
+    pattern: '\b(?:pateint\s*name|pt\.?\s*name|name\s+of\s+patient)\s*[:#.]?'
   - type: PATIENT_ID
     pattern: '\b(?:patient\s*id|pt\.?\s*id|patient\s*no\.?|medical\s*record\s*(?:no\.?|number)?)\s*[:#.]?'
   - type: PATIENT_ID
