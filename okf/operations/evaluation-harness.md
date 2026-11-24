@@ -16,6 +16,10 @@ sources:
   - src/radintake/eval/gate.py
   - src/radintake/eval/versions.py
   - src/radintake/eval/golden_qa.py
+  - src/radintake/eval/error_analysis.py
+  - eval/results/error_analysis_dev.md
+  - eval/results/attempts.md
+  - tests/unit/test_error_analysis.py
   - eval/baseline.json
   - eval/VERSIONS.lock
   - eval/golden_qa.jsonl
@@ -83,5 +87,13 @@ IU `mesh_major` matches, 1–38 docs each), 4 injection probes (one per injected
 unanswerable (verified at build time to have no golden match — the builder caught one mislabelled
 candidate, "shoulder prosthesis", because a golden study is coded `shoulder`).
 
-Not built yet: error analysis tool (worst-N pages) and the retrieval metrics wiring, which needs the
-[Retrieval / QA Agent](/subsystems/retrieval-qa-agent.md).
+# Error analysis (error_analysis.py)
+
+`python -m radintake.eval.error_analysis --run runs/<run>` ranks pages by mean field CER (omission = 1)
++ 0.25 per missed PHI instance, categorises each failure (omission, hallucination, handwriting, wrong
+field, layout: bleed / truncated, OCR misread, PHI miss) and draws overlays (GT green, prediction blue,
+VLM purple, missed PHI red; local only). Dev v3 (`eval/results/error_analysis_dev.md`): 8 of the 10
+worst pages are strongly keystoned phone photos where OCR reads almost nothing - the page-quad detector
+misses the paper edge, so dewarp never runs. Across all pages: PHI miss 290, OCR misread 143, omission 106,
+hallucination 99, layout bleed 42. A "skip CLAHE after flat-field" fix helped the worst pages but hurt the
+typical photo and was rejected (`eval/results/attempts.md`).

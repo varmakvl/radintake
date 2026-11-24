@@ -4,6 +4,9 @@ Newest changes recorded chronologically.
 
 
 ## 2026-11-24
+- Synchronized timestamp for 1 drifted concept(s): playbooks/delivery-plan-and-status.md.
+- Synchronized workspace frontier mapping in `index.md` (+1 new, -0 removed, 46 already listed; 47 undocumented files mapped).
+- Error-analysis tool (`radintake.eval.error_analysis`); dev worst pages are keystoned photos where dewarp never runs. Tried-and-rejected log started in `eval/results/attempts.md`.
 - Synchronized timestamp for 2 drifted concept(s): subsystems/extraction-agent.md, subsystems/model-client-guard.md.
 - Synchronized workspace frontier mapping in `index.md` (+1 new, -0 removed, 45 already listed; 46 undocumented files mapped).
 - Pipeline comparison on 18 dev docs: OCR-first 0.642 EM / 2.3 s, hybrid 0.651 / 11.9 s, VLM-first 0.421 / 16.8 s. OCR-first kept as default, hybrid opt-in. Fixes found on the way: dedicated crop prompt; reload the VLM when Ollama's runner degrades. Progress dashboard published as a private artifact.
