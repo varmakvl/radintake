@@ -7,6 +7,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -38,12 +39,19 @@ def create_app(config: Config | None = None, *, max_workers: int = 2) -> FastAPI
     cfg = config or load_config()
     configure_logging(cfg.log_level)
     store = CaseStore(cfg.data_dir)
+    from radintake.retrieval import RetrievalIndex
+
+    index = RetrievalIndex(Path(cfg.data_dir) / "retrieval.sqlite")
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         n = store.interrupt_unfinished()
         if n:
             log.warning("cases_interrupted", count=n)
+        if not index.case_ids():  # rebuild the retrieval index from finished cases (e.g. after an upgrade)
+            for c in store.list():
+                if c.get("result") and c["status"] in ("ok", "needs_review"):
+                    index.add_case(c["case_id"], c["result"])
         app.state.pool = ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="radintake-case")
         try:
             yield
@@ -51,7 +59,7 @@ def create_app(config: Config | None = None, *, max_workers: int = 2) -> FastAPI
             app.state.pool.shutdown(wait=False, cancel_futures=True)
 
     app = FastAPI(title="radintake", version="0.1.0", lifespan=lifespan)
-    app.state.config, app.state.store = cfg, store
+    app.state.config, app.state.store, app.state.index = cfg, store, index
 
     @app.exception_handler(ApiError)
     async def _api_error(_: Request, exc: ApiError) -> JSONResponse:

@@ -4,6 +4,9 @@ Newest changes recorded chronologically.
 
 
 ## 2026-11-24
+- Synchronized timestamp for 8 drifted concept(s): data/data-preparation.md, data/dataset-split-and-golden-set.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/deployment.md, subsystems/api-service.md, subsystems/dicom-deid-agent.md, subsystems/phi-agent.md.
+- PHI misses: credential-anchored sign-off names, DICOM fail-safes (all undeclared DA/DT, overlay groups 60xx, clinical-trial / scheduled-step / device items), burned-in redaction by text line with a safe-marker allowlist, and burned-in scoring on exact text-pixel masks from the curated twins.
+- Retrieval / QA built: `radintake.retrieval` (FTS5 BM25 + fastembed MiniLM, RRF) and `agents/qa.py` (extractive, verified citations, negation, abstention); `/query` wired; QA scoring (`score_qa`, `eval.run --qa / --qa-only`) and `eval/dev_qa.jsonl`. Dev: answer correctness 0.41 -> 0.77, abstention 0.97, citations 1.0. All 21 integration tests pass locally.
 - Synchronized timestamp for 1 drifted concept(s): subsystems/orchestrator.md.
 - Added the step inspector (`python -m radintake.inspect`, planner hook `_inspect`). Full dev re-run after the extraction fixes: mean EM 0.47 -> 0.66 (photos 0.18 -> 0.50), PHI recall 0.63 -> 0.81, precision 0.61 -> 0.80, injected pages flagged 5 -> 8 of 11.
 - Extraction fixes driven by the first dev run: header column-gap / label stops, section stop markers for technologist notes, exam-date fallback, credential-name PHI rule + referring anchor, and preprocessing reordered to dewarp -> flat-field illumination -> orientation -> deskew. 30-doc dev sample: mean EM 0.44 -> 0.64, phone photos 0.07 -> 0.43, PHI recall 0.60 -> 0.83. CI baseline ratcheted.

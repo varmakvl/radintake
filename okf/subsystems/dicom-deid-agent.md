@@ -7,7 +7,7 @@ tags: [dicom, de-identification, phi, burned-in-text, pydicom]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-23T17:39:22Z
+  at: 2026-11-24T12:19:56.032Z
 sources:
   - src/radintake/agents/dicom_deid.py
   - src/radintake/tools/dicom_io.py

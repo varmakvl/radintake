@@ -7,7 +7,7 @@ tags: [data, rendering, degradation, ground-truth, handwriting, adversarial, pla
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T12:00:00Z
+  at: 2026-11-24T12:19:56.032Z
 sources:
   - data_prep/__init__.py
   - data_prep/download.py

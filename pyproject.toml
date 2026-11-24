@@ -25,6 +25,7 @@ dependencies = [
   "pyyaml>=6.0",
   "pypdfium2>=4.30",
   "pytesseract>=0.3.10",
+  "fastembed>=0.4",          # local MiniLM (ONNX) embeddings for hybrid retrieval; no torch
 ]
 
 [project.optional-dependencies]

@@ -7,7 +7,7 @@ tags: [ci, testing, integration-test, github-actions, playbooks]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T10:54:19.351Z
+  at: 2026-11-24T12:19:56.032Z
 sources:
   - .github/workflows/ci.yml
   - tests/integration/fixtures.py

@@ -75,8 +75,8 @@ def relevant(gts: dict[str, dict], patterns: list[str]) -> list[str]:
                   if all(any(_matches(h, p) for h in g.get("mesh_major") or []) for p in patterns))
 
 
-def build(corpus: Path = Path("data/corpus")) -> list[dict]:
-    ids = [ln.split("\t")[0] for ln in (REPO_ROOT / "splits" / "golden_ids.txt").read_text(encoding="utf-8").splitlines() if ln.strip()]
+def build(corpus: Path = Path("data/corpus"), split: str = "golden") -> list[dict]:
+    ids = [ln.split("\t")[0] for ln in (REPO_ROOT / "splits" / f"{split}_ids.txt").read_text(encoding="utf-8").splitlines() if ln.strip()]
     gts = {i: json.loads((corpus / "gt" / f"{i}.json").read_text(encoding="utf-8")) for i in ids}
     out = []
     for k, (q, pats) in enumerate(ANSWERABLE, start=1):
@@ -85,9 +85,9 @@ def build(corpus: Path = Path("data/corpus")) -> list[dict]:
             out.append({"qid": f"Q{k:02d}", "question": q, "mesh": pats, "answerable": True, "relevant": rel})
     for k, (q, pats) in enumerate(UNANSWERABLE, start=1):
         rel = relevant(gts, pats)
-        if rel:
+        if rel and split == "golden":
             raise ValueError(f"'unanswerable' question has golden matches: {q} -> {rel}")
-        out.append({"qid": f"U{k:02d}", "question": q, "mesh": pats, "answerable": False, "relevant": []})
+        out.append({"qid": f"U{k:02d}", "question": q, "mesh": pats, "answerable": bool(rel), "relevant": rel})
     for k, (d, g) in enumerate(sorted((d, g) for d, g in gts.items() if g.get("injection")), start=1):
         terms = [h.split("/")[0] for h in g.get("mesh_major") or []][:1] or ["normal"]
         out.append({"qid": f"I{k:02d}", "question": f"What is the impression for study {d}?", "mesh": terms,
@@ -95,10 +95,17 @@ def build(corpus: Path = Path("data/corpus")) -> list[dict]:
     return out
 
 
-def main() -> int:
-    qs = build()
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text("".join(json.dumps(q) + "\n" for q in qs), encoding="utf-8")
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser(prog="python -m radintake.eval.golden_qa")
+    ap.add_argument("--split", choices=("golden", "dev"), default="golden",
+                    help="dev -> eval/dev_qa.jsonl, for tuning the QA agent without touching golden")
+    a = ap.parse_args(argv)
+    qs = build(split=a.split)
+    out = OUT if a.split == "golden" else OUT.with_name("dev_qa.jsonl")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("".join(json.dumps(q) + "\n" for q in qs), encoding="utf-8")
     print(json.dumps({"questions": len(qs), "answerable": sum(q["answerable"] for q in qs),
                       "unanswerable": sum(not q["answerable"] for q in qs),
                       "injection_probes": sum(bool(q.get("injection_probe")) for q in qs)}))

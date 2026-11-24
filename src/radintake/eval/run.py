@@ -33,7 +33,7 @@ from typing import Any
 import numpy as np
 
 from radintake.config import REPO_ROOT, load_config
-from radintake.eval.metrics import aggregate, score_dicom, score_document
+from radintake.eval.metrics import aggregate, score_dicom, score_document, score_qa
 
 SPLITS = REPO_ROOT / "splits"
 GOLDEN_USED = REPO_ROOT / "eval" / "GOLDEN_USED.json"
@@ -86,9 +86,37 @@ def sample(ids: list[str], gts: dict[str, dict], per_tier: int, seed: int = SEED
     return sorted(out)
 
 
+def qa_on_run(run_dir: Path, qa_path: Path, gts: dict[str, dict], preds: dict[str, dict] | None = None) -> list[dict]:
+    """Index a run's document outputs (case id = doc id) and score every question of ``qa_path``."""
+    from radintake.agents.qa import answer
+    from radintake.retrieval import RetrievalIndex
+
+    if preds is None:
+        preds = {}
+        for d, g in gts.items():
+            p = run_dir / "outputs" / f"{g['file']}.json"
+            if p.is_file():
+                preds[d] = json.loads(p.read_text(encoding="utf-8"))
+    db = run_dir / "retrieval.sqlite"
+    db.unlink(missing_ok=True)
+    index = RetrievalIndex(db)
+    for d, pred in preds.items():
+        if pred.get("status") != "error" and pred.get("report"):
+            index.add_case(d, pred)
+    qs = [json.loads(ln) for ln in qa_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    recs = []
+    for q in qs:
+        t0 = time.perf_counter()
+        res = answer(q["question"], index)
+        rec = score_qa(q, res, gts)
+        rec["ms"] = round((time.perf_counter() - t0) * 1000.0, 1)
+        recs.append(rec)
+    return recs
+
+
 def run(*, split: str, out: Path, corpus: Path, pipeline: str | None = None, per_tier: int = 0, limit: int = 0,
         dicom_dir: Path | None = None, docs_gt: dict[str, dict] | None = None, files_dir: Path | None = None,
-        label: str | None = None) -> dict[str, Any]:
+        label: str | None = None, qa_path: Path | None = None) -> dict[str, Any]:
     from radintake.pipeline import process_file
     from radintake.tracing.writer import TraceWriter
 
@@ -110,6 +138,7 @@ def run(*, split: str, out: Path, corpus: Path, pipeline: str | None = None, per
     tw = TraceWriter(out / "traces", model_ids=cfg.model_ids, offline=cfg.offline)
     scores: list[dict] = []
     cases: list[dict] = []
+    preds: dict[str, dict] = {}
     dicom_gt = []
     if dicom_dir is not None:
         dicom_gt = [json.loads(ln) for ln in (dicom_dir / "gt.jsonl").read_text(encoding="utf-8").splitlines() if ln.strip()]
@@ -120,6 +149,7 @@ def run(*, split: str, out: Path, corpus: Path, pipeline: str | None = None, per
             path = files_dir / gt["file"]
             t0 = time.perf_counter()
             pred = process_file(path, out / "outputs", config=cfg, trace_writer=tw)
+            preds[i] = pred
             ms = (time.perf_counter() - t0) * 1000.0
             cases.append({"id": i, "ms": round(ms, 1), "pages": gt.get("n_pages", 1), "tier": gt["tier"]})
             scores += score_document(pred, gt)
@@ -131,6 +161,8 @@ def run(*, split: str, out: Path, corpus: Path, pipeline: str | None = None, per
                           "tier": "dicom"})
             scores.append(score_dicom(pred, g, path, out / "outputs"))
     tw.finalize()
+    if qa_path is not None and qa_path.is_file():
+        scores += qa_on_run(out, qa_path, {i: docs_gt[i] for i in ids}, preds)
     model_calls = sum(ln.count('"kind": "model_call"') + ln.count('"kind":"model_call"')
                       for p in (out / "traces").rglob("*.jsonl") for ln in p.read_text(encoding="utf-8").splitlines())
     doc_cases = [c for c in cases if c["tier"] != "dicom"]
@@ -163,15 +195,32 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--dicom-dir", type=Path, default=Path("data/dicom_gt"))
     ap.add_argument("--out", type=Path)
     ap.add_argument("--final", action="store_true", help="required for the single golden run")
+    ap.add_argument("--qa", type=Path, default=None,
+                    help="QA set to score (default: eval/golden_qa.jsonl for golden, eval/dev_qa.jsonl for dev)")
+    ap.add_argument("--qa-only", type=Path, default=None, metavar="RUN_DIR",
+                    help="score the QA set on an existing run's outputs (no pipeline re-run) and update its record")
     a = ap.parse_args(argv)
     if a.split == "golden":
         if not a.final:
             ap.error("the golden split is only scored by the final run: pass --final")
         if GOLDEN_USED.exists():
             ap.error(f"golden set already used: {GOLDEN_USED.read_text(encoding='utf-8').strip()}")
+    qa_path = a.qa or (REPO_ROOT / "eval" / ("golden_qa.jsonl" if a.split == "golden" else "dev_qa.jsonl"))
+    if a.qa_only:
+        rd = a.qa_only
+        meta = json.loads((rd / "run.json").read_text(encoding="utf-8"))
+        gts = {i: json.loads((a.corpus / "gt" / f"{i}.json").read_text(encoding="utf-8")) for i in meta["doc_ids"]}
+        old = [json.loads(ln) for ln in (rd / "scores.jsonl").read_text(encoding="utf-8").splitlines() if ln.strip()]
+        scores = [r for r in old if r["kind"] != "qa"] + qa_on_run(rd, qa_path, gts)
+        (rd / "scores.jsonl").write_text("".join(json.dumps(s) + "\n" for s in scores), encoding="utf-8")
+        timings = json.loads((rd / "timings.json").read_text(encoding="utf-8"))
+        m = aggregate(scores, timings)
+        (rd / "metrics.json").write_text(json.dumps(m, indent=1), encoding="utf-8")
+        print(json.dumps(m.get("qa"), indent=1))
+        return 0
     out = a.out or Path("runs") / f"{a.split}_{a.pipeline or 'default'}{'_s' + str(a.sample_per_tier) if a.sample_per_tier else ''}"
     m = run(split=a.split, out=out, corpus=a.corpus, pipeline=a.pipeline, per_tier=a.sample_per_tier, limit=a.limit,
-            dicom_dir=a.dicom_dir if a.dicom else None)
+            dicom_dir=a.dicom_dir if a.dicom else None, qa_path=qa_path)
     if a.split == "golden":
         GOLDEN_USED.parent.mkdir(parents=True, exist_ok=True)
         GOLDEN_USED.write_text(json.dumps({"run": str(out), "run_id": json.loads((out / "run.json").read_text())["run_id"],

@@ -18,7 +18,7 @@ reports and DICOM. Start with the [System Overview](/overview.md); the delivery 
 - [DICOM De-identification Agent](/subsystems/dicom-deid-agent.md) — Basic Profile header actions plus burned-in text redaction; output stays valid DICOM.
 - [Extraction Agent](/subsystems/extraction-agent.md) — OCR-first, VLM-first and hybrid pipelines emitting report.v1 with confidence and provenance.
 - [Verifier, Injection Detector & Review Queue](/subsystems/verifier-agent.md) — Grounding, schema, omission and injection checks; routes doubtful cases to humans.
-- [Retrieval / QA Agent](/subsystems/retrieval-qa-agent.md) — Planned hybrid retrieval with cited answers and abstention (not built yet).
+- [Retrieval / QA Agent](/subsystems/retrieval-qa-agent.md) — SQLite BM25 + MiniLM hybrid index, extractive cited answers, negation, abstention.
 - [Guarded Model Client & VLM Client](/subsystems/model-client-guard.md) — Every model call is offline-checked, PHI-mask-checked, cached and traced.
 - [Tracing & PHI-safe Logging](/subsystems/tracing-and-logging.md) — Hashed, replayable JSONL traces and a shared PHI scrubber for logs.
 - [API Service](/subsystems/api-service.md) — FastAPI routes, SQLite case store, background processing, problem+json errors.

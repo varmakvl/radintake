@@ -39,6 +39,9 @@ def _process(app: Any, case_id: str, path: Path) -> None:
     try:
         store.set_running(case_id)
         doc = process_file(path, path.parent / "out", config=cfg, input_name=path.name)
+        if doc.get("status") != "error" and doc.get("report"):
+            n = app.state.index.add_case(case_id, doc)  # verified section fields only
+            log.info("case_indexed", case_id=case_id, chunks=n)
         store.finish(case_id, doc)
         log.info("case_finished", case_id=case_id, status=doc["status"], trace_id=doc["trace_id"])
     except Exception as exc:  # noqa: BLE001 - a case failure never kills the worker
@@ -135,13 +138,16 @@ class QueryBody(BaseModel):
 
 
 @router.post("/query")
-def post_query(body: QueryBody) -> Any:
+def post_query(body: QueryBody, request: Request) -> Any:
     try:
         qa = importlib.import_module("radintake.agents.qa")
         answer = qa.answer
     except (ImportError, AttributeError):
         return problem(503, "Query service unavailable", "the QA agent is not installed")
-    return answer(body.question)
+    res = answer(body.question, request.app.state.index)
+    log.info("query_answered", abstained=res["abstained"], n_citations=len(res["citations"]),
+             backend=res["retrieval"]["backend"])  # ids/counts only: no question or answer text
+    return res
 
 
 @router.get("/health")
