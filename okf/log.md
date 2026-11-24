@@ -4,6 +4,9 @@ Newest changes recorded chronologically.
 
 
 ## 2026-11-24
+- Synchronized timestamp for 2 drifted concept(s): subsystems/extraction-agent.md, subsystems/model-client-guard.md.
+- Synchronized workspace frontier mapping in `index.md` (+1 new, -0 removed, 45 already listed; 46 undocumented files mapped).
+- Pipeline comparison on 18 dev docs: OCR-first 0.642 EM / 2.3 s, hybrid 0.651 / 11.9 s, VLM-first 0.421 / 16.8 s. OCR-first kept as default, hybrid opt-in. Fixes found on the way: dedicated crop prompt; reload the VLM when Ollama's runner degrades. Progress dashboard published as a private artifact.
 - Synchronized timestamp for 3 drifted concept(s): data/dataset-split-and-golden-set.md, subsystems/dicom-deid-agent.md, subsystems/phi-agent.md.
 - Synchronized timestamp for 8 drifted concept(s): data/data-preparation.md, data/dataset-split-and-golden-set.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/deployment.md, subsystems/api-service.md, subsystems/dicom-deid-agent.md, subsystems/phi-agent.md.
 - PHI misses: credential-anchored sign-off names, DICOM fail-safes (all undeclared DA/DT, overlay groups 60xx, clinical-trial / scheduled-step / device items), burned-in redaction by text line with a safe-marker allowlist, and burned-in scoring on exact text-pixel masks from the curated twins.

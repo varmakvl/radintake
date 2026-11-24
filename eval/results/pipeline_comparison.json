@@ -1,0 +1,50 @@
+[
+ {
+  "pipeline": "ocr_first",
+  "label": "OCR-first",
+  "exact_match": 0.6415,
+  "cer": 0.1459,
+  "hallucination": 0.1049,
+  "omission": 0.0542,
+  "em_clean_scan": 0.8556,
+  "em_poor_scan": 0.5444,
+  "em_phone_photo": 0.5278,
+  "latency_p50_s": 2.3,
+  "latency_p95_s": 3.1,
+  "gpu_peak_mib": 0,
+  "vlm_calls_ok": 0,
+  "vlm_calls_failed": 0
+ },
+ {
+  "pipeline": "hybrid",
+  "label": "Hybrid",
+  "exact_match": 0.6508,
+  "cer": 0.1474,
+  "hallucination": 0.0769,
+  "omission": 0.0542,
+  "em_clean_scan": 0.8556,
+  "em_poor_scan": 0.5444,
+  "em_phone_photo": 0.5555,
+  "latency_p50_s": 11.9,
+  "latency_p95_s": 35.5,
+  "gpu_peak_mib": 2871,
+  "vlm_calls_ok": 19,
+  "vlm_calls_failed": 2
+ },
+ {
+  "pipeline": "vlm_first",
+  "label": "VLM-first",
+  "exact_match": 0.4206,
+  "cer": 0.4851,
+  "hallucination": 0.1062,
+  "omission": 0.3386,
+  "em_clean_scan": 0.4222,
+  "em_poor_scan": 0.4778,
+  "em_phone_photo": 0.3611,
+  "latency_p50_s": 16.8,
+  "latency_p95_s": 35.9,
+  "gpu_peak_mib": 2865,
+  "vlm_calls_ok": 21,
+  "vlm_calls_failed": 2
+ }
+]

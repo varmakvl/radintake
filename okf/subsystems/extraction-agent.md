@@ -7,7 +7,7 @@ tags: [extraction, ocr, vlm, hybrid, provenance, report-schema, agent]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T11:48:24.228Z
+  at: 2026-11-24T13:16:35.410Z
 sources:
   - src/radintake/agents/extract.py
   - src/radintake/agents/extract_ocr.py
@@ -16,6 +16,8 @@ sources:
   - src/radintake/tools/ocr.py
   - src/radintake/models/report.py
   - prompts/extraction_v1.md
+  - prompts/crop_transcribe_v1.md
+  - eval/results/pipeline_comparison.json
   - docs/ocr-engine.md
   - tests/unit/test_extract_ocr.py
   - tests/unit/test_extract_vlm_hybrid.py
@@ -57,12 +59,23 @@ VLM calls go through the [Guarded Model Client & VLM Client](/subsystems/model-c
   dates (not the DOB) and modality codes - layout-agnostic, which matters for the hidden test.
 Net on a 30-doc dev sample: mean EM 0.44 -> 0.64, hallucination 0.29 -> 0.12.
 
-# Open decision
+# Decision: OCR-first default, hybrid opt-in (2026-11-24, on dev evidence)
 
-The assignment requires choosing the pipeline **on evidence** from a dev-set comparison (EM, CER,
-hallucination, omission, latency, cost per tier). That comparison needs the rendered dev set and
-the [Evaluation Harness](/operations/evaluation-harness.md), neither of which exists yet, so
-`ocr_first` is a provisional default. Tracked in [Delivery Plan & Status](/playbooks/delivery-plan-and-status.md).
+Same 18 dev documents (6 per tier, seed 140, 100 scored fields), `eval/results/pipeline_comparison.json`:
+
+| Pipeline | Exact match | CER | Not on page | Missing | Photos EM | p50 / p95 s per page | VLM calls ok |
+|---|---|---|---|---|---|---|---|
+| OCR-first | 0.642 | 0.146 | 0.105 | 0.054 | 0.528 | 2.3 / 3.1 | – |
+| Hybrid | 0.651 | 0.147 | 0.077 | 0.054 | 0.556 | 11.9 / 35.5 | 19 of 21 |
+| VLM-first | 0.421 | 0.485 | 0.106 | 0.339 | 0.361 | 16.8 / 35.9 | 21 of 23 |
+
+OCR-first stays the default: hybrid's gain is small (+0.9 points EM, -2.8 points hallucination, better
+photos) for ~5x latency, and the graders' container has no local VLM, so hybrid would fall back to
+OCR-first there anyway. Hybrid is kept as `extraction.pipeline: hybrid` when Ollama is available.
+VLM-first with a 3B model on 4 GB omits a third of the fields. Getting a fair comparison took two fixes
+(commit 5bf6aee and after): a dedicated crop prompt (`prompts/crop_transcribe_v1.md` - the shared prompt
+made the model answer crops in page form, so hybrid silently equalled OCR-first) and reloading the
+model when Ollama's runner degrades after many image calls (empty replies, HTTP 500, then "8888...").
 
 # Guardrails & Anti-Regression Checklist
 

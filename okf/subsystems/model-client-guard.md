@@ -7,7 +7,7 @@ tags: [model-client, vlm, phi, offline, cache, cost, trust-boundary]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T10:31:35.389Z
+  at: 2026-11-24T13:16:35.410Z
 sources:
   - src/radintake/tools/model_client.py
   - src/radintake/tools/vlm_client.py
@@ -64,6 +64,9 @@ model can never be added silently.
 - Every model call goes through this class — OCR, VLM, embedder, answer LLM.
 - Never let the client trigger `ollama pull` or a Hugging Face download at run time.
 - Local VLM calls can take tens of seconds: `extraction.vlm.timeout_s` is 180.
+- On a failed Ollama attempt (empty / non-JSON reply, HTTP 500) the client unloads the model (`keep_alive: 0`)
+  and retries once on a fresh load: the Qwen2.5-VL runner degrades after many image calls on a 4 GB GPU.
+  Never send two image requests at once to the same local server during an evaluation run.
 - Pages are downscaled to `max_image_side` (1100) before Ollama and any returned `bbox` is scaled
   back (`downscale` / `rescale_boxes`). Measured 2026-11-24 on the 4 GB GPU: a full 1700x2200 page
   is ~4k image tokens, fills the default 4,096 context, truncates the reply and takes ~64 s; at

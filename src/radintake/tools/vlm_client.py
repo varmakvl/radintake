@@ -252,10 +252,14 @@ class VlmClient(ModelClient):
                         "num_ctx": self.num_ctx},
             "messages": [{"role": "user", "content": prompt, "images": [_png_b64(img)]}],
         }).encode("utf-8")
-        # A local server shared with other callers (or reloading the model on a 4 GB GPU) occasionally
-        # returns an empty or cut-off reply; one retry turns those transient failures into answers.
+        # Measured on the 4 GB GPU (model split ~55/45 CPU/GPU): after a run of image requests the
+        # Ollama runner for Qwen2.5-VL degrades - empty replies, HTTP 500, then degenerate text
+        # ("8888...") - until the model is reloaded. So a failed attempt unloads the model before the
+        # one retry, which then runs on a fresh load.
         last: Exception | None = None
-        for _attempt in range(2):
+        for attempt in range(2):
+            if attempt:
+                self._ollama_unload()
             req = urllib.request.Request(f"{ollama_host()}/api/chat", data=body, method="POST",
                                          headers={"content-type": "application/json"})
             try:
@@ -275,6 +279,19 @@ class VlmClient(ModelClient):
             except ValueError as exc:  # empty / truncated / non-JSON reply
                 last = exc
         raise last if last else VlmUnavailable("no reply")
+
+    def _ollama_unload(self) -> None:
+        """Ask Ollama to unload the model (keep_alive 0) so the next call starts on a fresh runner."""
+        import urllib.request
+
+        body = json.dumps({"model": self.model_id, "keep_alive": 0}).encode("utf-8")
+        try:
+            urllib.request.urlopen(urllib.request.Request(f"{ollama_host()}/api/generate", data=body, method="POST",
+                                                          headers={"content-type": "application/json"}), timeout=30).read()
+        except Exception as exc:  # noqa: BLE001 - best effort; the retry reports any real failure
+            from radintake.logging import get_logger
+
+            get_logger("radintake.vlm").warning("ollama_unload_failed", error_type=type(exc).__name__)
 
     def _invoke_local(self, payload: Any, prompt: str, **kwargs: Any) -> VlmResponse:
         """Florence-2 ``<OCR>`` on a crop -> ``{"text": ...}``. Page-level field JSON needs the Ollama VLM."""
