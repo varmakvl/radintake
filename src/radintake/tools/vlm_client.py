@@ -252,20 +252,29 @@ class VlmClient(ModelClient):
                         "num_ctx": self.num_ctx},
             "messages": [{"role": "user", "content": prompt, "images": [_png_b64(img)]}],
         }).encode("utf-8")
-        req = urllib.request.Request(f"{ollama_host()}/api/chat", data=body, method="POST",
-                                     headers={"content-type": "application/json"})
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout_s) as r:
-                out = json.loads(r.read().decode("utf-8"))
-        except urllib.error.HTTPError as exc:
-            detail = exc.read()[:200].decode("utf-8", "replace")
-            raise VlmUnavailable(f"Ollama HTTP {exc.code}: {detail}") from exc
-        except urllib.error.URLError as exc:
-            raise VlmUnavailable(f"Ollama not reachable at {ollama_host()}: {exc.reason}") from exc
-        text = (out.get("message") or {}).get("content", "")
-        usage = {"input_tokens": int(out.get("prompt_eval_count", 0) or 0),
-                 "output_tokens": int(out.get("eval_count", 0) or 0)}
-        return VlmResponse(rescale_boxes(parse_json(text), 1.0 / scale), usage, self.cost(usage))
+        # A local server shared with other callers (or reloading the model on a 4 GB GPU) occasionally
+        # returns an empty or cut-off reply; one retry turns those transient failures into answers.
+        last: Exception | None = None
+        for _attempt in range(2):
+            req = urllib.request.Request(f"{ollama_host()}/api/chat", data=body, method="POST",
+                                         headers={"content-type": "application/json"})
+            try:
+                with urllib.request.urlopen(req, timeout=self.timeout_s) as r:
+                    out = json.loads(r.read().decode("utf-8"))
+            except urllib.error.HTTPError as exc:
+                detail = exc.read()[:200].decode("utf-8", "replace")
+                last = VlmUnavailable(f"Ollama HTTP {exc.code}: {detail}")
+                continue
+            except urllib.error.URLError as exc:
+                raise VlmUnavailable(f"Ollama not reachable at {ollama_host()}: {exc.reason}") from exc
+            text = (out.get("message") or {}).get("content", "")
+            usage = {"input_tokens": int(out.get("prompt_eval_count", 0) or 0),
+                     "output_tokens": int(out.get("eval_count", 0) or 0)}
+            try:
+                return VlmResponse(rescale_boxes(parse_json(text), 1.0 / scale), usage, self.cost(usage))
+            except ValueError as exc:  # empty / truncated / non-JSON reply
+                last = exc
+        raise last if last else VlmUnavailable("no reply")
 
     def _invoke_local(self, payload: Any, prompt: str, **kwargs: Any) -> VlmResponse:
         """Florence-2 ``<OCR>`` on a crop -> ``{"text": ...}``. Page-level field JSON needs the Ollama VLM."""

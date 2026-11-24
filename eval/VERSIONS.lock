@@ -7,6 +7,7 @@
   "phi.yaml": "2c2da68b7af4be121d3f3d09a4fe2e37cfc3c540e598016d0d97afca36b8eaba"
  },
  "prompts": {
+  "crop_transcribe_v1.md": "d4551bd5f9b6ae59da10f1d65600d963f12e866c41a0a44b5d39c6504341ded6",
   "extraction_v1.md": "acec0a1f2e255798c19f334b846142108a64f27863fb2c2661cd5b4c71fab1cc"
  },
  "schemas": {

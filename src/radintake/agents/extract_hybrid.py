@@ -25,7 +25,9 @@ from rapidfuzz import fuzz
 from radintake.agents import extract_ocr, extract_vlm
 from radintake.agents.extract_ocr import ExtractionResult, OcrFirstExtractor, join_tokens, union
 from radintake.models.report import SECTION_FIELDS, Report, ReportField
-from radintake.tools.vlm_client import VlmClient, crop_payload, select_vlm
+from radintake.tools.vlm_client import VlmClient, crop_payload, load_prompt, select_vlm
+
+CROP_PROMPT_ID = "crop_transcribe_v1"
 
 EXTRACT_HYBRID_VERSION = "extract-hybrid-1"
 
@@ -44,12 +46,12 @@ def reread_crop(client: VlmClient, ctx: Any, res: ExtractionResult, name: str,
     """Re-read one weak field crop by crop; keep OCR boxes, mark the source."""
     hit = res.hits[name]
     old: ReportField = getattr(res.report, name)
-    prompt = extract_vlm.render_prompt("crop")
+    prompt = load_prompt(CROP_PROMPT_ID)  # single-purpose prompt: the shared one made the model answer in page form
     texts, confs, ratios = [], [], []
     for pidx in sorted({t.page for t in hit.tokens}):
         toks = [t for t in hit.tokens if t.page == pidx]
         crop = crop_payload(payloads[pidx], union([t.bbox for t in toks]))
-        resp = client.call(crop, prompt_id=extract_vlm.PROMPT_ID, prompt=prompt, trace=ctx.trace, task="crop")
+        resp = client.call(crop, prompt_id=CROP_PROMPT_ID, prompt=prompt, trace=ctx.trace, task="crop")
         data = resp.data if isinstance(resp.data, dict) else {}
         text = str(data.get("text") or "").strip()
         if not text:
