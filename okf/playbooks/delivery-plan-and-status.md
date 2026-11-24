@@ -30,12 +30,12 @@ well the higher priorities are done.
 | rad-beb.3 | Dedup, split, DICOM GT | done: golden 112 docs / 145 pages, 48 DICOM (6 burned-in) | [Dataset Split & Golden Set](/data/dataset-split-and-golden-set.md) |
 | rad-beb.4 | Orchestrator + preprocessing | built, tests closed | [Orchestrator](/subsystems/orchestrator.md) |
 | rad-beb.5 | PHI (documents + DICOM) | built | [Document PHI Agent](/subsystems/phi-agent.md), [DICOM De-id](/subsystems/dicom-deid-agent.md) |
-| rad-beb.6 | Extraction (OCR / VLM / hybrid) | all three built; evidence-based comparison pending | [Extraction Agent](/subsystems/extraction-agent.md) |
+| rad-beb.6 | Extraction (OCR / VLM / hybrid) | all three compared on dev (18 docs): OCR-first 0.642 / hybrid 0.651 / VLM-first 0.421 EM; OCR-first default | [Extraction Agent](/subsystems/extraction-agent.md) |
 | rad-beb.7 | Verifier + review queue | built | [Verifier](/subsystems/verifier-agent.md) |
-| rad-beb.8 | Tracing, eval harness, CI gate | built 2026-11-24 (metrics, runs, rescore, version lock, CI gate, golden QA); error analysis + intentional red commit pending | [Evaluation Harness](/operations/evaluation-harness.md) |
+| rad-beb.8 | Tracing, eval harness, CI gate | done: metrics, rescore, version lock, CI gate (red `f5d4033`, green `19c9d6e`), error analysis on dev and golden | [Evaluation Harness](/operations/evaluation-harness.md) |
 | rad-beb.9 | Retrieval / QA | built 2026-11-24; dev correctness 0.77, abstention 0.97, citations 1.0 | [Retrieval / QA Agent](/subsystems/retrieval-qa-agent.md) |
-| rad-beb.10 | Deployment | API, Compose, lockfile built; not smoke-tested here | [Deployment](/operations/deployment.md) |
-| rad-beb.11 | Final run, report, README | not started (README partly updated) | — |
+| rad-beb.10 | Deployment | done: Compose smoke test passed 2026-11-24 | [Deployment](/operations/deployment.md) |
+| rad-beb.11 | Final run, report, README | done 2026-11-24: golden run once (`traces/final/`), 9-page PDF via `docs/report/build_report.py`, README | [Evaluation Harness](/operations/evaluation-harness.md) |
 | rad-beb.12 | LoRA bonus | not planned in detail | — |
 
 Dev numbers (OCR-first, 218 docs, 2026-11-24 after fixes): report-field mean EM 0.66 (clean 0.90, poor
@@ -44,20 +44,25 @@ Dev numbers (OCR-first, 218 docs, 2026-11-24 after fixes): report-field mean EM 
 QA recall@5 0.58, answer correctness 0.77, correct abstention 0.97, citation accuracy 1.0; p50 2.6 s/page.
 All 21 integration tests pass locally (hybrid and BM25-only).
 
-Remaining before 2026-12-02: VLM-first / hybrid comparison on a dev sample, error-analysis tool,
-intentional failing CI-gate commit, Compose smoke test, the single golden run, report and README.
+Golden numbers (single run `20261124T170304Z-a5a6c448`, OCR-first, 112 docs / 145 pages): mean EM 0.672
+(clean 0.88, poor 0.58, photo 0.55), CER 0.17; document PHI recall 0.83 / precision 0.81 (149 of 883
+missed); DICOM valid 1.0, header PHI recall 1.0, burned-in text-pixel recall 0.61; QA recall@5 0.55,
+answer correctness 0.72, correct abstention 0.97, citations 1.0; injection 1 of 4 flagged, 0 changed
+behaviour; 60% of documents to review; p50 2.3 s / p95 3.5 s per page on CPU; $0 per page.
+Golden lands within 2 points of dev, so dev tuning did not overfit. The DICOM set (48 files) is shared
+by dev and golden and is not held out.
 
-# The key gap
+Remaining (optional) before 2026-12-02: close leftover beads; the LoRA bonus stays dropped.
 
-The sprint built the runtime agents first. Priority 1 (the rendered dataset, split and ground
-truth) is mostly missing, and without it there is no dev set to choose the extraction pipeline on
-evidence, no golden numbers, and no report tables. Data generation and the evaluation harness are
-the critical path.
+# The key gap (closed)
+
+The sprint built the runtime agents first; Priority 1 data, the evaluation harness, the pipeline
+comparison and the golden run followed on 2026-11-24. The weakest area is now phone photos whose
+page edge the quad detector misses (OCR reads almost nothing) and handwritten clinician names (PHI).
 
 # Open risks and decisions
 
 - Decided 2026-11-24: open-source local models only (Qwen2.5-VL-3B via Ollama, Florence-2 fallback, Qwen2.5-3B for answers); no vector database; decoded data in SQLite. Deadline 2026-12-02; LoRA bonus dropped.
-- Extraction pipeline choice is provisional (`ocr_first`).
+- Extraction pipeline: `ocr_first` chosen on dev evidence; hybrid opt-in.
 - Tesseract PATH on the dev machine.
-- Priority 1 (data and answer key) completed 2026-11-24. Next on the critical path: evaluation harness, then the pipeline comparison on dev.
 - The fleet sprint is stopped; the fleet server and supervisor are not set to auto-start.

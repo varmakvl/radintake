@@ -1,0 +1,514 @@
+{
+ "run": "golden_final",
+ "split": "golden",
+ "pipeline": "ocr_first",
+ "n_pages_scored": 145,
+ "worst": [
+  {
+   "doc_id": "D0178",
+   "page": 1,
+   "tier": "phone_photo",
+   "format": "tiff",
+   "handwriting": true,
+   "injected": false,
+   "badness": 2.05,
+   "mean_cer": 0.8,
+   "failures": [
+    {
+     "field": "patient_id",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "indication",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "comparison",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "findings",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "patient_name",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "referring_physician",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "patient_id",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "date_of_birth",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "accession_number",
+     "category": "PHI miss",
+     "cer": null
+    }
+   ]
+  },
+  {
+   "doc_id": "D0097",
+   "page": 1,
+   "tier": "phone_photo",
+   "format": "jpg",
+   "handwriting": false,
+   "injected": false,
+   "badness": 1.8333,
+   "mean_cer": 0.8333,
+   "failures": [
+    {
+     "field": "accession_number",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "indication",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "comparison",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "findings",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "impression",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "patient_name",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "referring_physician",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "accession_number",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "radiologist",
+     "category": "PHI miss",
+     "cer": null
+    }
+   ]
+  },
+  {
+   "doc_id": "D0290",
+   "page": 2,
+   "tier": "poor_scan",
+   "format": "tiff",
+   "handwriting": true,
+   "injected": false,
+   "badness": 1.6944,
+   "mean_cer": 0.4444,
+   "failures": [
+    {
+     "field": "accession_number",
+     "category": "layout: bleed",
+     "cer": 0.333
+    },
+    {
+     "field": "impression",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "patient_name",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "patient_id",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "accession_number",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "technologist",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "radiologist",
+     "category": "PHI miss",
+     "cer": null
+    }
+   ]
+  },
+  {
+   "doc_id": "D0322",
+   "page": 1,
+   "tier": "phone_photo",
+   "format": "jpg",
+   "handwriting": false,
+   "injected": false,
+   "badness": 1.6136,
+   "mean_cer": 0.8636,
+   "failures": [
+    {
+     "field": "patient_id",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "accession_number",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "indication",
+     "category": "OCR misread",
+     "cer": 0.455
+    },
+    {
+     "field": "impression",
+     "category": "hallucination",
+     "cer": 1.0
+    },
+    {
+     "field": "patient_name",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "technologist",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "radiologist",
+     "category": "PHI miss",
+     "cer": null
+    }
+   ]
+  },
+  {
+   "doc_id": "D0051",
+   "page": 2,
+   "tier": "phone_photo",
+   "format": "pdf",
+   "handwriting": true,
+   "injected": false,
+   "badness": 1.5833,
+   "mean_cer": 0.3333,
+   "failures": [
+    {
+     "field": "impression",
+     "category": "hallucination",
+     "cer": 1.0
+    },
+    {
+     "field": "patient_name",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "patient_id",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "accession_number",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "technologist",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "radiologist",
+     "category": "PHI miss",
+     "cer": null
+    }
+   ]
+  },
+  {
+   "doc_id": "D0057",
+   "page": 2,
+   "tier": "phone_photo",
+   "format": "tiff",
+   "handwriting": false,
+   "injected": false,
+   "badness": 1.5833,
+   "mean_cer": 0.3333,
+   "failures": [
+    {
+     "field": "impression",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "patient_name",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "patient_id",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "accession_number",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "technologist",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "radiologist",
+     "category": "PHI miss",
+     "cer": null
+    }
+   ]
+  },
+  {
+   "doc_id": "D0108",
+   "page": 1,
+   "tier": "phone_photo",
+   "format": "jpg",
+   "handwriting": false,
+   "injected": false,
+   "badness": 1.55,
+   "mean_cer": 0.8,
+   "failures": [
+    {
+     "field": "accession_number",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "comparison",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "findings",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "impression",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "accession_number",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "technologist",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "radiologist",
+     "category": "PHI miss",
+     "cer": null
+    }
+   ]
+  },
+  {
+   "doc_id": "D0060",
+   "page": 1,
+   "tier": "poor_scan",
+   "format": "png",
+   "handwriting": false,
+   "injected": false,
+   "badness": 1.5233,
+   "mean_cer": 0.7733,
+   "failures": [
+    {
+     "field": "accession_number",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "indication",
+     "category": "hallucination",
+     "cer": 0.64
+    },
+    {
+     "field": "comparison",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "findings",
+     "category": "hallucination",
+     "cer": 1.0
+    },
+    {
+     "field": "impression",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "patient_name",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "referring_physician",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "radiologist",
+     "category": "PHI miss",
+     "cer": null
+    }
+   ]
+  },
+  {
+   "doc_id": "D0058",
+   "page": 1,
+   "tier": "poor_scan",
+   "format": "pdf",
+   "handwriting": false,
+   "injected": false,
+   "badness": 1.453,
+   "mean_cer": 0.453,
+   "failures": [
+    {
+     "field": "indication",
+     "category": "OCR misread",
+     "cer": 0.162
+    },
+    {
+     "field": "comparison",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "findings",
+     "category": "hallucination",
+     "cer": 0.648
+    },
+    {
+     "field": "impression",
+     "category": "hallucination",
+     "cer": 0.908
+    },
+    {
+     "field": "patient_name",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "referring_physician",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "technologist",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "radiologist",
+     "category": "PHI miss",
+     "cer": null
+    }
+   ]
+  },
+  {
+   "doc_id": "D0245",
+   "page": 1,
+   "tier": "poor_scan",
+   "format": "tiff",
+   "handwriting": true,
+   "injected": false,
+   "badness": 1.35,
+   "mean_cer": 0.6,
+   "failures": [
+    {
+     "field": "indication",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "comparison",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "findings",
+     "category": "omission",
+     "cer": 1.0
+    },
+    {
+     "field": "patient_name",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "referring_physician",
+     "category": "PHI miss",
+     "cer": null
+    },
+    {
+     "field": "accession_number",
+     "category": "PHI miss",
+     "cer": null
+    }
+   ]
+  }
+ ],
+ "categories_worst": {
+  "PHI miss": 40,
+  "omission": 24,
+  "hallucination": 6,
+  "OCR misread": 2,
+  "layout: bleed": 1
+ },
+ "categories_all_pages": {
+  "PHI miss": 149,
+  "OCR misread": 74,
+  "hallucination": 51,
+  "omission": 50,
+  "layout: bleed": 22,
+  "layout: truncated": 9,
+  "handwriting": 8,
+  "wrong field": 1
+ },
+ "worst_by_tier": {
+  "phone_photo": 6,
+  "poor_scan": 4
+ }
+}

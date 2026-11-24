@@ -55,3 +55,6 @@ Thumbs.db
 
 # Code-index cache (fleet code_graph)
 .gitnexus/
+
+# report output: shows licensed IU pages and synthetic PHI (local only)
+/docs/report/out/

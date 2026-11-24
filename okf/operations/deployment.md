@@ -7,7 +7,7 @@ tags: [deployment, docker, compose, healthcheck, lockfile]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T17:01:04.519Z
+  at: 2026-11-24T17:14:18.527Z
 sources:
   - Dockerfile
   - .dockerignore
@@ -34,7 +34,13 @@ with OCR-first extraction. The image contains no data, renders or DICOM. Depende
 `deploy.md` is the runbook the fleet sprint's deployer follows (venv install + Compose + smoke test).
 Service details: [API Service](/subsystems/api-service.md).
 
-# Not verified
+# Smoke test (verified 2026-11-24)
 
-The Compose stack has not been brought up and smoke-tested in this review. Tracked in
-[Delivery Plan & Status](/playbooks/delivery-plan-and-status.md).
+`docker compose up -d --build --wait`, then health ok, two synthetic reports (clean, rotated photo)
+extracted 10 fields each, the synthetic DICOM completed, a corrupt PNG returned `status: error`
+with a clear problem detail, `/query` answered with 4 verified citations (bm25+dense) and an
+unanswerable question abstained. First build about 5 min (fastembed model baked into `/models`).
+
+Gotcha: a host `uvicorn ... --port 8000` left running binds `127.0.0.1:8000`, while Docker binds
+`::`/`0.0.0.0`; `curl localhost:8000` then reaches the stale host process (old code, 500 on
+`/query`). Check `Get-NetTCPConnection -LocalPort 8000` before smoke-testing.

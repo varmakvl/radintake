@@ -9,7 +9,7 @@ Florence-2, all-MiniLM-L6-v2), so the cost per page is $0 and no page leaves the
 - Design and decisions: [`PLAN.md`](PLAN.md), [`docs/agents_vs_fixed.md`](docs/agents_vs_fixed.md),
   [`docs/ocr-engine.md`](docs/ocr-engine.md). The living architecture bundle is [`okf/index.md`](okf/index.md).
 - Scope: [`requirements.md`](requirements.md). The end-to-end contract is [`tests/integration/`](tests/integration/).
-- Results: [Results](#results) below; the full report is `docs/report.pdf` (see [Report](#report)).
+- Results: [Results](#results) below; the full report is built by `docs/report/build_report.py` (see [Report](#report)).
 
 ## Architecture in one paragraph
 
@@ -125,7 +125,27 @@ synthetic subset. Commit `f5d4033` breaks the patient-name PHI anchor on purpose
 ## Results
 
 <!-- RESULTS:START -->
-Golden-set numbers are filled in after the single `--final` run.
+Single golden run `20261124T170304Z-a5a6c448` (OCR-first, 112 documents / 145 pages,
+scored once; record in [`traces/final/`](traces/final/), re-scorable offline).
+
+| Tier | Field EM | CER | Hallucination | Omission | PHI recall |
+|---|---|---|---|---|---|
+| **Overall** | 0.672 | 0.169 | 8.8% | 7.6% | 83.1% |
+| Clean scan | 0.884 | 0.016 | 0.9% | 0.0% | 91.0% |
+| Poor scan | 0.579 | 0.218 | 8.7% | 9.7% | 80.8% |
+| Phone photo | 0.549 | 0.279 | 18.4% | 13.3% | 77.7% |
+
+- **PHI (documents):** recall 83.1%, precision 80.7%; 149 of 883 instances missed,
+  mostly technologist / radiologist names and patient names on photos (all listed by id in `metrics.json`).
+- **DICOM (48 TCIA files):** 100.0% valid after redaction, header PHI recall 100.0%, UIDs remapped
+  100.0%, burned-in text-pixel recall 61.5% (precision 54.4%).
+- **Retrieval / QA (32 questions):** recall@5 0.549, citation accuracy 100.0%,
+  answer correctness 71.9%, correct abstention 96.9%.
+- **Injection:** 4 injected documents, 1 flagged, 0 changed behaviour, 0 false flags.
+- **Operations:** 59.8% of documents to human review; latency p50 2.3 s / p95 3.5 s
+  per page on CPU; GPU peak 0 MiB; cost $0.00 per page.
+- **10 worst pages:** [`eval/results/error_analysis_golden.md`](eval/results/error_analysis_golden.md): 6 of 10 are phone photos and
+  OCR reads almost nothing on most of them (on dev this was traced to the page-quad detector missing the paper edge).
 <!-- RESULTS:END -->
 
 ### Pipeline comparison (dev, 18 documents, 6 per tier)
@@ -153,8 +173,10 @@ into every `run.json` and pinned in `eval/VERSIONS.lock` and `requirements.lock`
 
 ## Report
 
-`docs/report.pdf` is built locally from the golden run and is not committed while it contains
-rendered IU pages (CC BY-NC-ND). Its sources (tables, charts, diagram) are in `docs/report/`.
+`python docs/report/build_report.py --run runs/golden_final` builds `docs/report/out/report.{html,pdf}` (9 pages:
+architecture, data, golden tables per field and tier, pipeline comparison, PHI and residual cases, DICOM before/after,
+injection, error analysis with best/median/worst overlays, chronology with failed attempts, technical details, traces).
+The output is not committed because it shows rendered IU pages (CC BY-NC-ND); it is shared with the assessor directly.
 
 ## Repository layout
 

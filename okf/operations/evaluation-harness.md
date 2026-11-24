@@ -7,7 +7,7 @@ tags: [evaluation, metrics, golden-set, regression-gate, replay, versioning]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T17:01:04.519Z
+  at: 2026-11-24T17:14:18.527Z
 sources:
   - src/radintake/eval/__init__.py
   - src/radintake/eval/metrics.py
@@ -19,6 +19,9 @@ sources:
   - src/radintake/eval/error_analysis.py
   - eval/results/error_analysis_dev.md
   - eval/results/attempts.md
+  - eval/results/error_analysis_golden.md
+  - docs/report/build_report.py
+  - traces/final/run.json
   - tests/unit/test_error_analysis.py
   - eval/baseline.json
   - eval/VERSIONS.lock
@@ -97,3 +100,14 @@ worst pages are strongly keystoned phone photos where OCR reads almost nothing -
 misses the paper edge, so dewarp never runs. Across all pages: PHI miss 290, OCR misread 143, omission 106,
 hallucination 99, layout bleed 42. A "skip CLAHE after flat-field" fix helped the worst pages but hurt the
 typical photo and was rejected (`eval/results/attempts.md`).
+
+# Golden run and report (2026-11-24)
+
+Run once: `RADINTAKE_OFFLINE=1 python -m radintake.eval.run --split golden --final --dicom --out runs/golden_final`
+(run id `20261124T170304Z-a5a6c448`, ~6 min on CPU). `rescore --check --verify-gt` passes. `traces/final/` holds
+run.json, metrics(.rescored).json, scores.jsonl, timings.json, traces/ and error_analysis/summary.* - never
+`outputs/`, `retrieval.sqlite` (values) or overlay PNGs; a scan of 979 golden PHI / report-text values found
+no leak. `python docs/report/build_report.py --run runs/golden_final` writes `docs/report/out/report.{html,pdf}`
+(gitignored: licensed pages) via Playwright print-to-PDF (no LibreOffice / docx-js on this machine). It
+calls `error_analysis.analyse` over all pages for best/median/worst overlays and then restores the
+10-worst `summary.json` that call overwrites.
