@@ -7,11 +7,12 @@ tags: [dicom, de-identification, phi, burned-in-text, pydicom]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T12:19:56.032Z
+  at: 2026-11-24T12:24:50.803Z
 sources:
   - src/radintake/agents/dicom_deid.py
   - src/radintake/tools/dicom_io.py
   - configs/dicom_profile.yaml
+  - data_prep/dicom_gt.py
   - tests/unit/test_dicom_deid.py
 ---
 
@@ -34,6 +35,19 @@ meta. `dicom_io.validate` re-reads the result; `dicom.valid` is reported in the 
 
 Stage `dicom_deid` (order 30, `failure_flag: phi_uncertain`). Ground truth for evaluation comes
 from the TCIA curated counterpart: [Dataset Split & Golden Set](/data/dataset-split-and-golden-set.md).
+
+# Fail-safes and burned-in policy (2026-11-24)
+
+Evaluation against the TCIA curated twins found header leaks outside Table E.1-1, so after the table
+the agent also removes: every DA/DT element not named in the profile (Safe Harbor: all dates are PHI),
+overlay groups 60xx, keyword prefixes ClinicalTrial* / ScheduledProcedureStep* / Admitting* / Curve* /
+Overlay* / DateOfLast*, device IDs (PlateID, DetectorID, GantryID...) and procedure code sequences.
+Dev header PHI recall 0.87 -> 0.998 (residual: two pixel-layout tags the curator rewrote, now excluded
+from GT). Burned-in text is redacted per text LINE (single letters such as "[M]" between a name and a
+date included) unless every confident word is a safe radiographic marker (`burned_in.safe_text`: L/R,
+PA/AP, Portable, Upright...), which TCIA also keeps. Dev: burned-in box recall 0.13 -> 0.60, text-pixel
+recall 0.61, pixel precision 0.41 -> 0.54. Known misses: text saturated by display windowing
+(DICOM_002) and vertical mammography labels (DICOM_024) that OCR cannot read.
 
 # Guardrails & Anti-Regression Checklist
 

@@ -46,6 +46,10 @@ import numpy as np
 
 SEED = 140
 MIN_AREA = 12  # px; smaller diff components are treated as noise
+# Image-pixel-module elements the curator rewrote while re-encoding pixels: they describe pixel layout,
+# not identity, so a difference there is a curation artefact and not ground-truth PHI.
+NOT_PHI = {"PlanarConfiguration", "PixelAspectRatio", "BitsStored", "HighBit", "PixelRepresentation",
+           "PhotometricInterpretation", "SamplesPerPixel", "LossyImageCompression", "TransferSyntaxUID"}
 
 
 def _walk(ds, prefix=""):
@@ -69,6 +73,8 @@ def header_diff(ev, de) -> dict[str, list[dict]]:
         val = el.value
         if val in (None, "", b"") or (hasattr(val, "__len__") and len(val) == 0):
             continue  # nothing to protect
+        if path.split("[")[0].split(".")[-1] in NOT_PHI:
+            continue
         rec = {"tag": path, "vr": el.VR, "private": bool(el.tag.is_private), "value": _str(val)}
         other = dmap.get(path)
         if other is None:
@@ -221,7 +227,9 @@ def write_committed(res: dict, csv_path: Path, md_path: Path) -> None:
           "  de-identifier removing *more* than TCIA shows up as extra actions, not as misses.",
           "- Burned-in text that the curator did not clean, or cleaned by re-encoding / cropping (shape change), cannot be",
           "  recovered from a pixel diff; those instances carry `pixel_status` other than `ok` or no boxes.",
-          "- Two evaluation instances have no curated twin on disk and are excluded.", ""]
+          "- Two evaluation instances have no curated twin on disk and are excluded.",
+          "- Pixel-layout elements the curator rewrote when re-encoding (" + ", ".join(sorted(NOT_PHI)) + ") are",
+          "  curation artefacts, not identity, and are excluded from header PHI.", ""]
     md_path.write_text("\n".join(md), encoding="utf-8")
 
 

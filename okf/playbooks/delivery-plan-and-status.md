@@ -33,15 +33,19 @@ well the higher priorities are done.
 | rad-beb.6 | Extraction (OCR / VLM / hybrid) | all three built; evidence-based comparison pending | [Extraction Agent](/subsystems/extraction-agent.md) |
 | rad-beb.7 | Verifier + review queue | built | [Verifier](/subsystems/verifier-agent.md) |
 | rad-beb.8 | Tracing, eval harness, CI gate | built 2026-11-24 (metrics, runs, rescore, version lock, CI gate, golden QA); error analysis + intentional red commit pending | [Evaluation Harness](/operations/evaluation-harness.md) |
-| rad-beb.9 | Retrieval / QA | not started | [Retrieval / QA Agent](/subsystems/retrieval-qa-agent.md) |
+| rad-beb.9 | Retrieval / QA | built 2026-11-24; dev correctness 0.77, abstention 0.97, citations 1.0 | [Retrieval / QA Agent](/subsystems/retrieval-qa-agent.md) |
 | rad-beb.10 | Deployment | API, Compose, lockfile built; not smoke-tested here | [Deployment](/operations/deployment.md) |
 | rad-beb.11 | Final run, report, README | not started (README partly updated) | — |
 | rad-beb.12 | LoRA bonus | not planned in detail | — |
 
 Dev numbers (OCR-first, 218 docs, 2026-11-24 after fixes): report-field mean EM 0.66 (clean 0.90, poor
 0.57, photo 0.50), CER 0.17, hallucination 0.09, omission 0.08; document PHI recall 0.81 / precision
-0.80; DICOM valid 1.0, header PHI recall 0.87, burned-in recall 0.13; p50 2.4 s/page. CI: 20/21
-integration tests pass on Linux; the remaining one needs retrieval.
+0.80; DICOM valid 1.0, header PHI recall 0.998, burned-in recall 0.60 (text-pixel 0.61, precision 0.54);
+QA recall@5 0.58, answer correctness 0.77, correct abstention 0.97, citation accuracy 1.0; p50 2.6 s/page.
+All 21 integration tests pass locally (hybrid and BM25-only).
+
+Remaining before 2026-12-02: VLM-first / hybrid comparison on a dev sample, error-analysis tool,
+intentional failing CI-gate commit, Compose smoke test, the single golden run, report and README.
 
 # The key gap
 

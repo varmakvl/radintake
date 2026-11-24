@@ -56,3 +56,5 @@ Most frequent PHI-bearing elements in the selection (count of instances):
 - Burned-in text that the curator did not clean, or cleaned by re-encoding / cropping (shape change), cannot be
   recovered from a pixel diff; those instances carry `pixel_status` other than `ok` or no boxes.
 - Two evaluation instances have no curated twin on disk and are excluded.
+- Pixel-layout elements the curator rewrote when re-encoding (BitsStored, HighBit, LossyImageCompression, PhotometricInterpretation, PixelAspectRatio, PixelRepresentation, PlanarConfiguration, SamplesPerPixel, TransferSyntaxUID) are
+  curation artefacts, not identity, and are excluded from header PHI.

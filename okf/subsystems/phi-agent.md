@@ -7,7 +7,7 @@ tags: [phi, privacy, masking, de-identification, agent, trust-boundary]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T12:19:56.032Z
+  at: 2026-11-24T12:24:50.803Z
 sources:
   - src/radintake/agents/phi.py
   - src/radintake/agents/phi_vault.py
@@ -30,6 +30,10 @@ the [Guarded Model Client](/subsystems/model-client-guard.md) refuses every othe
 3. **Names** — honorific ("Dr. X") and credential sign-off rules ("First Last, MD", "G. Rodriguez, RT")
    always run; Presidio NER is added when installed. A `REFERRING_PHYSICIAN` anchor covers "Referring:".
    (Technologist names had recall 0 before the credential rule learned `RT` and initials.)
+   A credential-anchored rule also takes whatever sits between a dash / "by" and RT/MD/RN as a name,
+   because OCR of handwritten sign-offs rarely yields a clean "Initial. Last" ("— L. Broo ks, RT").
+   Dev (2026-11-24): document PHI recall 0.83 / precision 0.81; technologist 0.52, radiologist 0.74 -
+   the remaining misses are mostly handwritten sign-offs OCR cannot read (see the step inspector).
 Uncertain spans raise `phi_uncertain` (case -> review).
 
 # Masking and the vault

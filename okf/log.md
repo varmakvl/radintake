@@ -4,6 +4,7 @@ Newest changes recorded chronologically.
 
 
 ## 2026-11-24
+- Synchronized timestamp for 3 drifted concept(s): data/dataset-split-and-golden-set.md, subsystems/dicom-deid-agent.md, subsystems/phi-agent.md.
 - Synchronized timestamp for 8 drifted concept(s): data/data-preparation.md, data/dataset-split-and-golden-set.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/deployment.md, subsystems/api-service.md, subsystems/dicom-deid-agent.md, subsystems/phi-agent.md.
 - PHI misses: credential-anchored sign-off names, DICOM fail-safes (all undeclared DA/DT, overlay groups 60xx, clinical-trial / scheduled-step / device items), burned-in redaction by text line with a safe-marker allowlist, and burned-in scoring on exact text-pixel masks from the curated twins.
 - Retrieval / QA built: `radintake.retrieval` (FTS5 BM25 + fastembed MiniLM, RRF) and `agents/qa.py` (extractive, verified citations, negation, abstention); `/query` wired; QA scoring (`score_qa`, `eval.run --qa / --qa-only`) and `eval/dev_qa.jsonl`. Dev: answer correctness 0.41 -> 0.77, abstention 0.97, citations 1.0. All 21 integration tests pass locally.
