@@ -136,6 +136,12 @@ class PhiDetector:
         self._credential = re.compile(
             r"(?P<name>\b(?:[A-Z]\.\s*|[A-Z][a-zA-Z'\-]+(?:\s+[A-Z]\.)?\s+)[A-Z][a-zA-Z'\-]+),?\s+"
             r"(?:MD|M\.D\.|DO|PhD|RN|NP|PA-C|RT|R\.T\.|RRT|ARRT|RT\(R\))(?![A-Za-z])")
+        # Credential-anchored: OCR of a (handwritten) sign-off rarely yields a clean "Initial. Last"
+        # ("— L. Broo ks, RT"), so whatever sits between a dash / "by" and an upper-case credential
+        # on the same line is taken as a name, whatever its shape.
+        self._cred_anchor = re.compile(
+            r"(?:[—–~]|(?<![A-Za-z])-|\bby\b)\s*(?P<name>[^—–~\n]{2,40}?)\s*[,.]?\s*"
+            r"(?:MD|M\.D\.|DO|RN|RT|R\.T\.|RRT|ARRT)(?![A-Za-z])")
         mode = str(p.get("ner", "auto")).lower()
         self.ner_backend = "presidio" if mode == "auto" and _presidio() is not None else "fallback"
 
@@ -171,7 +177,7 @@ class PhiDetector:
             res = eng.analyze(text=text, entities=["PERSON"], language="en") if eng else []
             out += [Span(r.start, r.end, "PERSON", "ner") for r in res if r.score >= 0.6]
         # honorific / credential rules always run: NER models miss "G. Rodriguez, RT"-style sign-offs
-        for rx in (self._honorific, self._credential):
+        for rx in (self._honorific, self._credential, self._cred_anchor):
             if rx is None:
                 continue
             out += [Span(m.start("name"), m.end("name"), "PERSON", "ner") for m in rx.finditer(text)]

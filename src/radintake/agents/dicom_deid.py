@@ -65,6 +65,8 @@ def load_profile(cfg: Any = None) -> dict[str, Any]:
     user = raw.get("dicom_deid") if isinstance(raw.get("dicom_deid"), dict) else {}
     for k, v in user.items():
         out[k] = {**out.get(k, {}), **v} if isinstance(v, dict) and isinstance(out.get(k), dict) else v
+    if isinstance(out.get("extra_actions"), dict):  # fail-safe additions found by evaluation
+        out["actions"] = {**(out.get("actions") or {}), **out["extra_actions"]}
     bi = dict(out.get("burned_in") or {})
     bi["pad_px"] = min(float(bi.get("pad_px", 4)), _MAX_PAD)
     out["burned_in"] = bi
@@ -154,11 +156,17 @@ def deidentify_header(ds, profile: dict[str, Any], remap: UidRemapper,
             continue
         kw = elem.keyword
         act = actions.get(kw)
+        if act is None and 0x6000 <= tag.group <= 0x601E and tag.group % 2 == 0:
+            act = "X"  # overlay planes (60xx): graphic annotations can carry burned-in-style text
         if act is None:  # fail-safe rules
             if elem.VR == "PN":
                 act = "Z"
             elif elem.VR == "UI" and elem.value and not str(elem.value).startswith(_REGISTERED_ROOT):
                 act = "U"
+            elif elem.VR in ("DA", "DT") and elem.value:
+                act = "X"  # any date not named in the profile (HIPAA Safe Harbor: all dates are PHI)
+            elif kw and any(kw.startswith(p) for p in profile.get("remove_keyword_prefixes") or ()):
+                act = "X"
             else:
                 act = "K"
         if act == "K":
@@ -229,9 +237,33 @@ def find_text_boxes(display: np.ndarray, params: dict[str, Any], *, ocr_fn: OcrF
     if scale > 1:
         inv = cv2.resize(inv, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
     min_conf = float(params.get("min_conf", 0.3))
-    words = [w for w in ocr_fn(inv, psm=11, trace=trace)
-             if getattr(w, "conf", getattr(w, "confidence", 0.0)) >= min_conf
-             and len(re.findall(r"[A-Za-z0-9]", w.text)) >= 2]
+    safe = {s.upper() for s in params.get("safe_text") or ()}
+    raw = [w for w in ocr_fn(inv, psm=11, trace=trace) if re.search(r"[A-Za-z0-9]", w.text)]
+
+    def conf(w) -> float:
+        return float(getattr(w, "conf", getattr(w, "confidence", 0.0)))
+
+    def is_safe(w) -> bool:
+        return re.sub(r"[^A-Za-z0-9-]", "", w.text).upper() in safe
+
+    # group words into text lines (vertical overlap); a line is redacted as a whole - single letters
+    # such as "[M]" between a name and a date included - unless every confident word on it is a
+    # known-safe radiographic marker (laterality, view, position). Unknown text is always redacted.
+    lines: list[list[Any]] = []
+    for w in sorted(raw, key=lambda w: (w.bbox.y0, w.bbox.x0)):
+        for ln in lines:
+            r = ln[-1].bbox
+            if min(w.bbox.y1, r.y1) - max(w.bbox.y0, r.y0) > 0.5 * min(w.bbox.height, r.height):
+                ln.append(w)
+                break
+        else:
+            lines.append([w])
+    words = []
+    for ln in lines:
+        strong = [w for w in ln if conf(w) >= min_conf and len(re.findall(r"[A-Za-z0-9]", w.text)) >= 2]
+        if not strong or all(is_safe(w) for w in ln if conf(w) >= min_conf):
+            continue
+        words += [w for w in ln if not is_safe(w)]
     if not words:
         return []
     # group bright pixels into text lines; grow each accepted word to its line's bright pixels

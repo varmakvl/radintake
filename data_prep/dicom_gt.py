@@ -86,7 +86,7 @@ def _str(v) -> str:
     return str(v)[:200]
 
 
-def burned_boxes(ev, de) -> tuple[list[dict], str]:
+def burned_boxes(ev, de, masks: list | None = None) -> tuple[list[dict], str]:
     import cv2
 
     try:
@@ -102,6 +102,8 @@ def burned_boxes(ev, de) -> tuple[list[dict], str]:
         diff = np.any(fa != fb, axis=-1) if fa.ndim == 3 else (fa != fb)
         if not diff.any():
             continue
+        if masks is not None:
+            masks.append((f, diff))
         mask = cv2.dilate(diff.astype(np.uint8), np.ones((5, 5), np.uint8))
         n, _, st, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
         for k in range(1, n):
@@ -161,9 +163,16 @@ def build(tcia: Path, out: Path, n: int = 48, seed: int = SEED) -> dict:
         shutil.copyfile(r["eval"], dst)
         ev, de = pydicom.dcmread(r["eval"], stop_before_pixels=True), pydicom.dcmread(r["deid"], stop_before_pixels=True)
         hd = header_diff(ev, de)
+        mask_rel = None
+        if r["boxes"]:  # exact text-pixel masks (eval != curated) for pixel-level burned-in scoring
+            masks: list = []
+            burned_boxes(pydicom.dcmread(r["eval"]), pydicom.dcmread(r["deid"]), masks)
+            (out / "masks").mkdir(exist_ok=True)
+            mask_rel = f"masks/{did}.npz"
+            np.savez_compressed(out / mask_rel, **{f"frame_{f}": m for f, m in masks})
         phi_tags = hd["removed"] + hd["changed"] + hd["emptied"]
         gt_lines.append(json.dumps({"dicom_id": did, "modality": r["modality"], "transfer_syntax": str(ev.file_meta.TransferSyntaxUID),
-                                    "frames": r["frames"], "header": hd, "burned_in": r["boxes"],
+                                    "frames": r["frames"], "header": hd, "burned_in": r["boxes"], "burned_mask": mask_rel,
                                     "pixel_status": r["pixel_status"]}))
         rows.append({"dicom_id": did, "modality": r["modality"], "frames": r["frames"],
                      "sha256": hashlib.sha256(dst.read_bytes()).hexdigest(),

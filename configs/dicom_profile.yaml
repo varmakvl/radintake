@@ -103,6 +103,22 @@ actions:
   ConcatenationUID: U
   DimensionOrganizationUID: U
 
+# Fail-safe additions (beyond Table E.1-1 rows above), found by the dev evaluation against the TCIA
+# curated twins: keyword prefixes removed wherever they appear, and named device / procedure items.
+# (Any DA/DT element not named above is also removed, and overlay groups 60xx are dropped - see
+# agents/dicom_deid.py.)
+remove_keyword_prefixes: [ClinicalTrial, ScheduledProcedureStep, Admitting, Curve, Overlay, DateOfLast]
+extra_actions:
+  ContributingEquipmentSequence: X
+  ProcedureCodeSequence: X
+  RequestedProcedureCodeSequence: X
+  PlateID: X
+  DetectorID: X
+  GantryID: X
+  SecondaryCaptureDeviceID: X
+  CassetteID: X
+  StudyReadDate: X
+
 # Private elements kept: list of {creator: <Private Creator string>, element: <hex offset 00-FF>}.
 # Empty by default: no private tag is known safe for this pipeline.
 private_safe_list: []
@@ -114,3 +130,8 @@ burned_in:
   threshold: 0.9          # burned-in text candidates: display intensity >= threshold * max
   min_conf: 0.3           # OCR word confidence (0..1) needed to accept a text region
   ocr_scale: 2            # upscale factor for OCR on the binarised text mask
+  # Text kept on the image: standard radiographic markers carry no identity (TCIA's curated set keeps
+  # them too). A burned-in text line is redacted unless every confident word on it is in this list.
+  safe_text: [L, R, LT, RT, LEFT, RIGHT, PA, AP, LAT, LATERAL, OBL, OBLIQUE, PORTABLE, UPRIGHT, SEMI-UPRIGHT,
+              SUPINE, ERECT, PRONE, DECUBITUS, STANDING, SITTING, INSP, EXP, INSPIRATION, EXPIRATION,
+              CC, MLO, ML, LM, XCCL, SPOT, MAG, AXIAL, SAG, COR, CORONAL, SAGITTAL]
