@@ -25,9 +25,9 @@ well the higher priorities are done.
 
 | Bead | Feature | State | Concept |
 |---|---|---|---|
-| rad-beb.1 | Data acquisition + audit | IU download/parser written but uncommitted; TCIA + audit not started | [Data Preparation](/data/data-preparation.md) |
-| rad-beb.2 | Rendering, handwriting, degradation, adversarial, GT | degradation library done; rendering not started | [Data Preparation](/data/data-preparation.md) |
-| rad-beb.3 | Dedup, split, DICOM GT | not started | [Dataset Split & Golden Set](/data/dataset-split-and-golden-set.md) |
+| rad-beb.1 | Data acquisition + audit | done 2026-11-24 (IU scripted, TCIA via NBIA, audit.md) | [Data Preparation](/data/data-preparation.md) |
+| rad-beb.2 | Rendering, handwriting, degradation, adversarial, GT | done: 330 docs / 412 pages, 42% handwritten, 15 injected, 3 tiers, 4 formats | [Data Preparation](/data/data-preparation.md) |
+| rad-beb.3 | Dedup, split, DICOM GT | done: golden 112 docs / 145 pages, 48 DICOM (6 burned-in) | [Dataset Split & Golden Set](/data/dataset-split-and-golden-set.md) |
 | rad-beb.4 | Orchestrator + preprocessing | built, tests closed | [Orchestrator](/subsystems/orchestrator.md) |
 | rad-beb.5 | PHI (documents + DICOM) | built | [Document PHI Agent](/subsystems/phi-agent.md), [DICOM De-id](/subsystems/dicom-deid-agent.md) |
 | rad-beb.6 | Extraction (OCR / VLM / hybrid) | all three built; evidence-based comparison pending | [Extraction Agent](/subsystems/extraction-agent.md) |
@@ -50,10 +50,8 @@ the critical path.
 
 # Open risks and decisions
 
-- TCIA Pseudo-PHI-DICOM download may need the NBIA Data Retriever (manual step).
 - Decided 2026-11-24: open-source local models only (Qwen2.5-VL-3B via Ollama, Florence-2 fallback, Qwen2.5-3B for answers); no vector database; decoded data in SQLite. Deadline 2026-12-02; LoRA bonus dropped.
-- TCIA DICOM download is being done by the user via NBIA Data Retriever into `data/tcia/`; IU reports are fetched by script (the Open-i URL works again).
 - Extraction pipeline choice is provisional (`ocr_first`).
 - Tesseract PATH on the dev machine.
-- Uncommitted `data_prep/` files and a modified `.beads/issues.jsonl` sit in the working tree.
+- Priority 1 (data and answer key) completed 2026-11-24. Next on the critical path: evaluation harness, then the pipeline comparison on dev.
 - The fleet sprint is stopped; the fleet server and supervisor are not set to auto-start.

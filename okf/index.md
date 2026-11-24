@@ -27,8 +27,8 @@ reports and DICOM. Start with the [System Overview](/overview.md); the delivery 
 ## Data
 - [Coordinate Contract](/data/coordinate-contract.md) — BBox/Transform/Page types; every output box is in original page pixels.
 - [Output & Trace Schemas](/data/output-schemas.md) — cli_output.v1, report.v1, trace.v1 and the Pydantic mirror.
-- [Data Preparation](/data/data-preparation.md) — Downloads, IU parsing, rendering, handwriting, degradation tiers, ground truth.
-- [Dataset Split & Golden Set](/data/dataset-split-and-golden-set.md) — Near-duplicate grouping and the frozen golden test set (not built yet).
+- [Data Preparation](/data/data-preparation.md) — IU/TCIA acquisition, audit, 330 rendered docs with handwriting and injections, 3 tiers, 4 formats, exact GT boxes.
+- [Dataset Split & Golden Set](/data/dataset-split-and-golden-set.md) — Near-duplicate groups, hash-locked dev/golden split, DICOM ground truth from TCIA pairs.
 
 ## Operations
 - [Configuration](/operations/configuration.md) — YAML + env precedence, budgets, thresholds, model registry, offline mode.

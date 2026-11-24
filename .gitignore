@@ -1,10 +1,11 @@
 # --- Licensed / sensitive data: NEVER commit ---
 # IU Open-i is CC BY-NC-ND: rendered pages and raw downloads must not be published.
-data/
-!data/README.md
-renders/
-degraded/
-dicom/
+# Root-anchored: an unanchored `data/` also hid okf/data/ (the bundle's data concepts).
+/data/
+!/data/README.md
+/renders/
+/degraded/
+/dicom/
 *.dcm
 !tests/**/fixtures/**/*.dcm
 *.docx

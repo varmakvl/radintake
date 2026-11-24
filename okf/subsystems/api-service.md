@@ -43,6 +43,8 @@ file and is transactional. Planned: a `subject_key` column (indexed) so "all rec
 GUID" is one query, plus an export to `<subject_key>.jsonl` for a file view. If the GUID is per
 patient it must be pseudonymous (keyed hash of the patient ID with a local secret, or a random UUID
 mapped locally), never the MRN itself. Decoded PHI (name, DOB, IDs) stays in this local file only —
-never in logs or traces. Open question: whether the GUID means the patient or the uploading user.
+never in logs or traces. Decided 2026-11-24: the patient and the uploading user are the same person,
+so there is one key per patient: `subject_key = HMAC-SHA256(local secret, normalised patient ID)`.
+Not implemented yet.
 
 Deployment: [Deployment](/operations/deployment.md).
