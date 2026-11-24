@@ -7,7 +7,7 @@ tags: [model-client, vlm, phi, offline, cache, cost, trust-boundary]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T10:26:13.955Z
+  at: 2026-11-24T10:31:35.389Z
 sources:
   - src/radintake/tools/model_client.py
   - src/radintake/tools/vlm_client.py
@@ -64,3 +64,9 @@ model can never be added silently.
 - Every model call goes through this class — OCR, VLM, embedder, answer LLM.
 - Never let the client trigger `ollama pull` or a Hugging Face download at run time.
 - Local VLM calls can take tens of seconds: `extraction.vlm.timeout_s` is 180.
+- Pages are downscaled to `max_image_side` (1100) before Ollama and any returned `bbox` is scaled
+  back (`downscale` / `rescale_boxes`). Measured 2026-11-24 on the 4 GB GPU: a full 1700x2200 page
+  is ~4k image tokens, fills the default 4,096 context, truncates the reply and takes ~64 s; at
+  850x1100 it is ~1.2k tokens and ~4.5 s for one field. `num_ctx` is 8192. A full VLM-first page
+  read (all sections + boxes, ~390 output tokens) took ~41 s, peak GPU ~2.2 GB; OCR-first and
+  hybrid on a clean page took ~2 s (hybrid made no VLM call).

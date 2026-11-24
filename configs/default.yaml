@@ -48,6 +48,9 @@ extraction:
     cache_dir: null       # null -> <data_dir>/cache/vlm (responses keyed by input + prompt hash)
     max_tokens: 2000
     timeout_s: 180        # local 3B VLM on a 4 GB GPU (partly CPU-offloaded) can take tens of seconds
+    max_image_side: 1100  # pages are downscaled before the VLM: 1700x2200 = ~4k image tokens (64 s, reply
+                          # truncated); 850x1100 = ~1.2k tokens (4.5 s, same text). Boxes are scaled back.
+    num_ctx: 8192         # Ollama context window (default 4096 is too small for a page + prompt + reply)
 
 verify:                   # radintake.agents.verify (thresholds tuned later on dev)
   ground_min_ratio: 90    # rapidfuzz partial_ratio for a value to count as present in the OCR text

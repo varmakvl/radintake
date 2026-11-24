@@ -356,3 +356,34 @@ def test_prompt_file_declares_id_and_tasks():
     assert "prompt_id: extraction_v1" in text and "{task}" in text
     assert "DATA" in text  # untrusted-data spotlighting
     assert np.all([k in text for k in ("indication", "comparison", "findings", "impression")])
+
+
+def test_ollama_page_is_downscaled_and_boxes_scaled_back(tmp_path, monkeypatch):
+    sent = {}
+
+    class Resp(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(req, timeout):
+        from PIL import Image
+
+        body = json.loads(req.data.decode("utf-8"))
+        img = Image.open(io.BytesIO(__import__("base64").b64decode(body["messages"][0]["images"][0])))
+        sent["size"], sent["num_ctx"] = img.size, body["options"]["num_ctx"]
+        reply = {"fields": {"findings": {"value": FINDINGS, "bbox": [50, 100, 550, 150]}}}
+        return Resp(json.dumps({"message": {"content": json.dumps(reply)}}).encode("utf-8"))
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    client = VlmClient("qwen2.5vl:3b", config=load_config(), cache_dir=tmp_path / "c")
+    big = np.full((2200, 1700), 255, np.uint8)
+    payload = MaskedPayload(data={"image": big, "page": 1}, phi_masked=True)
+    resp = client.call(payload, prompt_id="extraction_v1", prompt="P", task="page")
+    assert max(sent["size"]) == client.max_image_side and sent["num_ctx"] >= 8192
+    scale = client.max_image_side / 2200
+    assert resp.data["fields"]["findings"]["bbox"] == pytest.approx([50 / scale, 100 / scale, 550 / scale, 150 / scale])
+    small, s = vc.downscale(np.zeros((300, 200), np.uint8), client.max_image_side)
+    assert s == 1.0 and small.shape == (300, 200)  # crops are never enlarged

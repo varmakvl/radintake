@@ -72,7 +72,37 @@ def vlm_params(cfg: Config) -> dict[str, Any]:
     ext = raw.get("extraction") if isinstance(raw.get("extraction"), dict) else {}
     v = ext.get("vlm") if isinstance(ext.get("vlm"), dict) else {}
     return {"model": "vlm_page", "local_model": "vlm_local", "max_tokens": 2000, "timeout_s": 180.0,
-            "cache_dir": None, **v}
+            "cache_dir": None, "max_image_side": 1100, "num_ctx": 8192, **v}
+
+
+def downscale(img: np.ndarray, max_side: int) -> tuple[np.ndarray, float]:
+    """Shrink ``img`` so its longer side is <= ``max_side`` (never enlarges). Returns (image, scale)."""
+    h, w = img.shape[:2]
+    if not max_side or max(h, w) <= max_side:
+        return img, 1.0
+    from PIL import Image
+
+    scale = max_side / float(max(h, w))
+    out = Image.fromarray(np.asarray(img)).resize((max(1, round(w * scale)), max(1, round(h * scale))),
+                                                   Image.Resampling.LANCZOS)
+    return np.asarray(out), scale
+
+
+def rescale_boxes(obj: Any, factor: float) -> Any:
+    """Multiply every ``"bbox": [x0, y0, x1, y1]`` in a model reply by ``factor`` (back to page pixels)."""
+    if factor == 1.0:
+        return obj
+    if isinstance(obj, dict):
+        out = {}
+        for k, v in obj.items():
+            if k == "bbox" and isinstance(v, list) and len(v) == 4 and all(isinstance(n, (int, float)) for n in v):
+                out[k] = [float(n) * factor for n in v]
+            else:
+                out[k] = rescale_boxes(v, factor)
+        return out
+    if isinstance(obj, list):
+        return [rescale_boxes(v, factor) for v in obj]
+    return obj
 
 
 def _model_spec_raw(cfg: Config, model_id: str) -> dict[str, Any]:
@@ -133,6 +163,8 @@ class VlmClient(ModelClient):
         self.price_in = float(spec.get("usd_per_mtok_in", 0.0) or 0.0)
         self.price_out = float(spec.get("usd_per_mtok_out", 0.0) or 0.0)
         self.backend = str(spec.get("backend") or ("ollama" if ":" in self.model_id else "transformers"))
+        self.max_image_side = int(p.get("max_image_side") or 0)
+        self.num_ctx = int(p.get("num_ctx") or 8192)
 
     # -- cache --------------------------------------------------------------------------
     def cache_key(self, payload: Any, prompt: str) -> str:
@@ -211,22 +243,29 @@ class VlmClient(ModelClient):
         import urllib.request
 
         data = payload.data if isinstance(payload, MaskedPayload) else payload["data"]
+        # A full 1700x2200 page is ~4k image tokens: it fills the context, truncates the reply and takes
+        # ~60 s on 4 GB. Downscaled to max_image_side (~1.2k tokens) it reads the same text in ~5 s.
+        img, scale = downscale(np.asarray(data["image"]), self.max_image_side)
         body = json.dumps({
             "model": self.model_id, "stream": False, "format": "json",
-            "options": {"temperature": 0, "seed": int(self.config.seed), "num_predict": self.max_tokens},
-            "messages": [{"role": "user", "content": prompt, "images": [_png_b64(data["image"])]}],
+            "options": {"temperature": 0, "seed": int(self.config.seed), "num_predict": self.max_tokens,
+                        "num_ctx": self.num_ctx},
+            "messages": [{"role": "user", "content": prompt, "images": [_png_b64(img)]}],
         }).encode("utf-8")
         req = urllib.request.Request(f"{ollama_host()}/api/chat", data=body, method="POST",
                                      headers={"content-type": "application/json"})
         try:
             with urllib.request.urlopen(req, timeout=self.timeout_s) as r:
                 out = json.loads(r.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            detail = exc.read()[:200].decode("utf-8", "replace")
+            raise VlmUnavailable(f"Ollama HTTP {exc.code}: {detail}") from exc
         except urllib.error.URLError as exc:
             raise VlmUnavailable(f"Ollama not reachable at {ollama_host()}: {exc.reason}") from exc
         text = (out.get("message") or {}).get("content", "")
         usage = {"input_tokens": int(out.get("prompt_eval_count", 0) or 0),
                  "output_tokens": int(out.get("eval_count", 0) or 0)}
-        return VlmResponse(parse_json(text), usage, self.cost(usage))
+        return VlmResponse(rescale_boxes(parse_json(text), 1.0 / scale), usage, self.cost(usage))
 
     def _invoke_local(self, payload: Any, prompt: str, **kwargs: Any) -> VlmResponse:
         """Florence-2 ``<OCR>`` on a crop -> ``{"text": ...}``. Page-level field JSON needs the Ollama VLM."""
