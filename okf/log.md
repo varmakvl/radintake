@@ -4,6 +4,8 @@ Newest changes recorded chronologically.
 
 
 ## 2026-11-24
+- Synchronized timestamp for 15 drifted concept(s): data/data-preparation.md, data/dataset-split-and-golden-set.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/deployment.md, operations/evaluation-harness.md, operations/step-inspector.md, overview.md, subsystems/batch-cli.md, subsystems/orchestrator.md, subsystems/phi-agent.md, subsystems/preprocessing-agent.md, subsystems/retrieval-qa-agent.md, subsystems/tracing-and-logging.md, subsystems/verifier-agent.md.
+- Synchronized workspace frontier mapping in `index.md` (+1 new, -0 removed, 47 already listed; 48 undocumented files mapped).
 - Synchronized timestamp for 1 drifted concept(s): playbooks/delivery-plan-and-status.md.
 - Synchronized workspace frontier mapping in `index.md` (+1 new, -0 removed, 46 already listed; 47 undocumented files mapped).
 - Error-analysis tool (`radintake.eval.error_analysis`); dev worst pages are keystoned photos where dewarp never runs. Tried-and-rejected log started in `eval/results/attempts.md`.

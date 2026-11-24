@@ -7,7 +7,7 @@ tags: [retrieval, qa, rag, citations, abstention, negation, prompt-injection, sq
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T13:30:00Z
+  at: 2026-11-24T17:01:04.519Z
 sources:
   - src/radintake/retrieval.py
   - src/radintake/agents/qa.py

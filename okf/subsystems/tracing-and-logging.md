@@ -7,7 +7,7 @@ tags: [tracing, replay, observability, logging, phi, versioning]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T10:26:13.955Z
+  at: 2026-11-24T17:01:04.519Z
 sources:
   - src/radintake/tracing/writer.py
   - src/radintake/logging.py

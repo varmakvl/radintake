@@ -7,7 +7,7 @@ tags: [deployment, docker, compose, healthcheck, lockfile]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T12:19:56.032Z
+  at: 2026-11-24T17:01:04.519Z
 sources:
   - Dockerfile
   - .dockerignore

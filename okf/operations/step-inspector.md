@@ -7,7 +7,7 @@ tags: [debugging, inspection, ocr, phi, vlm, dicom, demo]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T12:20:00Z
+  at: 2026-11-24T17:01:04.519Z
 sources:
   - src/radintake/inspect.py
   - src/radintake/orchestrator/planner.py
