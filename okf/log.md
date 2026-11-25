@@ -4,6 +4,11 @@ Newest changes recorded chronologically.
 
 
 ## 2026-11-25
+- Synchronized timestamp for 4 drifted concept(s): data/data-preparation.md, data/dataset-split-and-golden-set.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md.
+- Synchronized workspace frontier mapping in `index.md` (+15 new, -0 removed, 220 already listed; 235 undocumented files mapped).
+- Golden v2 tests: `tests/unit/test_data_assets.py` (v2 lock, edited-id detection, disjointness from dev/golden v1,
+  no shared dup group, v1 lock pinned) and `tests/unit/test_eval_harness.py` (`--split golden_v2` needs `--final`,
+  second run refused, tampered lock refused, v1 guard still refuses, `--check-only`); guards patched to tmp paths.
 - Synchronized timestamp for 3 drifted concept(s): data/dataset-split-and-golden-set.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md.
 - Synchronized workspace frontier mapping in `index.md` (+8 new, -0 removed, 220 already listed; 228 undocumented files mapped).
 - Golden v2 held-out set: new `data_prep/heldout.py` (seed 241; 112 docs / 140 pages from IU reports never used in v1;

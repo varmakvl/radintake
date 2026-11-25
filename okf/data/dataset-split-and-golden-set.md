@@ -7,7 +7,7 @@ tags: [split, deduplication, golden-set, minhash, dicom-ground-truth]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-25T15:59:19.925Z
+  at: 2026-11-25T16:12:05.886Z
 sources:
   - data_prep/split.py
   - data_prep/dicom_gt.py
@@ -24,6 +24,7 @@ sources:
   - splits/golden_v2_dedup.json
   - src/radintake/eval/run.py
   - tests/unit/test_data_assets.py
+  - tests/unit/test_eval_harness.py
 ---
 
 # De-duplication
@@ -73,6 +74,8 @@ section of `splits/SPLIT.md` (kept when `data_prep.split` regenerates the v1 par
 `eval/GOLDEN_V2_USED.json` exists (its own guard; the v1 guard `eval/GOLDEN_USED.json` is unchanged)
 and verifies the lock before running. `--check-only` validates lock + GT presence without running
 the pipeline or writing the guard.
+`tests/unit/test_data_assets.py` pins both locks and the v1/v2 disjointness; `tests/unit/test_eval_harness.py`
+exercises the golden_v2 / golden guards against tmp guard paths (never the real files).
 
 # DICOM ground truth (data_prep/dicom_gt.py, data_prep/DICOM_GT.md)
 

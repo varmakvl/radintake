@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -113,3 +114,77 @@ def test_gate_compare_flags_a_regression():
     rows = {r["metric"]: r["ok"] for r in compare(worse, base)}
     assert len(rows) == len(RULES) and rows["fields.overall.mean.exact_match"] is False
     assert all(ok for m, ok in rows.items() if m != "fields.overall.mean.exact_match")
+
+
+# ------------------------------------------------------------------------------- golden v2 guard (eval.run)
+REAL_V2_GUARD = ROOT / "eval" / "GOLDEN_V2_USED.json"
+_T0 = time.time()  # the real guard may exist (after the final run) but must never be written by these tests
+
+
+@pytest.fixture
+def run_mod(monkeypatch, tmp_path):
+    """eval.run with both guards pointed at tmp paths and the pipeline run replaced by a tripwire."""
+    from radintake.eval import run as R
+
+    monkeypatch.setattr(R, "GOLDEN_V2_USED", tmp_path / "GOLDEN_V2_USED.json")
+    monkeypatch.setattr(R, "GOLDEN_USED", tmp_path / "GOLDEN_USED.json")
+
+    def tripwire(**kw):
+        raise AssertionError(f"pipeline must not run: {kw.get('split')}")
+
+    monkeypatch.setattr(R, "run", tripwire)
+    yield R
+    assert not REAL_V2_GUARD.exists() or REAL_V2_GUARD.stat().st_mtime < _T0
+
+
+def _refused(R, argv, capsys) -> str:
+    with pytest.raises(SystemExit) as e:
+        R.main(argv)
+    assert e.value.code == 2
+    return capsys.readouterr().err
+
+
+def test_golden_v2_requires_final(run_mod, capsys):
+    err = _refused(run_mod, ["--split", "golden_v2"], capsys)
+    assert "pass --final" in err
+    assert not run_mod.GOLDEN_V2_USED.exists()
+
+
+def test_golden_v2_refuses_a_second_run(run_mod, capsys):
+    run_mod.GOLDEN_V2_USED.write_text('{"run": "runs/golden_v2_final", "run_id": "X-1"}\n', encoding="utf-8")
+    err = _refused(run_mod, ["--split", "golden_v2", "--final"], capsys)
+    assert "golden v2 set already used" in err and "X-1" in err
+
+
+def test_golden_v2_refuses_a_tampered_lock(run_mod, monkeypatch, tmp_path, capsys):
+    splits = tmp_path / "splits"
+    splits.mkdir()
+    ids = (ROOT / "splits" / "golden_v2_ids.txt").read_text(encoding="utf-8").replace("G0001", "G9999", 1)
+    (splits / "golden_v2_ids.txt").write_text(ids, encoding="utf-8", newline="\n")
+    (splits / "golden_v2.lock").write_bytes((ROOT / "splits" / "golden_v2.lock").read_bytes())
+    monkeypatch.setattr(run_mod, "SPLITS", splits)
+    err = _refused(run_mod, ["--split", "golden_v2", "--final", "--corpus", str(tmp_path / "none")], capsys)
+    assert "lock mismatch" in err
+    assert not run_mod.GOLDEN_V2_USED.exists()
+
+
+def test_golden_v1_guard_still_refuses(run_mod, capsys):
+    assert "pass --final" in _refused(run_mod, ["--split", "golden"], capsys)
+    run_mod.GOLDEN_USED.write_text('{"run": "runs/golden_final", "run_id": "V1"}\n', encoding="utf-8")
+    assert "golden set already used" in _refused(run_mod, ["--split", "golden", "--final"], capsys)
+    # the committed v1 guard is untouched by golden v2
+    assert (ROOT / "eval" / "GOLDEN_USED.json").is_file()
+
+
+def test_golden_v2_check_only_validates_the_committed_lock_without_a_corpus(run_mod, tmp_path):
+    res = run_mod.check_golden_v2(tmp_path / "no_corpus")
+    assert res["ok"] and res["n_ids"] >= 100 and res["gt_missing"] is None
+    assert res["lock"] == (ROOT / "splits" / "golden_v2.lock").read_text().strip()
+
+
+@pytest.mark.skipif(not (ROOT / "data" / "corpus_v2" / "gt").is_dir(),
+                    reason="golden v2 corpus not present (licensed data)")
+def test_golden_v2_check_only_passes_on_the_local_corpus(run_mod, capsys):
+    assert run_mod.main(["--split", "golden_v2", "--check-only", "--corpus", str(ROOT / "data" / "corpus_v2")]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["ok"] and out["gt_missing"] == [] and not run_mod.GOLDEN_V2_USED.exists()

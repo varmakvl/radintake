@@ -17,6 +17,8 @@ from data_prep.split import golden_hash
 ROOT = Path(__file__).resolve().parents[2]
 SPLITS = ROOT / "splits"
 CORPUS = ROOT / "data" / "corpus"
+# golden v1 was scored once; its lock must never change (golden v2 is a separate list)
+GOLDEN_V1_LOCK = "7b33866975ce4c34b0148875349634262aa28ba06787f1d78d0f399954836aa2"
 
 
 def _ids(name: str) -> dict[str, str]:
@@ -75,3 +77,37 @@ def test_corpus_meets_the_brief():
                 assert 0 <= x0 < x1 <= w + 1 and 0 <= y0 < y1 <= h + 1, (m["doc_id"], i["field"])
     assert hw_pages / pages >= 0.30
     assert {90, 180} <= rots
+
+
+# ------------------------------------------------------------------------------- golden v2 (held-out set)
+def test_golden_v2_list_is_hash_locked_and_v1_lock_is_unchanged():
+    assert golden_hash(SPLITS / "golden_v2_ids.txt") == (SPLITS / "golden_v2.lock").read_text().strip()
+    assert (SPLITS / "golden.lock").read_text().strip() == GOLDEN_V1_LOCK
+
+
+def test_golden_v2_lock_detects_an_edited_id(tmp_path):
+    lines = (SPLITS / "golden_v2_ids.txt").read_text(encoding="utf-8").splitlines(keepends=True)
+    doc, rep = lines[0].rstrip("\n").split("\t")
+    lines[0] = f"{doc}\t{rep}9\n"
+    edited = tmp_path / "golden_v2_ids.txt"
+    edited.write_text("".join(lines), encoding="utf-8", newline="\n")
+    assert golden_hash(edited) != (SPLITS / "golden_v2.lock").read_text().strip()
+
+
+def test_golden_v2_is_disjoint_from_dev_and_golden_v1():
+    dev, gold, v2 = _ids("dev_ids.txt"), _ids("golden_ids.txt"), _ids("golden_v2_ids.txt")
+    assert len(v2) >= 100
+    assert not set(v2) & (set(dev) | set(gold))                   # doc ids
+    assert not set(v2.values()) & (set(dev.values()) | set(gold.values()))  # report ids
+    assert len(set(v2.values())) == len(v2)                       # one doc per report
+
+
+def test_no_duplicate_group_spans_v1_and_golden_v2():
+    v1 = set(_ids("dev_ids.txt").values()) | set(_ids("golden_ids.txt").values())
+    v2 = set(_ids("golden_v2_ids.txt").values())
+    for g in json.loads((SPLITS / "dup_groups.json").read_text(encoding="utf-8"))["groups"]:
+        assert not set(g) & v2, f"v1 dup group reaches golden v2: {g}"
+    rec = json.loads((SPLITS / "golden_v2_dedup.json").read_text(encoding="utf-8"))
+    assert rec["dropped_v1_dup_group"] > 0 and rec["seed"] != 140
+    for g in rec["groups"]:
+        assert set(g) <= v2 and not set(g) & v1, f"v2 dup group touches v1: {g}"
