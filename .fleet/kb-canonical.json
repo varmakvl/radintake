@@ -1,9 +1,9 @@
 {
   "version": 3,
   "provenance": {
-    "commit": "279d0f2a260a63a2aa7bf715d09f6fd91a9d5030",
+    "commit": "76ff7ea5322f06bb59648d30e5152ced220d16c2",
     "branch": "main",
-    "entry_count": 5
+    "entry_count": 6
   },
   "entries": [
     {
@@ -78,6 +78,30 @@
         "src/radintake/agents/extract_hybrid.py": "a6c87f2a6ef674f279c3e4735810717177319cf9",
         "src/radintake/agents/extract_ocr.py": "7cb40fbc3916faad75db0267792b397b09c298b4",
         "src/radintake/agents/extract_vlm.py": "c875a54e7cb6799d29be867359a5f0f4f412c224"
+      }
+    },
+    {
+      "id": "63e4ac69-866e-4152-9850-63f0ef1a38b1",
+      "type": "knowledge",
+      "title": "Golden v2 held-out set: separate lock, guard and corpus from golden v1",
+      "summary": "Golden v2 (splits/golden_v2_ids.txt, seed 241, doc ids G0001..) is built by data_prep/heldout.py into data/corpus_v2. eval.run --split golden_v2 requires --final, has its own guard eval/GOLDEN_V2_USED.json, verifies splits/golden_v2.lock first, and supports --check-only.",
+      "symbols": [
+        "check_golden_v2",
+        "lock_hash",
+        "select",
+        "write_split"
+      ],
+      "source_files": [
+        "data_prep/heldout.py",
+        "src/radintake/eval/run.py",
+        "splits/golden_v2.lock"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-25T20:23:46.017Z",
+      "source_file_hashes": {
+        "data_prep/heldout.py": "a3c736b6d9f624934f62768aae54863a1f009941",
+        "splits/golden_v2.lock": "0b53fd92215f224acc0d5ff8623a71eda1be73ab",
+        "src/radintake/eval/run.py": "10fd5a63c9b2e6dc7df5808a99c4d6524092ca22"
       }
     },
     {
