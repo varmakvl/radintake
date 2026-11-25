@@ -180,15 +180,16 @@ def tables_section(img: Path) -> str:
     dc = ROOT / "eval/results/dev_tables_comparison.json"
     if not te.exists():
         return ""
-    conds = json.loads(te.read_text(encoding="utf-8"))["conditions"]
-    label = {"digital": "Digital PDF, text layer (new)", "digital_ocr": "Digital PDF, OCR only (old)",
+    res = json.loads(te.read_text(encoding="utf-8"))
+    conds = {**res.get("conditions_main", {}), **res["conditions"]}
+    label = {"digital_main": "Digital PDF, main (before)", "digital": "Digital PDF, text layer (new)", "digital_ocr": "Digital PDF, OCR only (old)",
              "scan_clean": "Clean scan PDF (OCR + cell re-read)", "scan_poor": "Poor scan PDF (OCR + cell re-read)"}
     rows = []
     for k, c in conds.items():
         t, f, h = c["tables"], c["fields"], c["hidden_text"]
         rows.append([label.get(k, k), pct(t["detected"]), pct(t["shape_exact"]), f3(t["cell_exact_match"]), f3(t["cell_cer"]),
                      f3(f["mean_em"]), pct(h["flag_recall"]) if k.startswith("digital") else "-",
-                     f"{c['seconds_per_doc']['p50']} s"])
+                     f"{c['seconds_per_doc']['p50']} s" if c.get("seconds_per_doc") else "-"])
     styles = sorted({s for c in conds.values() for s in c["tables"]["cell_em_by_style"]})
     style_rows = [[label.get(k, k), *[f3(c["tables"]["cell_em_by_style"].get(s)) for s in styles]] for k, c in conds.items()]
     dev_html = ""
@@ -200,7 +201,13 @@ def tables_section(img: Path) -> str:
     shot = ""
     over = next(iter(sorted((ROOT / "runs" / "inspect_tables").glob("*/25_tables/page_1_tables.png"))), None)
     if over:
-        (img / "tables_overlay.png").write_bytes(over.read_bytes())
+        from PIL import Image, ImageOps
+
+        im = Image.open(over).convert("RGB")
+        box = ImageOps.invert(im.convert("L")).getbbox()  # crop the empty page margin
+        if box:
+            im = im.crop((max(0, box[0] - 20), max(0, box[1] - 20), min(im.width, box[2] + 20), min(im.height, box[3] + 20)))
+        im.save(img / "tables_overlay.png")
         shot = ('<figure style="width:60%"><img src="img/tables_overlay.png" style="width:100%"/><figcaption>'
                 'Step inspector, synthetic digital PDF: detected table cells (red).</figcaption></figure>')
     return f"""

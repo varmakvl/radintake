@@ -3,6 +3,19 @@
 Newest changes recorded chronologically.
 
 
+## 2026-11-25
+- Synchronized timestamp for 1 drifted concept(s): operations/evaluation-harness.md.
+- Synchronized timestamp for 8 drifted concept(s): operations/deployment.md, operations/evaluation-harness.md, operations/step-inspector.md, overview.md, playbooks/delivery-plan-and-status.md, subsystems/model-client-guard.md, subsystems/preprocessing-agent.md, subsystems/tables-and-text-layer.md.
+- Synchronized workspace frontier mapping in `index.md` (+4 new, -0 removed, 216 already listed; 220 undocumented files mapped).
+- PDF text layer and table reading: new concept [PDF Text Layer & Table Reading](/subsystems/tables-and-text-layer.md).
+  - New pieces: `tools/pdf_text`, `tools/tables`, the `tables` stage (order 25), `schemas/tables.v1.json`,
+    `data_prep.tables_set` and `eval.tables_eval`.
+  - Digital PDFs: field EM 0.658 -> 1.000 and tables 0% -> 100% (all cells exact); hidden text flagged in 5 of 5.
+  - Dev: exam date EM 0.50 -> 0.60, PHI recall 0.827 -> 0.848, p95 latency 14.2 -> 5.0 s.
+  - Contract: `cli_output.v1` is unchanged; new conditions use v1 flags plus review-reason codes.
+  - Updated concepts: orchestrator, coordinate contract, output schemas, extraction, PHI, configuration,
+    data preparation and evaluation harness.
+
 ## 2026-11-24
 - Synchronized timestamp for 2 drifted concept(s): operations/deployment.md, operations/evaluation-harness.md.
 - Golden run done once (`traces/final/`), golden error analysis, PDF report builder (`docs/report/build_report.py`), README results, Compose smoke test verified, CI gate step now runs even when unit tests fail.

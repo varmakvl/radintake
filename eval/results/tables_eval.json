@@ -1,0 +1,230 @@
+{
+ "set": "data\\tables_set",
+ "conditions": {
+  "digital": {
+   "docs": 40,
+   "tables": {
+    "gt": 88,
+    "detected": 1.0,
+    "shape_exact": 1.0,
+    "cell_exact_match": 1.0,
+    "cell_cer": 0.0,
+    "extra_predicted": 0,
+    "cell_em_by_style": {
+     "borderless": 1.0,
+     "grid": 1.0,
+     "rules": 1.0,
+     "shaded": 1.0
+    }
+   },
+   "fields": {
+    "mean_em": 1.0,
+    "mean_cer": 0.0,
+    "per_field_em": {
+     "accession_number": 1.0,
+     "date_of_birth": 1.0,
+     "exam_date": 1.0,
+     "findings": 1.0,
+     "impression": 1.0,
+     "indication": 1.0,
+     "modality": 1.0,
+     "patient_id": 1.0,
+     "patient_name": 1.0
+    }
+   },
+   "hidden_text": {
+    "docs_with_hidden": 5,
+    "flag_recall": 1.0,
+    "flag_false_positive": 0.0
+   },
+   "status": {
+    "ok": 35,
+    "needs_review": 5
+   },
+   "seconds_per_doc": {
+    "p50": 0.57,
+    "max": 1.08
+   }
+  },
+  "digital_ocr": {
+   "docs": 40,
+   "tables": {
+    "gt": 88,
+    "detected": 0.9886,
+    "shape_exact": 0.9091,
+    "cell_exact_match": 0.8903,
+    "cell_cer": 0.0927,
+    "extra_predicted": 1,
+    "cell_em_by_style": {
+     "borderless": 0.6583,
+     "grid": 0.9983,
+     "rules": 0.7922,
+     "shaded": 1.0
+    }
+   },
+   "fields": {
+    "mean_em": 0.9972,
+    "mean_cer": 0.0005,
+    "per_field_em": {
+     "accession_number": 1.0,
+     "date_of_birth": 1.0,
+     "exam_date": 1.0,
+     "findings": 1.0,
+     "impression": 1.0,
+     "indication": 1.0,
+     "modality": 1.0,
+     "patient_id": 0.975,
+     "patient_name": 1.0
+    }
+   },
+   "hidden_text": {
+    "docs_with_hidden": 5,
+    "flag_recall": 0.0,
+    "flag_false_positive": 0.0
+   },
+   "status": {
+    "ok": 38,
+    "needs_review": 2
+   },
+   "seconds_per_doc": {
+    "p50": 4.89,
+    "max": 9.45
+   }
+  },
+  "scan_clean": {
+   "docs": 40,
+   "tables": {
+    "gt": 88,
+    "detected": 1.0,
+    "shape_exact": 0.9318,
+    "cell_exact_match": 0.9169,
+    "cell_cer": 0.0595,
+    "extra_predicted": 0,
+    "cell_em_by_style": {
+     "borderless": 0.8389,
+     "grid": 0.9881,
+     "rules": 0.749,
+     "shaded": 0.9879
+    }
+   },
+   "fields": {
+    "mean_em": 0.9917,
+    "mean_cer": 0.001,
+    "per_field_em": {
+     "accession_number": 1.0,
+     "date_of_birth": 1.0,
+     "exam_date": 1.0,
+     "findings": 1.0,
+     "impression": 1.0,
+     "indication": 1.0,
+     "modality": 1.0,
+     "patient_id": 0.925,
+     "patient_name": 1.0
+    }
+   },
+   "hidden_text": {
+    "docs_with_hidden": 5,
+    "flag_recall": 0.0,
+    "flag_false_positive": 0.0
+   },
+   "status": {
+    "ok": 35,
+    "needs_review": 5
+   },
+   "seconds_per_doc": {
+    "p50": 5.77,
+    "max": 9.65
+   }
+  },
+  "scan_poor": {
+   "docs": 40,
+   "tables": {
+    "gt": 88,
+    "detected": 0.8068,
+    "shape_exact": 0.6591,
+    "cell_exact_match": 0.5059,
+    "cell_cer": 0.4217,
+    "extra_predicted": 4,
+    "cell_em_by_style": {
+     "borderless": 0.3639,
+     "grid": 0.6689,
+     "rules": 0.3922,
+     "shaded": 0.4684
+    }
+   },
+   "fields": {
+    "mean_em": 0.7028,
+    "mean_cer": 0.2182,
+    "per_field_em": {
+     "accession_number": 0.625,
+     "date_of_birth": 0.85,
+     "exam_date": 0.5,
+     "findings": 0.575,
+     "impression": 0.625,
+     "indication": 0.675,
+     "modality": 0.75,
+     "patient_id": 0.9,
+     "patient_name": 0.825
+    }
+   },
+   "hidden_text": {
+    "docs_with_hidden": 5,
+    "flag_recall": 0.0,
+    "flag_false_positive": 0.0
+   },
+   "status": {
+    "needs_review": 27,
+    "ok": 13
+   },
+   "seconds_per_doc": {
+    "p50": 5.01,
+    "max": 10.13
+   }
+  }
+ },
+ "conditions_main": {
+  "digital_main": {
+   "docs": 40,
+   "tables": {
+    "gt": 88,
+    "detected": 0.0,
+    "shape_exact": 0.0,
+    "cell_exact_match": 0.0,
+    "cell_cer": 1.0,
+    "extra_predicted": 0,
+    "cell_em_by_style": {
+     "borderless": 0.0,
+     "grid": 0.0,
+     "rules": 0.0,
+     "shaded": 0.0
+    }
+   },
+   "fields": {
+    "mean_em": 0.6583,
+    "mean_cer": 0.3265,
+    "per_field_em": {
+     "accession_number": 0.0,
+     "date_of_birth": 1.0,
+     "exam_date": 0.975,
+     "findings": 0.225,
+     "impression": 1.0,
+     "indication": 1.0,
+     "modality": 0.2,
+     "patient_id": 0.975,
+     "patient_name": 0.55
+    }
+   },
+   "hidden_text": {
+    "docs_with_hidden": 5,
+    "flag_recall": 0.0,
+    "flag_false_positive": 0.0
+   },
+   "status": {
+    "ok": 27,
+    "needs_review": 13
+   },
+   "seconds_per_doc": null
+  }
+ },
+ "note": "digital_main = the pipeline on main (before this change) on the same digital PDFs, same scorer"
+}

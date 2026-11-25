@@ -7,7 +7,7 @@ tags: [pdf, text-layer, tables, ocr, layout, prompt-injection, accuracy]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-25T07:00:00Z
+  at: 2026-11-25T08:12:27.009Z
 sources:
   - src/radintake/tools/pdf_text.py
   - src/radintake/tools/tables.py
