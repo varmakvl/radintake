@@ -67,3 +67,4 @@ verify:                   # radintake.agents.verify (thresholds tuned later on d
 
 injection:                # radintake.agents.injection (patterns extend the built-in list)
   extra_patterns: []
+  fuzzy_threshold: 86     # rapidfuzz partial_ratio (0-100) for OCR-damaged canonical phrases; null disables
