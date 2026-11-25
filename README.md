@@ -85,6 +85,24 @@ docker compose down
 The VLM runs in Ollama on the host (`OLLAMA_HOST`, default `http://host.docker.internal:11434`).
 Data and traces live in the `radintake-data` volume. Logs are structured JSON with no PHI.
 
+### Review UI
+
+With the service running, open **http://localhost:8000/ui** (a plain HTML/JS page served by the API itself;
+no build step, no CDN, no external requests - a strict Content-Security-Policy enforces it).
+
+- **Upload**: send a report (PNG/JPG/PDF/DICOM/zip) to `POST /cases`; the page polls the case until it finishes.
+- **Case**: the PHI-masked page image (`GET /cases/{id}/pages/{n}.png`) with boxes drawn in original page
+  pixels: green = extracted fields, red = PHI detections, blue = tables, amber = a cited box.
+- **Review queue**: cases waiting for a human, with flags and fields; click one to open it.
+- **Query**: ask a question; the answer lists its citations (open one to see the cited box) or the abstention.
+
+Screenshots use synthetic fixtures only.
+
+![Upload](docs/img/ui_upload.png)
+![Case with boxes](docs/img/ui_case.png)
+![Review queue](docs/img/ui_queue.png)
+![Cited answer](docs/img/ui_query.png)
+
 ## Batch CLI
 
 ```bash

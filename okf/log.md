@@ -4,6 +4,8 @@ Newest changes recorded chronologically.
 
 
 ## 2026-11-25
+- Synchronized timestamp for 10 drifted concept(s): data/data-preparation.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/deployment.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/api-service.md, subsystems/model-client-guard.md, subsystems/retrieval-qa-agent.md, subsystems/verifier-agent.md.
+- Synchronized workspace frontier mapping in `index.md` (+9 new, -0 removed, 220 already listed; 229 undocumented files mapped).
 - Synchronized timestamp for 4 drifted concept(s): data/data-preparation.md, data/dataset-split-and-golden-set.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md.
 - Synchronized workspace frontier mapping in `index.md` (+15 new, -0 removed, 220 already listed; 235 undocumented files mapped).
 - Golden v2 tests: `tests/unit/test_data_assets.py` (v2 lock, edited-id detection, disjointness from dev/golden v1,
@@ -63,3 +65,4 @@ Newest changes recorded chronologically.
 - Synchronized workspace frontier mapping in `index.md` (+39 new, -0 removed, 5 already listed; 44 undocumented files mapped).
 - Bootstrapped the radintake OKF v0.2 bundle (nested layout: subsystems, data, operations, playbooks) from the code on `sprint/radintake-v1` at commit `0e903a4`, `PLAN.md`, `requirements.md` and the beads epic `rad-beb`. Concepts for not-yet-built parts (retrieval/QA, split and golden set, evaluation harness) are marked `status: draft`.
 - Added the OKF steering section to `CLAUDE.md`.
+- 2026-11-25: Documented the review UI at `/ui` and the PHI-masked page route `GET /cases/{id}/pages/{n}.png` in `subsystems/api-service.md` (sources bound: ui assets, Playwright test).
