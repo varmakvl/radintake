@@ -93,6 +93,11 @@ def preprocess_page(page: Page, *, params: dict[str, Any] | None = None,
     cur = page  # never mutate ``page``; ops return new arrays
     m0 = _metrics(cur.image)
     record("metrics", "input_quality", **m0)
+    tl = getattr(page, "text_layer", None)
+    if tl is not None and tl.usable and not tl.mixed:
+        # born-digital page: text comes from the PDF itself, the raster needs no repair
+        record("skip", "pdf_text_layer")
+        return PreprocessResult(page=cur, decisions=decisions, metrics=m0)
     if m0["laplacian_var"] < p["blur_laplacian_min"]:
         record("flag_blur", "laplacian_var_below_min", laplacian_var=m0["laplacian_var"],
                threshold=p["blur_laplacian_min"])

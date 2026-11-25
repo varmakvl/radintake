@@ -104,4 +104,23 @@ def extract_stage(ctx: StageContext) -> dict[str, Any]:
                            "extraction": res.meta, "flags": sorted(flags)}
     if not any(v["value"] for v in report.values()):  # nothing readable: a human must look
         out["review_reasons"] = [*(ctx.data.get("review_reasons") or []), "extract: no fields found"]
+    if ctx.data.get("tables"):
+        out["tables"] = with_sections(ctx.data["tables"], res.meta.get("table_sections") or {})
+        tcfg = (getattr(ctx.config, "raw", None) or {}).get("tables")
+        low = float((tcfg or {}).get("min_section_table_conf", 0.6)) if isinstance(tcfg, dict) else 0.6
+        weak = [t for t in out["tables"] if t["section"] and t["confidence"] < low]
+        if weak:  # a table inside a clinical section we could not read well: a human must check it
+            out["flags"] = sorted({*out["flags"], "low_confidence"})
+            reason = f"table_unreadable: {len(weak)} table(s) in report sections below confidence {low}"
+            out["review_reasons"] = [*(out.get("review_reasons") or ctx.data.get("review_reasons") or []), reason]
+    return out
+
+
+def with_sections(tables: list[dict[str, Any]], sections: dict[str, str]) -> list[dict[str, Any]]:
+    """Copy of the output tables with ``section`` set from the extractor's (page, table index) map."""
+    out, seen = [], {}
+    for t in tables:
+        ti = seen.get(t["page"], 0)
+        seen[t["page"]] = ti + 1
+        out.append({**t, "section": sections.get(f"{t['page']}:{ti}")})
     return out

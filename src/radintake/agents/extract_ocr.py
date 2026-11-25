@@ -68,6 +68,11 @@ DEFAULT_TABLE_LABELS: dict[str, list[str]] = {
     "exam_date": ["EXAM DATE", "DATE OF EXAM", "STUDY DATE", "EXAMINATION DATE"],
     "modality": ["MODALITY"],
 }
+# Extra column labels used only for DETECTED tables (tools.tables): in the line-based fallback an
+# "Accession No.: ..." header line would itself look like a table header row.
+DETECTED_TABLE_LABELS: dict[str, list[str]] = {
+    "accession_number": ["ACCESSION", "ACCESSION NO", "ACCESSION NUMBER", "ACC NO"],
+}
 # Instruction-like sentences inside report text: kept as data, never part of the clinical value.
 DEFAULT_UNTRUSTED_PATTERNS: list[str] = [
     (r"\b(?:ignore|disregard|forget|override)\b.{0,40}\b(?:previous|prior|above|earlier|all|any)\b"
@@ -362,9 +367,47 @@ class OcrFirstExtractor:
         return kept, untrusted
 
     # -- main -------------------------------------------------------------------------
-    def map_fields(self, lines: list[Line]) -> dict[str, FieldHit]:
+    def table_field_hits(self, tables: dict[int, list[Any]]) -> dict[str, FieldHit]:
+        """Header-labelled columns of detected tables (row 0 = labels, row 1 = values)."""
         hits: dict[str, FieldHit] = {}
+        labels = {**{k: [_norm_label(a) for a in v] for k, v in DETECTED_TABLE_LABELS.items()}, **self.table_labels}
+        for pidx in sorted(tables):
+            for t in tables[pidx]:
+                if t.n_rows < 2:
+                    continue
+                grid = {(c.row, c.col): c for c in t.cells}
+                for col in range(t.n_cols):
+                    head, val = grid.get((0, col)), grid.get((1, col))
+                    if head is None or val is None or not val.text:
+                        continue
+                    lab = _norm_label(head.text)
+                    best, br = None, 0.0
+                    for f, aliases in labels.items():
+                        r = max(fuzz.ratio(lab, a) for a in aliases)
+                        if r >= self.p["heading_min_ratio"] and r > br:
+                            best, br = f, r
+                    if best and best not in hits:
+                        hits[best] = FieldHit([Token(val.text, val.bbox, val.confidence, pidx, True)],
+                                              self.p["table_mapping_conf"])
+        return hits
+
+    def map_fields(self, lines: list[Line], tables: dict[int, list[Any]] | None = None) -> dict[str, FieldHit]:
+        tables = tables or {}
+        table_hits = self.table_field_hits(tables)
+        # exam date / modality: a detected table column wins (its cells were re-read); accession: a
+        # labelled header line wins and a table column only fills it when no header line has it
+        late = {f: table_hits.pop(f) for f in list(table_hits) if f in DETECTED_TABLE_LABELS}
+        hits: dict[str, FieldHit] = dict(table_hits)
         consumed: set[int] = set()
+        self.table_sections: dict[tuple[int, int], str] = {}
+
+        def table_of(tok: Token) -> int | None:
+            cx, cy = (tok.bbox.x0 + tok.bbox.x1) / 2, (tok.bbox.y0 + tok.bbox.y1) / 2
+            for ti, t in enumerate(tables.get(tok.page) or []):
+                b = t.bbox
+                if b.x0 <= cx <= b.x1 and b.y0 <= cy <= b.y1:
+                    return ti
+            return None
         # exam table + header anchors (first occurrence in reading order wins)
         for i, ln in enumerate(lines):
             if i in consumed:
@@ -383,6 +426,8 @@ class OcrFirstExtractor:
                 for f, toks in hh:
                     hits.setdefault(f, FieldHit(toks, self.p["header_mapping_conf"]))
 
+        for f, h in late.items():
+            hits.setdefault(f, h)
         self.exam_fallback(lines, consumed, hits)
 
         # letterhead lines above the first heading on page 1 are page furniture when repeated
@@ -428,6 +473,15 @@ class OcrFirstExtractor:
             if stripped != text:  # drop the "Page N of M -" tokens
                 n_drop = len(text.split()) - len(stripped.split())
                 toks = toks[n_drop:]
+            if tables:  # table cells are reported as tables, not flattened into the section's prose
+                kept_toks = []
+                for t in toks:
+                    ti = table_of(t)
+                    if ti is None:
+                        kept_toks.append(t)
+                    else:
+                        self.table_sections.setdefault((t.page, ti), cur)
+                toks = kept_toks
             sections[cur][0].extend(toks)
 
         for sec, (toks, conf) in sections.items():
@@ -480,14 +534,15 @@ class ExtractionResult:
 
 def extract_pages(pages: Sequence[Page], words_by_page: dict[int, Sequence[Any]], *,
                   params: dict[str, Any] | None = None, anchors=None,
-                  reread: Callable[[Page, BBox], tuple[str, float]] | None = None) -> ExtractionResult:
+                  reread: Callable[[Page, BBox], tuple[str, float]] | None = None,
+                  tables: dict[int, list[Any]] | None = None) -> ExtractionResult:
     """Run OCR-first mapping over already-OCR'd pages (processed-page word coordinates)."""
     p = {**DEFAULTS, **(params or {})}
     ex = OcrFirstExtractor(p, anchors)
     page_map = {pg.index: pg for pg in pages}
     lines_by_page = {pg.index: page_lines(pg.index, words_by_page.get(pg.index) or []) for pg in pages}
     all_lines = [ln for pg in sorted(page_map) for ln in lines_by_page[pg]]
-    hits = ex.map_fields(all_lines)
+    hits = ex.map_fields(all_lines, tables)
     fields: dict[str, ReportField] = {}
     for name in ALL_FIELDS:
         hit = hits.get(name)
@@ -505,7 +560,9 @@ def extract_pages(pages: Sequence[Page], words_by_page: dict[int, Sequence[Any]]
             "fields_missing": sorted(n for n in HEADER_FIELDS + SECTION_FIELDS if not fields[n].value),
             "low_confidence_fields": sorted(n for n, f in fields.items() if f.low_confidence),
             "n_untrusted": sum(len(f.untrusted_text or []) for f in fields.values()),
-            "handwriting_reader": "supplied" if reread is not None else "unavailable"}
+            "handwriting_reader": "supplied" if reread is not None else "unavailable",
+            "n_tables": sum(len(v) for v in (tables or {}).values()),
+            "table_sections": {f"{pg}:{ti}": sec for (pg, ti), sec in ex.table_sections.items()}}
     return ExtractionResult(report, lines_by_page, meta, flags, hits, page_map)
 
 
@@ -536,9 +593,9 @@ def words_for_pages(ctx: Any, pages: Sequence[Page]) -> dict[int, Sequence[Any]]
         if words is None:
             words = pg.words or None
         if words is None:
-            from radintake.tools.ocr import ocr
+            from radintake.tools.pdf_text import page_words
 
-            words = ocr(pg.image, trace=ctx.trace)
+            words = page_words(pg, trace=ctx.trace)
         out[pg.index] = words
     return out
 
@@ -547,6 +604,7 @@ def run(ctx: Any) -> ExtractionResult:
     """OCR-first pipeline over the stage context (used by the extract stage)."""
     t0 = time.perf_counter()
     pages: list[Page] = list(ctx.data.get("pages") or [])
-    res = extract_pages(pages, words_for_pages(ctx, pages), params=load_params(ctx.config))
+    res = extract_pages(pages, words_for_pages(ctx, pages), params=load_params(ctx.config),
+                        tables=ctx.data.get("table_objs"))
     res.meta["duration_ms"] = round((time.perf_counter() - t0) * 1000.0, 3)
     return res

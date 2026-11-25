@@ -187,6 +187,8 @@ class Page:
     source: str = ""  # e.g. "png", "pdf@200dpi", "tiff-frame"
     words: list[Word] = field(default_factory=list)
     meta: dict[str, Any] = field(default_factory=dict)
+    # PDF text layer (``tools.pdf_text.TextLayer``, words in ORIGINAL coords); None = not a digital page
+    text_layer: Any = None
 
     @property
     def size(self) -> tuple[int, int]:
@@ -204,4 +206,4 @@ class Page:
         """A new Page for a processed image; ``step`` maps current -> new image coords."""
         return Page(index=self.index, image=image, original_size=self.original_size,
                     transform=self.transform.then(step), source=self.source,
-                    words=[], meta=dict(self.meta))
+                    words=[], meta=dict(self.meta), text_layer=self.text_layer)

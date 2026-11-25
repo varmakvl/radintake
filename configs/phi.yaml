@@ -7,6 +7,8 @@
 anchors:
   - type: PATIENT_NAME
     pattern: '\b(?:patient\s*name|pt\.?\s*name|name\s+of\s+patient)\s*[:#.]?'
+  - type: PATIENT_NAME    # bare "Patient:" label (colon required, so prose like "patient is" never matches)
+    pattern: '\bpatient\s*:'
   - type: PATIENT_ID
     pattern: '\b(?:patient\s*id|pt\.?\s*id|patient\s*no\.?|medical\s*record\s*(?:no\.?|number)?)\s*[:#.]?'
   - type: PATIENT_ID

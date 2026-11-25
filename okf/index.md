@@ -16,6 +16,7 @@ reports and DICOM. Start with the [System Overview](/overview.md); the delivery 
 - [Preprocessing Agent](/subsystems/preprocessing-agent.md) — Metric-driven orientation, dewarp, deskew, denoise, contrast with tracked transforms.
 - [Document PHI Agent](/subsystems/phi-agent.md) — Layered PHI detection, image/text masking, local vault, sole producer of masked payloads.
 - [DICOM De-identification Agent](/subsystems/dicom-deid-agent.md) — Basic Profile header actions plus burned-in text redaction; output stays valid DICOM.
+- [PDF Text Layer & Table Reading](/subsystems/tables-and-text-layer.md) — Exact words from digital PDFs (hidden-text guard), ruled / rules-only / borderless table detection, per-cell re-read, tables.v1.
 - [Extraction Agent](/subsystems/extraction-agent.md) — OCR-first, VLM-first and hybrid pipelines emitting report.v1 with confidence and provenance.
 - [Verifier, Injection Detector & Review Queue](/subsystems/verifier-agent.md) — Grounding, schema, omission and injection checks; routes doubtful cases to humans.
 - [Retrieval / QA Agent](/subsystems/retrieval-qa-agent.md) — SQLite BM25 + MiniLM hybrid index, extractive cited answers, negation, abstention.

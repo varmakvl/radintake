@@ -9,6 +9,9 @@ Coordinate conventions (see ``radintake.core.types``):
 * PDF: each page is rasterised at ``dpi`` (default 200, ``loader.pdf_dpi``). Page coordinates
   in every output are the RASTERISED PIXEL coordinates at that DPI (PDF point coords x dpi/72),
   recorded in ``page.meta`` (``dpi``, ``pdf_size_pt``).
+* PDF text layer: when a page carries enough visible text (``tools.pdf_text``), its words are
+  attached as ``page.text_layer`` (original coords) and used instead of OCR; counts only in
+  ``page.meta["text_layer"]``. ``text_layer={"enabled": False}`` turns this off.
 """
 
 from __future__ import annotations
@@ -54,21 +57,31 @@ def load_tiff(path: str | Path) -> list[Page]:
     return pages
 
 
-def load_pdf(path: str | Path, dpi: int = 200) -> list[Page]:
+def load_pdf(path: str | Path, dpi: int = 200, text_layer: dict | None = None) -> list[Page]:
     import pypdfium2 as pdfium
+
+    from radintake.tools import pdf_text
+
+    tl_params = {**pdf_text.DEFAULTS, **(text_layer or {})}
 
     pages: list[Page] = []
     pdf = pdfium.PdfDocument(str(path))
     try:
         for i in range(len(pdf)):
             page = pdf[i]
+            tl = None
             try:
                 w_pt, h_pt = page.get_size()
-                pil = page.render(scale=dpi / 72.0).to_pil()
+                arr = _to_array(page.render(scale=dpi / 72.0).to_pil())
+                if tl_params["enabled"]:
+                    tl = _text_layer(page, (w_pt, h_pt), arr, dpi, tl_params)
             finally:
                 page.close()
-            pages.append(_page(i + 1, _to_array(pil), f"pdf@{dpi}dpi", dpi=dpi,
-                               pdf_size_pt=[float(w_pt), float(h_pt)]))
+            pg = _page(i + 1, arr, f"pdf@{dpi}dpi", dpi=dpi, pdf_size_pt=[float(w_pt), float(h_pt)])
+            if tl is not None:
+                pg.meta["text_layer"] = tl.stats()
+                pg.text_layer = tl if tl.usable else None
+            pages.append(pg)
     finally:
         pdf.close()
     if not pages:
@@ -76,12 +89,28 @@ def load_pdf(path: str | Path, dpi: int = 200) -> list[Page]:
     return pages
 
 
-def load_pages(path: str | Path, input_type: str, *, dpi: int = 200) -> list[Page]:
+def _text_layer(page, size_pt, arr: np.ndarray, dpi: int, params: dict):
+    """Text layer of one pdfium page, or None (rotated page / unreadable layer -> OCR)."""
+    from radintake.tools import pdf_text
+
+    if page.get_rotation() % 360:
+        return pdf_text.TextLayer(reason="rotated_page")
+    textpage = page.get_textpage()
+    try:
+        return pdf_text.text_layer_words(textpage, size_pt, arr, dpi, params)
+    except Exception:  # noqa: BLE001 - a broken text layer must never fail the load; OCR still works
+        return pdf_text.TextLayer(reason="text_layer_error")
+    finally:
+        textpage.close()
+
+
+def load_pages(path: str | Path, input_type: str, *, dpi: int = 200,
+               text_layer: dict | None = None) -> list[Page]:
     """Load every page of a routed document input (scan, photo, pdf, tiff)."""
     if input_type in ("scan", "photo"):
         return load_image(path)
     if input_type == "tiff":
         return load_tiff(path)
     if input_type == "pdf":
-        return load_pdf(path, dpi=dpi)
+        return load_pdf(path, dpi=dpi, text_layer=text_layer)
     raise ValueError(f"load_pages does not handle input_type={input_type!r}")

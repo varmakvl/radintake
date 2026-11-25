@@ -147,6 +147,8 @@ def process_file(path: str | Path, out_dir: str | Path, *, config: Config | None
         doc["flags"] = sorted(ctx.flags)
         for key in ("report", "phi", "dicom"):
             doc[key] = ctx.data.get(key)
+        if ctx.data.get("tables"):
+            doc["tables"] = ctx.data["tables"]
         if doc["status"] == "ok":
             missing = doc["report"] is None if r.input_type in DOCUMENT_TYPES else doc["dicom"] is None
             if missing:  # nothing produced the main result yet -> a human must look

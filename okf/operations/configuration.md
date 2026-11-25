@@ -36,6 +36,9 @@ sources:
 # Key settings (`configs/default.yaml`)
 
 `seed: 140`; budgets (see [Orchestrator](/subsystems/orchestrator.md)); `loader.pdf_dpi: 200`;
+`loader.pdf_text_layer` (use a digital PDF's own text: `enabled`, `min_chars`, `min_font_pt`,
+`mixed_ink_threshold`) and an optional `tables:` block overriding `tools/tables.DEFAULTS`
+([PDF Text Layer & Table Reading](/subsystems/tables-and-text-layer.md));
 preprocess thresholds ([Preprocessing Agent](/subsystems/preprocessing-agent.md));
 `extraction.pipeline: ocr_first` plus VLM/hybrid knobs ([Extraction Agent](/subsystems/extraction-agent.md));
 verifier thresholds ([Verifier](/subsystems/verifier-agent.md)); `injection.extra_patterns`.

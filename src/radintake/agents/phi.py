@@ -53,6 +53,7 @@ from radintake.tools.model_client import MaskedPayload
 
 PHI_VERSION = "phi-docs-1"
 HEADER_TYPES = ("PATIENT_NAME", "PATIENT_ID", "DATE_OF_BIRTH", "ACCESSION_NUMBER")
+_NAME_ANCHORS = ("PATIENT_NAME", "REFERRING_PHYSICIAN")
 
 # Overlapping spans keep the type of the most specific layer.
 _PRIORITY = {"anchor": 3, "known": 2, "regex": 1, "ner": 1}
@@ -159,6 +160,13 @@ class PhiDetector:
                 kept.append(lab)
             for i, (_, end, t) in enumerate(kept):
                 stop = kept[i + 1][0] if i + 1 < len(kept) else len(line)
+                if t in _NAME_ANCHORS:
+                    # a name value ends where an ID / accession / date starts: when OCR garbles the next
+                    # label ("MRN:"), the name would otherwise swallow the next value as well
+                    hits = [m.start() for _t, rx in self.regex for m in rx.finditer(line, end, stop)
+                            if m.start() > end]
+                    if hits:
+                        stop = min(hits)
                 seg = line[end:stop]
                 v0 = end + (len(seg) - len(seg.lstrip(" \t:#.")))
                 v1 = end + len(seg.rstrip())
@@ -369,7 +377,7 @@ def _save_png(img: np.ndarray, path: Path) -> None:
 
 @register_stage("phi", applies_to=DOCUMENT_TYPES, order=30, failure_flag="phi_uncertain")
 def phi_stage(ctx: StageContext) -> dict[str, Any]:
-    from radintake.tools.ocr import ocr
+    from radintake.tools.pdf_text import page_words
 
     params = load_params(ctx.config)
     mcfg = params.get("mask") or {}
@@ -385,11 +393,14 @@ def phi_stage(ctx: StageContext) -> dict[str, Any]:
     detections: list[dict[str, Any]] = []
     payloads: list[MaskedPayload] = []
     ocr_words: dict[int, list[Any]] = {}
+    cached: dict[int, list[Any]] = ctx.data.get("ocr_words") or {}
     out_pages: list[Page] = []
     flags: set[str] = set()
     known: set[str] = set()
     for pg in pages:
-        words = ocr(pg.image, trace=ctx.trace)
+        words = cached.get(pg.index)  # from the tables stage (text layer or OCR + re-read cells)
+        if words is None:
+            words = page_words(pg, trace=ctx.trace)
         ocr_words[pg.index] = words
         if not words:
             flags.add("phi_uncertain")  # nothing readable: cannot vouch for this page

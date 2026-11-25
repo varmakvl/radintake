@@ -38,6 +38,7 @@ Current plan:
 |---|---|---|---|
 | 10 | `load` (critical) | documents | `orchestrator/stages.py` -> `tools/loader.py` |
 | 20 | `preprocess` | documents | [Preprocessing Agent](/subsystems/preprocessing-agent.md) |
+| 25 | `tables` | documents | [PDF Text Layer & Table Reading](/subsystems/tables-and-text-layer.md) (words once per page + tables) |
 | 30 | `phi` | documents | [Document PHI Agent](/subsystems/phi-agent.md) |
 | 30 | `dicom_deid` | DICOM | [DICOM De-identification Agent](/subsystems/dicom-deid-agent.md) |
 | 40 | `extract` | documents | [Extraction Agent](/subsystems/extraction-agent.md) |

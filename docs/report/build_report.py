@@ -174,6 +174,51 @@ ARCH_SVG = """
 """
 
 
+def tables_section(img: Path) -> str:
+    """Section 11: PDF text layer + tables (after the golden run; dev and synthetic-set evidence only)."""
+    te = ROOT / "eval/results/tables_eval.json"
+    dc = ROOT / "eval/results/dev_tables_comparison.json"
+    if not te.exists():
+        return ""
+    conds = json.loads(te.read_text(encoding="utf-8"))["conditions"]
+    label = {"digital": "Digital PDF, text layer (new)", "digital_ocr": "Digital PDF, OCR only (old)",
+             "scan_clean": "Clean scan PDF (OCR + cell re-read)", "scan_poor": "Poor scan PDF (OCR + cell re-read)"}
+    rows = []
+    for k, c in conds.items():
+        t, f, h = c["tables"], c["fields"], c["hidden_text"]
+        rows.append([label.get(k, k), pct(t["detected"]), pct(t["shape_exact"]), f3(t["cell_exact_match"]), f3(t["cell_cer"]),
+                     f3(f["mean_em"]), pct(h["flag_recall"]) if k.startswith("digital") else "-",
+                     f"{c['seconds_per_doc']['p50']} s"])
+    styles = sorted({s for c in conds.values() for s in c["tables"]["cell_em_by_style"]})
+    style_rows = [[label.get(k, k), *[f3(c["tables"]["cell_em_by_style"].get(s)) for s in styles]] for k, c in conds.items()]
+    dev_html = ""
+    if dc.exists():
+        d = json.loads(dc.read_text(encoding="utf-8"))
+        dev_html = ("<h3>Dev set, main vs this change (218 documents, image-only inputs)</h3>"
+                    + table(["Metric", "main", "with text layer + tables"],
+                            [[r["metric"], r["main"], r["branch"]] for r in d["rows"]]))
+    shot = ""
+    over = next(iter(sorted((ROOT / "runs" / "inspect_tables").glob("*/25_tables/page_1_tables.png"))), None)
+    if over:
+        (img / "tables_overlay.png").write_bytes(over.read_bytes())
+        shot = ('<figure style="width:60%"><img src="img/tables_overlay.png" style="width:100%"/><figcaption>'
+                'Step inspector, synthetic digital PDF: detected table cells (red).</figcaption></figure>')
+    return f"""
+<h2>11. Added after the golden run: PDF text layer and tables (dev and synthetic evidence)</h2>
+<p>Digital PDFs were rasterised and OCR'd, and only a one-row exam table was parsed: a synthetic CT report with a nodule
+table came out <i>ok</i> with the table garbled into Findings. Now the loader reads the PDF's own text layer (exact words
+and boxes, invisible text dropped and sent to review as a prompt-injection risk), and a <code>tables</code> stage detects
+ruled, rules-only and borderless tables, re-reads each ruled cell on OCR pages (single-line Tesseract on the cleaned cell
+crop) and writes the better reading back for PHI masking, extraction and grounding. Table text no longer leaks into the
+section prose; tables are emitted as an optional <code>tables</code> array (schema <code>tables.v1</code>; the locked
+<code>cli_output.v1</code> contract is unchanged). The golden set was not re-run: these numbers are dev and a new
+synthetic table set (40 documents x 3 variants, no IU text).</p>
+{table(["Condition", "Tables found", "Exact shape", "Cell EM", "Cell CER", "Field EM", "Hidden text flagged", "p50 per doc"], rows, "small")}
+{table(["Cell EM by style", *styles], style_rows, "small")}
+{dev_html}
+{shot}"""
+
+
 def build(run: Path, out: Path, corpus: Path) -> Path:
     img = out / "img"
     img.mkdir(parents=True, exist_ok=True)
@@ -259,6 +304,8 @@ def build(run: Path, out: Path, corpus: Path) -> Path:
         ["PHI NER", "Presidio + spaCy when available, else honorific rules", "CPU", "PHI agent"],
     ]
     prompts = sorted((ROOT / "prompts").glob("*.md"))
+
+    tables_html = tables_section(img)
 
     def img_tag(name, cap, w="100%"):
         return f'<figure style="width:{w}"><img src="img/{name}" style="width:100%"/><figcaption>{cap}</figcaption></figure>'
@@ -413,6 +460,7 @@ committed under <code>traces/final/</code> and re-score offline with every model
 <pre>{html.escape(trace_excerpt(run))}</pre>
 {img_tag(shots['inspector'], 'Step inspector on a synthetic fixture: each stage input and output, masked page, OCR words, extraction with provenance.') if 'inspector' in shots else ''}
 {img_tag(shots['dashboard'], 'Progress dashboard (Claude artifact) built from the run records.') if 'dashboard' in shots else ''}
+{tables_html}
 </body></html>"""
     page = out / "report.html"
     page.write_text(doc, encoding="utf-8")

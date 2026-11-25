@@ -12,3 +12,11 @@ unless stated; samples are seeded dev subsets, never the golden set.
 | 2026-11-24 | Pipeline choice: OCR-first vs hybrid vs VLM-first (18 docs) | 0.642 / 0.651 / 0.421 EM; 2.3 / 11.9 / 16.8 s per page | OCR-first default, hybrid opt-in |
 | 2026-11-24 | Skip CLAHE after flat-field (from worst-10 error analysis) | worst 10: omission 0.74 -> 0.67; 18-doc sample: photo EM 0.53 -> 0.47, PHI recall 0.84 -> 0.80 | rejected (helps the worst pages, hurts the typical photo) |
 | 2026-11-24 | Looser page-quad contrast threshold (0.3, 0.15) | finds fewer quads than the default 0.6 on 5 worst photos | rejected |
+| 2026-11-25 | Tight pdfium glyph boxes for text-layer word splitting | "Measu rements", "0001 2345": narrow glyphs leave gaps read as spaces | replaced by loose (advance-width) boxes, gap > 0.15 x height |
+| 2026-11-25 | "Accession" as a label in the line-based exam-table fallback | dev doc D0011: the "Accession No.: ..." header line was read as a table header, accession = next line | label used for detected tables only |
+| 2026-11-25 | Re-read cell words keep the OCR line id of their row | accession = "Exam": OCR line ids around the table run into the patient block | each re-read table row gets its own line id |
+| 2026-11-25 | Rules stack only when the gap is < 6 x word height | rules-only tables with > 4 body rows missed (table set: rules 0.38 cell EM) | 16 x word height, then split stacks at bands that are not table-like |
+| 2026-11-25 | Split a rule stack at bands whose words do not form columns, ruled or not | patient key/value block (4 columns) joined the exam table | with vertical rules, only bands they cross count |
+| 2026-11-25 | Require OCR words inside a ruled grid | Tesseract psm 6 returns no words for dense grids: 6-column dose tables never found on scans (shaded 0.48 cell EM) | keep word-less grids, read every cell with the per-cell re-read, drop grids still empty |
+| 2026-11-25 | Spread re-read cell text evenly over the cell box | dev PHI precision 0.807 -> 0.787 (boxes wider than the text miss GT boxes) | keep Tesseract's own word boxes from the cell crop |
+| 2026-11-25 | Table column fills accession before the header line | CI fixture CI002: borderless detector paired "Accession No.:" with the table header -> accession "Exam" | header line wins for accession; single-band ruled tables split by text line |

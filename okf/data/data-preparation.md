@@ -9,6 +9,7 @@ generated:
   by: Claude/opus-5.5
   at: 2026-11-24T17:01:04.519Z
 sources:
+  - data_prep/tables_set.py
   - data_prep/__init__.py
   - data_prep/download.py
   - data_prep/download_iu.py
@@ -80,6 +81,16 @@ Visual QA overlays in `data/corpus/overlays/`.
 
 IU Open-i is CC BY-NC-ND and the repo is public: raw downloads, renders, corpus files and GT live
 under gitignored `data/` only. Committed: scripts, `audit.md` (aggregates), `splits/` (ids, hashes).
+
+# Synthetic table set (2026-11-25)
+
+`python -m data_prep.tables_set` -> `data/tables_set/` (gitignored): 40 fully synthetic reports
+(Faker seed 140, template sentences, no IU text) with clinical tables (nodules, labs, prior studies,
+CT dose; 2-8 body rows, 3-6 columns; grid / rules-only / borderless / shaded header; 8 docs with two
+tables, 5 with hidden white or 1-pt text). Each in three variants: Chromium-printed digital PDF (text
+layer) and the 200-DPI raster degraded to clean_scan / poor_scan, saved image-only. GT: field values,
+table rows with their section, hidden-text flag. Scored by `radintake.eval.tables_eval`
+([PDF Text Layer & Table Reading](/subsystems/tables-and-text-layer.md)).
 
 Next: [Dataset Split & Golden Set](/data/dataset-split-and-golden-set.md).
 
