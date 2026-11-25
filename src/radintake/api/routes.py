@@ -10,7 +10,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from fastapi import APIRouter, Request, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
 from radintake.api.app import ApiError, problem
@@ -49,10 +49,22 @@ def _process(app: Any, case_id: str, path: Path) -> None:
         store.fail(case_id, f"pipeline crashed: {type(exc).__name__}")
 
 
+def _index_dir(app: Any) -> Path:
+    return Path(app.state.config.data_dir) / "cases" / "_index"
+
+
+def _remember_out_dir(app: Any, case_id: str, out_dir: Path) -> None:
+    """case_id -> output dir, so the UI can serve the case's PHI-masked page images."""
+    d = _index_dir(app)
+    d.mkdir(parents=True, exist_ok=True)
+    (d / case_id).write_text(str(out_dir), encoding="utf-8")
+
+
 def _submit(app: Any, name: str, src: Path) -> str:
     """Register a case for ``src`` (already on disk under the case dir) and queue it."""
     store: CaseStore = app.state.store
     case_id = store.create(name)
+    _remember_out_dir(app, case_id, src.parent / "out")
     app.state.pool.submit(_process, app, case_id, src)
     return case_id
 
@@ -117,6 +129,25 @@ def get_case(case_id: str, request: Request) -> dict[str, Any]:
         raise ApiError(404, "Case not found", f"no case {case_id}")
     return {"case_id": c["case_id"], "input": c["input"], "status": c["status"], "result": c["result"],
             "flags": c["flags"], "trace_id": c["trace_id"], "error": c["error"]}
+
+
+@router.get("/cases/{case_id}/pages/{page}.png")
+def get_case_page(case_id: str, page: int, request: Request) -> FileResponse:
+    """The PHI-MASKED page image the PHI agent produced (never the original upload)."""
+    app = request.app
+    c = app.state.store.get(case_id)  # also validates case_id before it touches the filesystem
+    if c is None:
+        raise ApiError(404, "Case not found", f"no case {case_id}")
+    marker = _index_dir(app) / case_id
+    arts = ((c.get("result") or {}).get("phi") or {}).get("masked_artifacts") or []
+    rel = next((a for a in arts if a.endswith(f"/page_{page}.png")), None)
+    if rel is None or not marker.is_file():
+        raise ApiError(404, "Page image not found", f"no masked image for page {page}")
+    out_dir = Path(marker.read_text(encoding="utf-8")).resolve()
+    f = (out_dir / rel).resolve()
+    if out_dir not in f.parents or not f.is_file():
+        raise ApiError(404, "Page image not found", f"no masked image for page {page}")
+    return FileResponse(f, media_type="image/png", headers={"Cache-Control": "no-store"})
 
 
 @router.get("/review-queue")

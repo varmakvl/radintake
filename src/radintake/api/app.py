@@ -20,6 +20,8 @@ from radintake.logging import configure_logging, get_logger
 from radintake.store.cases import CaseStore
 
 PROBLEM = "application/problem+json"
+UI_CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
+          "connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
 log = get_logger("radintake.api")
 
 
@@ -82,4 +84,16 @@ def create_app(config: Config | None = None, *, max_workers: int = 2) -> FastAPI
     from radintake.api.routes import router
 
     app.include_router(router)
+
+    # Review UI: static, self-contained (no CDN / external URL); a restrictive CSP keeps it that way.
+    from fastapi.staticfiles import StaticFiles
+
+    @app.middleware("http")
+    async def _ui_csp(request: Request, call_next: Any) -> Any:
+        resp = await call_next(request)
+        if request.url.path == "/ui" or request.url.path.startswith("/ui/"):
+            resp.headers["Content-Security-Policy"] = UI_CSP
+        return resp
+
+    app.mount("/ui", StaticFiles(directory=Path(__file__).parent / "ui", html=True), name="ui")
     return app

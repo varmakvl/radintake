@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>radintake review</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header><h1>radintake</h1><span class="muted">local review UI - nothing leaves this machine</span>
+<nav><a href="#upload" data-view="upload">Upload</a><a href="#case" data-view="case">Case</a>
+<a href="#queue" data-view="queue">Review queue</a><a href="#query" data-view="query">Query</a></nav></header>
+<main>
+<section id="view-upload">
+  <h2>Upload a report</h2>
+  <form id="upload-form"><input type="file" id="file" name="file" accept=".png,.jpg,.jpeg,.pdf,.dcm,.zip" required>
+  <button type="submit">Upload</button></form>
+  <p id="upload-msg" class="muted"></p>
+</section>
+<section id="view-case" hidden>
+  <h2>Case <span id="case-id" class="muted"></span></h2>
+  <p>Status: <b id="case-status">-</b> <span id="case-flags" class="flags"></span></p>
+  <div class="legend"><span class="lg field">field</span><span class="lg phi">PHI</span><span class="lg table">table</span><span class="lg cite">cited</span></div>
+  <div id="pager"></div>
+  <div id="page-wrap"><img id="page-img" alt="PHI-masked page"><div id="overlay"></div></div>
+  <pre id="case-fields"></pre>
+</section>
+<section id="view-queue" hidden>
+  <h2>Review queue</h2><button id="queue-refresh" type="button">Refresh</button>
+  <table id="queue-table"><thead><tr><th>Case</th><th>Input</th><th>Reasons</th><th>Fields</th></tr></thead><tbody></tbody></table>
+</section>
+<section id="view-query" hidden>
+  <h2>Ask a question</h2>
+  <form id="query-form"><input type="text" id="question" size="60" placeholder="e.g. Which studies mention pneumonia?" required>
+  <button type="submit">Ask</button></form>
+  <div id="answer"></div>
+</section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

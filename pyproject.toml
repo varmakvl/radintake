@@ -29,12 +29,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.2", "pytest-timeout>=2.3", "httpx>=0.27", "ruff>=0.5", "img2pdf>=0.5"]
+dev = ["pytest>=8.2", "pytest-timeout>=2.3", "httpx>=0.27", "ruff>=0.5", "img2pdf>=0.5", "playwright>=1.47"]
 # Dataset generation only (python -m data_prep.*); not needed by the service or CI.
 data = ["playwright>=1.47", "faker>=30", "jinja2>=3.1", "datasketch>=1.6", "scikit-learn>=1.5", "img2pdf>=0.5"]
 
 [project.scripts]
 radintake = "radintake.cli:main"
+
+[tool.setuptools.package-data]
+radintake = ["api/ui/*"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
