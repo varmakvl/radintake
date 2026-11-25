@@ -30,3 +30,25 @@ Golden flags: 50 handwriting docs, 4 injected docs, 33 multi-page docs. Dev: 82 
 
 Golden list lock (sha256 of `golden_ids.txt`, LF line endings): `7b33866975ce4c34b0148875349634262aa28ba06787f1d78d0f399954836aa2`.
 The golden set is scored once, by the final evaluation run only; all tuning uses dev.
+
+<!-- golden_v2 -->
+## Golden v2 (held-out set, `python -m data_prep.heldout`, seed 241)
+
+A fresh evaluation set built after golden v1 was spent; scored once by the v2 final run (`python -m radintake.eval.run --split golden_v2 --final`, guard `eval/GOLDEN_V2_USED.json`).
+
+- Selection: IU reports not in `dev_ids.txt` / `golden_ids.txt` (330 v1 reports excluded); 3597 renderable candidates.
+- Near-duplicate check against ALL v1 reports (same method as above: exact + MinHash 128 perms, 5-gram shingles, LSH at Jaccard 0.8, exact re-check, union-find over v1 + candidates): 697 candidates dropped because their dup group touches a v1 report; 2900 kept. Shared v1/v2 dup groups: 0.
+- Plan/render/degrade: v1 code and rules, seed 241, 112 docs (ids `G0001..`), 8 injection slots; v2-internal dup groups: 3 (`golden_v2_dedup.json`).
+
+| Tier | Docs | Pages |
+|---|---|---|
+| clean_scan | 38 | 45 |
+| poor_scan | 37 | 46 |
+| phone_photo | 37 | 49 |
+| **total** | 112 | 140 |
+
+Formats: jpg 25, pdf 32, png 44, tiff 11.
+
+Flags: 45 handwriting docs (56 of 140 pages, 40 %), 8 injected docs, 28 multi-page docs.
+
+Golden v2 list lock (sha256 of `golden_v2_ids.txt`, LF line endings): `19293a6eb2df42b58fd4ea08231dcdebdd7d02a7ddbf531b5c3c3ce472edefc4`.

@@ -1,0 +1,25 @@
+{
+ "method": "exact + MinHash LSH",
+ "threshold": 0.8,
+ "seed": 241,
+ "v1_reports": 330,
+ "candidate_pool": 3597,
+ "dropped_v1_dup_group": 697,
+ "kept": 2900,
+ "universe_groups_size_gt1": 182,
+ "groups": [
+  [
+   "CXR1583",
+   "CXR2916",
+   "CXR968"
+  ],
+  [
+   "CXR1207",
+   "CXR1917"
+  ],
+  [
+   "CXR3224",
+   "CXR3489"
+  ]
+ ]
+}

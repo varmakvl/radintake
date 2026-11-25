@@ -3,6 +3,8 @@
     python -m radintake.eval.run --split dev [--pipeline ocr_first|vlm_first|hybrid]
                                  [--sample-per-tier K] [--limit N] [--dicom] [--out runs/<name>]
     python -m radintake.eval.run --split golden --final      # the ONE golden run (guarded)
+    python -m radintake.eval.run --split golden_v2 --final   # the ONE golden v2 run (guarded)
+    python -m radintake.eval.run --split golden_v2 --check-only   # lock + GT check, runs nothing
 
 Run record (``--out``)::
 
@@ -16,11 +18,17 @@ Run record (``--out``)::
 Everything except ``outputs/`` can be committed (final run: ``traces/final/``). The golden split is
 guarded: the first ``--final`` golden run writes ``eval/GOLDEN_USED.json``; later golden runs are
 refused (the brief: use the golden set once for the final numbers).
+
+Golden v2 (``splits/golden_v2_ids.txt``, built by ``data_prep.heldout``, corpus ``data/corpus_v2``)
+has its own guard, ``eval/GOLDEN_V2_USED.json``, written by its first ``--final`` run, and is only
+run when ``sha256(golden_v2_ids.txt)`` matches ``splits/golden_v2.lock``. ``--check-only`` verifies
+the lock, the guard and the GT presence without running the pipeline or touching the guard.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -37,6 +45,8 @@ from radintake.eval.metrics import aggregate, score_dicom, score_document, score
 
 SPLITS = REPO_ROOT / "splits"
 GOLDEN_USED = REPO_ROOT / "eval" / "GOLDEN_USED.json"
+GOLDEN_V2_USED = REPO_ROOT / "eval" / "GOLDEN_V2_USED.json"
+GOLDEN_V2_CORPUS = Path("data/corpus_v2")
 SEED = 140
 
 
@@ -75,6 +85,29 @@ class GpuSampler:
 
 def split_ids(name: str) -> list[str]:
     return [ln.split("\t")[0] for ln in (SPLITS / f"{name}_ids.txt").read_text(encoding="utf-8").splitlines() if ln.strip()]
+
+
+def lock_hash(path: Path) -> str:
+    """sha256 of a split ids file with LF line endings (same rule as data_prep.split.golden_hash)."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
+def check_golden_v2(corpus: Path, splits: Path | None = None) -> dict[str, Any]:
+    """Validate the golden v2 lock and GT presence; never runs the pipeline, never writes the guard.
+
+    ``ok`` is the lock verdict; ``gt_missing`` lists ids without ``<corpus>/gt/<id>.json`` (``None``
+    when the corpus directory is absent, e.g. in CI)."""
+    splits = splits or SPLITS
+    ids_path, lock_path = splits / "golden_v2_ids.txt", splits / "golden_v2.lock"
+    if not ids_path.is_file() or not lock_path.is_file():
+        return {"ok": False, "error": f"missing {ids_path.name} or {lock_path.name}"}
+    actual, expected = lock_hash(ids_path), lock_path.read_text(encoding="utf-8").strip()
+    ids = [ln.split("\t")[0] for ln in ids_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    gt_missing = None
+    if (corpus / "gt").is_dir():
+        gt_missing = [i for i in ids if not (corpus / "gt" / f"{i}.json").is_file()]
+    return {"ok": actual == expected, "lock": expected, "actual": actual, "n_ids": len(ids),
+            "corpus": str(corpus), "gt_missing": gt_missing, "used": GOLDEN_V2_USED.exists()}
 
 
 def sample(ids: list[str], gts: dict[str, dict], per_tier: int, seed: int = SEED) -> list[str]:
@@ -186,26 +219,48 @@ def run(*, split: str, out: Path, corpus: Path, pipeline: str | None = None, per
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m radintake.eval.run")
-    ap.add_argument("--split", choices=("dev", "golden"), required=True)
+    ap.add_argument("--split", choices=("dev", "golden", "golden_v2"), required=True)
     ap.add_argument("--pipeline", choices=("ocr_first", "vlm_first", "hybrid"))
     ap.add_argument("--sample-per-tier", type=int, default=0)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--dicom", action="store_true", help="also evaluate data/dicom_gt")
-    ap.add_argument("--corpus", type=Path, default=Path("data/corpus"))
+    ap.add_argument("--corpus", type=Path, default=None,
+                    help="corpus directory (default data/corpus; data/corpus_v2 for golden_v2)")
     ap.add_argument("--dicom-dir", type=Path, default=Path("data/dicom_gt"))
     ap.add_argument("--out", type=Path)
-    ap.add_argument("--final", action="store_true", help="required for the single golden run")
+    ap.add_argument("--final", action="store_true", help="required for the single golden / golden_v2 run")
+    ap.add_argument("--check-only", action="store_true",
+                    help="golden_v2: verify the lock and GT presence; run nothing, write nothing")
     ap.add_argument("--qa", type=Path, default=None,
                     help="QA set to score (default: eval/golden_qa.jsonl for golden, eval/dev_qa.jsonl for dev)")
     ap.add_argument("--qa-only", type=Path, default=None, metavar="RUN_DIR",
                     help="score the QA set on an existing run's outputs (no pipeline re-run) and update its record")
     a = ap.parse_args(argv)
+    if a.corpus is None:
+        a.corpus = GOLDEN_V2_CORPUS if a.split == "golden_v2" else Path("data/corpus")
+    if a.check_only:
+        if a.split != "golden_v2":
+            ap.error("--check-only applies to --split golden_v2")
+        res = check_golden_v2(a.corpus)
+        print(json.dumps(res, indent=1))
+        return 0 if res["ok"] and not res.get("gt_missing") else 1
+    if a.split == "golden_v2":
+        if not a.final:
+            ap.error("the golden_v2 split is only scored by the final run: pass --final")
+        if GOLDEN_V2_USED.exists():
+            ap.error(f"golden v2 set already used: {GOLDEN_V2_USED.read_text(encoding='utf-8').strip()}")
+        res = check_golden_v2(a.corpus)
+        if not res["ok"]:
+            ap.error(f"golden_v2 lock mismatch: {res}")
+        if res.get("gt_missing"):
+            ap.error(f"golden_v2 ground truth missing for {len(res['gt_missing'])} docs under {a.corpus}")
     if a.split == "golden":
         if not a.final:
             ap.error("the golden split is only scored by the final run: pass --final")
         if GOLDEN_USED.exists():
             ap.error(f"golden set already used: {GOLDEN_USED.read_text(encoding='utf-8').strip()}")
-    qa_path = a.qa or (REPO_ROOT / "eval" / ("golden_qa.jsonl" if a.split == "golden" else "dev_qa.jsonl"))
+    qa_default = {"golden": "golden_qa.jsonl", "golden_v2": "golden_v2_qa.jsonl"}.get(a.split, "dev_qa.jsonl")
+    qa_path = a.qa or (REPO_ROOT / "eval" / qa_default)
     if a.qa_only:
         rd = a.qa_only
         meta = json.loads((rd / "run.json").read_text(encoding="utf-8"))
@@ -225,6 +280,12 @@ def main(argv: list[str] | None = None) -> int:
         GOLDEN_USED.parent.mkdir(parents=True, exist_ok=True)
         GOLDEN_USED.write_text(json.dumps({"run": str(out), "run_id": json.loads((out / "run.json").read_text())["run_id"],
                                            "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}) + "\n", encoding="utf-8")
+    if a.split == "golden_v2":
+        GOLDEN_V2_USED.parent.mkdir(parents=True, exist_ok=True)
+        GOLDEN_V2_USED.write_text(json.dumps({"run": str(out), "run_id": json.loads((out / "run.json").read_text())["run_id"],
+                                              "lock": check_golden_v2(a.corpus)["lock"],
+                                              "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}) + "\n",
+                                  encoding="utf-8")
     print(json.dumps({"out": str(out), "mean": m["fields"]["overall"]["mean"], "phi_recall": m["phi_documents"]["recall"],
                       "latency": m.get("latency_ms_per_page"), "dicom": {k: v for k, v in (m.get("dicom") or {}).items() if k != "residual"}},
                      indent=1))

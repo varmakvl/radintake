@@ -7,7 +7,7 @@ tags: [split, deduplication, golden-set, minhash, dicom-ground-truth]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T17:01:04.519Z
+  at: 2026-11-25T15:59:19.925Z
 sources:
   - data_prep/split.py
   - data_prep/dicom_gt.py
@@ -18,6 +18,11 @@ sources:
   - splits/golden.lock
   - splits/dup_groups.json
   - splits/dicom_selection.csv
+  - data_prep/heldout.py
+  - splits/golden_v2_ids.txt
+  - splits/golden_v2.lock
+  - splits/golden_v2_dedup.json
+  - src/radintake/eval/run.py
   - tests/unit/test_data_assets.py
 ---
 
@@ -43,6 +48,31 @@ Golden holds 50 handwriting docs, 4 injected docs, 33 multi-page docs. `splits/g
 sha256 of `golden_ids.txt`; `tests/unit/test_data_assets.py` fails if the list changes or a dup group
 crosses. All tuning uses dev; golden is scored once by the final run
 ([Evaluation Harness](/operations/evaluation-harness.md)).
+
+# Golden v2 (held-out set, data_prep/heldout.py)
+
+Golden v1 was spent by the v1 final run, so v2 is a fresh set built the same way from IU reports
+never used in v1 (seed **241**, doc ids `G0001..`, corpus `data/corpus_v2`, gitignored):
+
+1. Exclude all 330 v1 report ids (dev + golden) -> 3,597 renderable candidates.
+2. Near-duplicate check with the method above over v1 + candidates; any candidate whose dup group
+   holds a v1 report is dropped (**697 dropped, 2,900 kept**), so no dup group spans v1 and v2.
+3. Plan/render/degrade with the v1 code (`render.plan_documents` with 8 injection slots,
+   `generate.build`).
+
+| | Docs | Pages | clean / poor / photo pages |
+|---|---|---|---|
+| **Golden v2** | **112** | **140** | 45 / 46 / 49 |
+
+All four formats (png 44, pdf 32, jpg 25, tiff 11), 45 handwriting docs (40 % of pages), 8 injected
+docs, 28 multi-page docs. Committed: `splits/golden_v2_ids.txt`, `splits/golden_v2.lock` (sha256,
+LF), `splits/golden_v2_dedup.json` (counts + 3 v2-internal dup groups) and a `<!-- golden_v2 -->`
+section of `splits/SPLIT.md` (kept when `data_prep.split` regenerates the v1 part).
+
+`python -m radintake.eval.run --split golden_v2` needs `--final`, refuses once
+`eval/GOLDEN_V2_USED.json` exists (its own guard; the v1 guard `eval/GOLDEN_USED.json` is unchanged)
+and verifies the lock before running. `--check-only` validates lock + GT presence without running
+the pipeline or writing the guard.
 
 # DICOM ground truth (data_prep/dicom_gt.py, data_prep/DICOM_GT.md)
 

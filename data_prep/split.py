@@ -178,7 +178,11 @@ def run(corpus: Path, reports_path: Path, out: Path, seed: int = SEED) -> dict:
           f"{flags(dev, 'multipage')}."), "",
           f"Golden list lock (sha256 of `golden_ids.txt`, LF line endings): `{(out / 'golden.lock').read_text().strip()}`.",
           "The golden set is scored once, by the final evaluation run only; all tuning uses dev.", ""]
-    (out / "SPLIT.md").write_text("\n".join(md), encoding="utf-8")
+    # keep the golden v2 section (written by data_prep.heldout) when the v1 split is regenerated
+    marker = "<!-- golden_v2 -->"
+    old = (out / "SPLIT.md").read_text(encoding="utf-8") if (out / "SPLIT.md").exists() else ""
+    tail = ("\n" + marker + old.split(marker, 1)[1]) if marker in old else ""
+    (out / "SPLIT.md").write_text("\n".join(md) + tail, encoding="utf-8")
     return {"dedup": stats, "dev": td, "golden": tg}
 
 
