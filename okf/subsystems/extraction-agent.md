@@ -18,6 +18,7 @@ sources:
   - prompts/extraction_v1.md
   - prompts/crop_transcribe_v1.md
   - eval/results/pipeline_comparison.json
+  - src/radintake/agents/tables.py
   - docs/ocr-engine.md
   - tests/unit/test_extract_ocr.py
   - tests/unit/test_extract_vlm_hybrid.py
@@ -76,6 +77,13 @@ VLM-first with a 3B model on 4 GB omits a third of the fields. Getting a fair co
 (commit 5bf6aee and after): a dedicated crop prompt (`prompts/crop_transcribe_v1.md` - the shared prompt
 made the model answer crops in page form, so hybrid silently equalled OCR-first) and reloading the
 model when Ollama's runner degrades after many image calls (empty replies, HTTP 500, then "8888...").
+
+# Tables (2026-11-25)
+
+Detected tables ([PDF Text Layer & Table Reading](/subsystems/tables-and-text-layer.md)) feed
+`exam_date` / `modality` / `accession_number` from header-labelled columns, and their tokens are kept
+out of section prose (each table records its `section`). Section text on a digital PDF comes from the
+text layer, so it is exact.
 
 # Guardrails & Anti-Regression Checklist
 

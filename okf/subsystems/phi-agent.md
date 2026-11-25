@@ -23,7 +23,8 @@ the [Guarded Model Client](/subsystems/model-client-guard.md) refuses every othe
 
 # Layered detector (`configs/phi.yaml`)
 
-1. **Layout anchors** — a label on an OCR line (`Patient Name:`, `Patient ID`, `MRN`, `DOB` /
+1. **Layout anchors** — a label on an OCR line (`Patient Name:`, bare `Patient:` (colon required,
+   added 2026-11-25), `Patient ID`, `MRN`, `DOB` /
    `Date of Birth`, `Accession`); the value is the tokens to its right up to the next label. Gives
    typed header fields. The same anchors drive header extraction in the [Extraction Agent](/subsystems/extraction-agent.md).
 2. **Regex** — MRN / accession / date formats anywhere on the page.
@@ -35,6 +36,9 @@ the [Guarded Model Client](/subsystems/model-client-guard.md) refuses every othe
    Dev (2026-11-24): document PHI recall 0.83 / precision 0.81; technologist 0.52, radiologist 0.74 -
    the remaining misses are mostly handwritten sign-offs OCR cannot read (see the step inspector).
 Uncertain spans raise `phi_uncertain` (case -> review).
+
+Words come from the `tables` stage cache when present (PDF text layer, or OCR with re-read table cells),
+so digital PDFs are masked on exact word boxes: [PDF Text Layer & Table Reading](/subsystems/tables-and-text-layer.md).
 
 # Masking and the vault
 

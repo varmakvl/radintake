@@ -94,6 +94,8 @@ radintake batch --in <folder> --out <folder> [--config my.yaml]
 Writes one `<input-name>.json` per input following [`schemas/cli_output.v1.json`](schemas/cli_output.v1.json):
 `status`, `input_type`, `report` fields (value, confidence, provenance `{page, bbox, source}`,
 `needs_review`), PHI detections (types and boxes, never values), `injection` flags and `trace_id`.
+Documents with tables also get an optional `tables` array (cells with text, box and confidence;
+[`schemas/tables.v1.json`](schemas/tables.v1.json)). Digital PDFs are read from their text layer.
 Unsupported or corrupt files get `status: "error"` and never stop the batch.
 
 ## Seeing what each step does
@@ -159,6 +161,35 @@ scored once; record in [`traces/final/`](traces/final/), re-scorable offline).
 OCR-first stays the default: hybrid gains 0.9 points of exact match (all on phone photos) for 5× the
 latency. Raw numbers: [`eval/results/pipeline_comparison.json`](eval/results/pipeline_comparison.json);
 failed attempts: [`eval/results/attempts.md`](eval/results/attempts.md).
+
+### PDF text layer and tables (added after the golden run; dev and synthetic evidence)
+
+Digital PDFs are now read from their own text layer instead of OCR on a raster. Invisible text
+(white, smaller than 4 pt, or off the page) is dropped and sends the case to review. A `tables` stage
+detects ruled, rules-only and borderless tables, and on scans it re-reads each ruled cell on its own.
+Tables are emitted as an optional `tables` array ([`schemas/tables.v1.json`](schemas/tables.v1.json));
+`cli_output.v1` is unchanged. Design notes: [`okf/subsystems/tables-and-text-layer.md`](okf/subsystems/tables-and-text-layer.md).
+
+Synthetic table set: 40 reports × 3 variants, 88 tables, no IU text
+(`python -m data_prep.tables_set`, then `python -m radintake.eval.tables_eval`;
+[`eval/results/tables_eval.json`](eval/results/tables_eval.json)):
+
+| Input | Tables found | Cell exact match | Field exact match | Findings exact match | Hidden text flagged | p50 per doc |
+|---|---|---|---|---|---|---|
+| Digital PDF, `main` (before) | 0% | 0.000 | 0.658 | 0.225 | 0 of 5 | – |
+| **Digital PDF, text layer** | 100% | **1.000** | **1.000** | **1.000** | **5 of 5** | 0.6 s |
+| Digital PDF, OCR only (text layer off) | 99% | 0.890 | 0.997 | 1.000 | 0 of 5 | 4.9 s |
+| Clean scan PDF | 100% | 0.917 | 0.992 | 1.000 | – | 5.8 s |
+| Poor scan PDF | 81% | 0.506 | 0.703 | 0.575 | – | 5.0 s |
+
+Dev set (218 image-only documents, so the text layer never applies; the gains come from table
+cells read one at a time; [`eval/results/dev_tables_comparison.json`](eval/results/dev_tables_comparison.json)):
+- **Exam date:** exact match 0.50 → 0.60 overall, and 0.16 → 0.32 on phone photos.
+- **Patient name:** exact match 0.69 → 0.71.
+- **Document PHI recall:** 82.7% → 84.8%.
+- **Latency:** p95 per page 14.2 s → 5.0 s.
+- **PHI precision:** measured on boxes, it fell from 80.7% to 78.7%. That is because 28 exam dates are now read correctly and masked; the dev ground truth doesn't count exam dates as PHI, although HIPAA does.
+- **Golden set:** not re-run, because it is single-use.
 
 ## Reproducing every number
 

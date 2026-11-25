@@ -19,7 +19,9 @@ sources:
 - `BBox` = `[x0, y0, x1, y1]` pixels, `x0 < x1`, `y0 < y1`.
 - Output boxes are always in ORIGINAL page coordinates: the pixel grid as loaded from the file.
   PNG/JPEG: pixels as stored (EXIF orientation is recorded in `page.meta`, not applied). TIFF: each
-  frame as stored. PDF: the page rasterised at `loader.pdf_dpi` (200) — PDF points x dpi/72.
+  frame as stored. PDF: the page rasterised at `loader.pdf_dpi` (200) — PDF points x dpi/72. A PDF's
+  text-layer words (`page.text_layer`) are stored in this ORIGINAL grid too and mapped to the processed
+  image with `page.to_current` ([PDF Text Layer & Table Reading](/subsystems/tables-and-text-layer.md)).
 - Every geometry change (rotate, deskew, dewarp, crop, resize) is a `Transform` (3x3 homography)
   from its input image to its output image. `Page.transform` composes ORIGINAL -> CURRENT;
   `page.to_original(box)` maps back.

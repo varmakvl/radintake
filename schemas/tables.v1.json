@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radintake/tables.v1",
+  "title": "tables.v1 - tables found on document pages",
+  "description": "Optional top-level `tables` array of a cli_output.v1 document (v1 allows extra top-level keys, so v1 consumers are unaffected). Boxes are [x0, y0, x1, y1] in ORIGINAL (unpreprocessed) page pixel coordinates; for PDFs the page rasterised at loader.pdf_dpi.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["page", "bbox", "n_rows", "n_cols", "method", "text_source", "confidence", "cells"],
+    "additionalProperties": false,
+    "properties": {
+      "page": { "type": "integer", "minimum": 1 },
+      "bbox": { "$ref": "#/$defs/bbox" },
+      "n_rows": { "type": "integer", "minimum": 1 },
+      "n_cols": { "type": "integer", "minimum": 1 },
+      "method": { "enum": ["ruled", "rules_only", "aligned"],
+                  "description": "ruled = horizontal and vertical rules; rules_only = horizontal rules, columns from word gaps; aligned = borderless, columns from word gaps" },
+      "text_source": { "enum": ["pdf_text", "ocr"] },
+      "confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "mean confidence of non-empty cells" },
+      "section": { "type": ["string", "null"], "description": "report section the table sits in (findings, ...), null outside sections" },
+      "cells": {
+        "type": "array",
+        "description": "row-major; row 0 is usually the header row",
+        "items": {
+          "type": "object",
+          "required": ["row", "col", "text", "bbox", "confidence"],
+          "additionalProperties": false,
+          "properties": {
+            "row": { "type": "integer", "minimum": 0 },
+            "col": { "type": "integer", "minimum": 0 },
+            "text": { "type": "string" },
+            "bbox": { "$ref": "#/$defs/bbox" },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "bbox": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" } }
+  }
+}

@@ -156,5 +156,18 @@ def discover(extra_modules: Iterable[str] = ()) -> list[str]:
 def load_stage(ctx: StageContext) -> dict[str, Any]:
     from radintake.tools.loader import load_pages
 
-    pages = load_pages(ctx.path, ctx.input_type, dpi=ctx.config.pdf_dpi)
-    return {"pages": pages, "n_pages": len(pages)}
+    loader_cfg = ((getattr(ctx.config, "raw", None) or {}).get("loader") or {})
+    pages = load_pages(ctx.path, ctx.input_type, dpi=ctx.config.pdf_dpi,
+                       text_layer=loader_cfg.get("pdf_text_layer"))
+    for pg in pages:
+        if "text_layer" in pg.meta:
+            ctx.trace.event("pdf_text_layer", page=pg.index, **pg.meta["text_layer"])
+    # text a reader cannot see (white / tiny / off-page) is dropped: it is a classic prompt-injection
+    # channel, so the case goes to review under the existing v1 flag, with a specific reason code
+    hidden = sum((pg.meta.get("text_layer") or {}).get("hidden_words", 0) for pg in pages)
+    out: dict[str, Any] = {"pages": pages, "n_pages": len(pages)}
+    if hidden:
+        out["flags"] = ["prompt_injection_suspected"]
+        out["review_reasons"] = [*(ctx.data.get("review_reasons") or []),
+                                 f"hidden_text: {hidden} invisible text-layer words dropped"]
+    return out

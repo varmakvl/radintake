@@ -36,7 +36,7 @@ from typing import Any
 import numpy as np
 
 ENV = "RADINTAKE_INSPECT_DIR"
-_ORDER = {"load": "10", "preprocess": "20", "phi": "30", "dicom_deid": "30", "extract": "40",
+_ORDER = {"load": "10", "preprocess": "20", "tables": "25", "phi": "30", "dicom_deid": "30", "extract": "40",
           "verify": "50", "injection": "55"}
 
 
@@ -157,6 +157,27 @@ def _dump_preprocess(ctx, u, d):
         _png(pg.image, d / f"page_{pg.index}.png")
     _write(d / "transform.json", {p.index: np.asarray(p.transform.matrix).round(6).tolist() for p in u.get("pages") or []})
     _write(d / "decisions.json", _trace_events(ctx, "preprocess_decision"))
+
+
+def _dump_tables(ctx, u, d):
+    """Detected tables drawn on the processed page (red cells) + the tables.v1 JSON."""
+    import cv2
+
+    pages = {p.index: p for p in (ctx.data.get("pages") or [])}
+    for pidx, tables in (u.get("table_objs") or {}).items():
+        pg = pages.get(pidx)
+        if pg is None:
+            continue
+        img = np.asarray(pg.image).copy()
+        if img.ndim == 2:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        for t in tables:
+            for c in t.cells:
+                b = c.bbox
+                cv2.rectangle(img, (int(b.x0), int(b.y0)), (int(b.x1), int(b.y1)), (220, 0, 0), 2)
+        _png(img, d / f"page_{pidx}_tables.png")
+    _write(d / "tables.json", u.get("tables") or [])
+    _write(d / "text_layer.json", {p.index: p.meta.get("text_layer") for p in pages.values()})
 
 
 def _dump_phi(ctx, u, d):
