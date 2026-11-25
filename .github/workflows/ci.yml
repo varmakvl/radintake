@@ -26,6 +26,8 @@ jobs:
         run: ruff check src tests
       - name: Unit tests
         run: pytest tests/unit -q
+      - name: Install Chromium for the UI smoke test
+        run: python -m playwright install --with-deps chromium
       - name: Integration tests (end-to-end, offline)
         run: pytest tests/integration -m integration -q --timeout=1800
       - name: Eval regression gate
