@@ -37,6 +37,9 @@ preprocess:               # rule thresholds for the preprocessing agent (numbers
   noise_sigma_max: 6.0
   contrast_min: 120.0
   blur_laplacian_min: 20.0
+  quad_fallback: true     # edge/Hough-line page detector when the contour detector finds no quad (phone photos)
+  quad_fallback_min_support: 0.5      # mean fraction of the quad perimeter lying on a paper edge
+  quad_fallback_max_side_ratio: 0.88  # each side: grey just outside / just inside (paper is brighter)
 
 extraction:
   pipeline: ocr_first     # ocr_first | vlm_first | hybrid (radintake.agents.extract)

@@ -159,3 +159,90 @@ def test_stage_registered():
 
     st = registered()["preprocess"]
     assert {"scan", "photo", "pdf", "tiff"} <= set(st.applies_to) and st.failure_flag == "preprocess_failed"
+
+
+# ---- fallback page detector (low-contrast, shadowed phone photos) -------------------------
+def _shadowed_photo(rng: np.random.Generator, bg: int = 150):
+    """Page warped by a random perspective onto a desk of similar brightness, then a strong lighting
+    gradient and a soft shadow over the whole frame (so no global threshold separates paper/desk).
+    Returns (image, forward map page coords -> photo coords)."""
+    page = _page_image()
+    src = np.array([[0, 0], [PW, 0], [PW, PH], [0, PH]], np.float64)
+    off = np.array([(CW - PW) / 2.0, (CH - PH) / 2.0])
+    dst = src + off + rng.uniform(-0.05, 0.05, (4, 2)) * np.array([PW, PH])
+    g = Transform(cv2.getPerspectiveTransform(src.astype(np.float32), dst.astype(np.float32)).astype(np.float64))
+    g = g.then(Transform.rotation(float(rng.uniform(-6, 6)), CW / 2.0, CH / 2.0))
+    canvas = np.full((CH, CW), bg, np.uint8)
+    cv2.warpPerspective(page, g.matrix, (CW, CH), dst=canvas, borderMode=cv2.BORDER_TRANSPARENT)
+    yy, xx = np.mgrid[0:CH, 0:CW].astype(np.float32)
+    light = 1.0 - 0.45 * xx / CW                                       # bright left, dark right
+    shadow = 1.0 - 0.3 / (1.0 + np.exp(-(yy - 0.6 * CH - 0.3 * xx) / 40.0))  # soft half-plane
+    img = canvas.astype(np.float32) * light * shadow + rng.normal(0, 3, canvas.shape)
+    return np.clip(img, 0, 255).astype(np.uint8), g
+
+
+def test_fallback_detects_low_contrast_shadowed_photo_and_dewarps():
+    from radintake.tools import image_ops as ops
+
+    for seed in range(5):
+        img, g = _shadowed_photo(np.random.default_rng(300 + seed))
+        assert ops.find_page_quad(img) is None, "photo must defeat the contour detector"
+        res = preprocess_page(Page(index=1, image=img, original_size=(CW, CH)), orient_fn=lambda _a: 0)
+        dw = [d for d in res.decisions if d["op"] == "dewarp"]
+        assert dw and dw[0]["reason"] == "page_quad_fallback" and dw[0]["fallback"] == 1, (seed, res.decisions)
+        assert 0.5 <= dw[0]["score"] <= 1.0
+        # dewarped page: markers land at their upright page fractions
+        for mx, my in MARKERS:
+            ox, oy = g.map_points([(mx, my)])[0]
+            px, py = res.page.transform.map_points([(ox, oy)])[0]
+            assert abs(px / res.page.size[0] - mx / PW) <= 0.015, (seed, px, mx)
+            assert abs(py / res.page.size[1] - my / PH) <= 0.015, (seed, py, my)
+    # disabled -> no dewarp
+    res = preprocess_page(Page(index=1, image=img, original_size=(CW, CH)), params={"quad_fallback": False},
+                          orient_fn=lambda _a: 0)
+    assert "dewarp" not in {d["op"] for d in res.decisions}
+
+
+def test_dewarp_homography_round_trip_within_1_5px():
+    from radintake.tools import image_ops as ops
+
+    rng = np.random.default_rng(77)
+    for seed in range(5):
+        img, _g = _shadowed_photo(np.random.default_rng(400 + seed))
+        quad, detector, _s = ops.detect_page_quad(img, {})
+        assert detector == "lines"
+        out, t = ops.dewarp(img, quad)
+        pg = Page(index=1, image=img, original_size=(CW, CH)).with_image(out, t)
+        pts = rng.uniform([50, 50], [CW - 50, CH - 50], (40, 2))
+        fwd = pg.transform.map_points(pts)
+        for (x, y), (fx, fy) in zip(pts, fwd, strict=True):
+            b = map_to_original(pg, BBox(fx - 2, fy - 2, fx + 2, fy + 2))
+            assert abs((b.x0 + b.x1) / 2 - x) <= 1.5 and abs((b.y0 + b.y1) / 2 - y) <= 1.5, (seed, (x, y), b)
+
+
+def test_clean_scan_without_paper_edge_keeps_identity():
+    from radintake.tools import image_ops as ops
+
+    rng = np.random.default_rng(5)
+    page = _page_image()
+    scan = np.clip(page.astype(np.float32) * (1.0 - 0.15 * np.linspace(0, 1, PW))[None, :]
+                   + rng.normal(0, 3, page.shape), 0, 255).astype(np.uint8)  # mild lighting, no edge
+    for im in (page, scan):
+        assert ops.detect_page_quad(im, {})[0] is None
+        res = preprocess_page(Page(index=1, image=im, original_size=(PW, PH)), orient_fn=lambda _a: 0)
+        assert "dewarp" not in {d["op"] for d in res.decisions}
+        assert np.allclose(res.page.transform.matrix, np.eye(3)), res.decisions
+
+
+def test_fallback_detector_and_score_in_trace_without_text(tmp_path):
+    from radintake.tracing.writer import TraceWriter
+
+    img, _g = _shadowed_photo(np.random.default_rng(301))
+    case = TraceWriter(tmp_path / "tr").start_case("c1", "0" * 64)
+    preprocess_page(Page(index=1, image=img, original_size=(CW, CH)), orient_fn=lambda _a: 0, trace=case)
+    dec = [json.loads(x)["data"] for x in case.path.read_text().splitlines()
+           if json.loads(x)["kind"] == "preprocess_decision"]
+    dw = next(d for d in dec if d["op"] == "dewarp")
+    assert dw["reason"] == "page_quad_fallback" and dw["fallback"] == 1 and 0.5 <= dw["score"] <= 1.0
+    assert set(dw) == {"op", "reason", "page", "fallback", "score", "out_w", "out_h"}
+    assert all(isinstance(v, (int, float)) for k, v in dw.items() if k not in ("op", "reason"))
