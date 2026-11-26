@@ -47,6 +47,11 @@ def normalise_ocr(text: str) -> str:
 
 
 _PHRASES_N: tuple[str, ...] = tuple(normalise_ocr(p) for p in CANONICAL_PHRASES)
+# Too ordinary on their own ("given new instructions for the visit"): the fuzzy pass only counts them at the
+# very start of a clause. Anywhere else the regex pass (e.g. "new instructions:") still applies.
+_ANCHORED_N: frozenset[str] = frozenset({normalise_ocr("new instructions")})
+_CLAUSE_SPLIT = re.compile(r"[.;:]+")  # tokens are never joined across sentence/clause punctuation
+_ANCHOR_SLACK = 3
 
 
 def fuzzy_injected(text: str | None, threshold: float = DEFAULT_FUZZY_THRESHOLD) -> bool:
@@ -55,15 +60,23 @@ def fuzzy_injected(text: str | None, threshold: float = DEFAULT_FUZZY_THRESHOLD)
         return False
     from rapidfuzz import fuzz
 
-    flat = normalise_ocr(text)
+    for clause in _CLAUSE_SPLIT.split(text):
+        flat = normalise_ocr(clause)
+        if flat and _clause_hit(flat, threshold, fuzz):
+            return True
+    return False
+
+
+def _clause_hit(flat: str, threshold: float, fuzz: Any) -> bool:
     for ph in _PHRASES_N:
         if len(flat) < len(ph) * 0.7:
             continue
         al = fuzz.partial_ratio_alignment(ph, flat)
         # the WHOLE phrase must align (a partial overlap at the edge, e.g. "previous instructions" for
         # "ignore previous instructions", is ordinary clinical wording, not an instruction)
-        if al is not None and al.score >= threshold \
-                and al.dest_end - al.dest_start >= 0.85 * len(ph):
+        if (al is not None and al.score >= threshold
+                and al.dest_end - al.dest_start >= 0.85 * len(ph)
+                and (ph not in _ANCHORED_N or al.dest_start <= _ANCHOR_SLACK)):
             return True
     return False
 

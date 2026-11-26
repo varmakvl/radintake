@@ -43,7 +43,7 @@ def create_app(config: Config | None = None, *, max_workers: int = 2) -> FastAPI
     store = CaseStore(cfg.data_dir)
     from radintake.retrieval import RetrievalIndex
 
-    index = RetrievalIndex(Path(cfg.data_dir) / "retrieval.sqlite")
+    index = RetrievalIndex(Path(cfg.data_dir) / "retrieval.sqlite", config=cfg)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:

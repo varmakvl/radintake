@@ -90,7 +90,8 @@ def _field_box(fld: dict) -> tuple[int, list[float]] | None:
 
 
 class RetrievalIndex:
-    def __init__(self, path: str | Path, *, use_embeddings: bool = True):
+    def __init__(self, path: str | Path, *, use_embeddings: bool = True, config: Any = None):
+        self.config = config  # optional: supplies injection.fuzzy_threshold / extra_patterns to add_case
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.use_embeddings = use_embeddings
@@ -116,9 +117,13 @@ class RetrievalIndex:
 
     # -- write ------------------------------------------------------------------------
     def add_case(self, case_id: str, doc: dict[str, Any]) -> int:
-        from radintake.agents.injection import compile_patterns, looks_injected
+        from radintake.agents.injection import DEFAULT_FUZZY_THRESHOLD, compile_patterns, looks_injected
 
-        pats = compile_patterns()
+        raw = getattr(self.config, "raw", None) or {}
+        icfg = raw.get("injection") if isinstance(raw.get("injection"), dict) else {}
+        pats = compile_patterns(icfg.get("extra_patterns"))
+        thr = icfg.get("fuzzy_threshold", DEFAULT_FUZZY_THRESHOLD)
+        thr = None if thr is None else float(thr)
         rep = doc.get("report") or {}
         rows = []
         for f in SECTIONS:
@@ -131,7 +136,7 @@ class RetrievalIndex:
                 continue
             parts = split_sentences(val) if f == "findings" else [val]
             for s in parts:
-                if looks_injected(s, pats):
+                if looks_injected(s, pats, thr):
                     continue
                 rows.append((case_id, f, loc[0], json.dumps([round(v, 1) for v in loc[1]]), s, val,
                              float(fld.get("confidence") or 0.0)))

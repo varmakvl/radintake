@@ -132,7 +132,7 @@ def qa_on_run(run_dir: Path, qa_path: Path, gts: dict[str, dict], preds: dict[st
                 preds[d] = json.loads(p.read_text(encoding="utf-8"))
     db = run_dir / "retrieval.sqlite"
     db.unlink(missing_ok=True)
-    index = RetrievalIndex(db)
+    index = RetrievalIndex(db, config=load_config())
     for d, pred in preds.items():
         if pred.get("status") != "error" and pred.get("report"):
             index.add_case(d, pred)
