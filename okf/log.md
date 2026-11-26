@@ -3,6 +3,7 @@
 Newest changes recorded chronologically.
 
 ## 2026-11-26
+- Phone-photo page-detection tests `tests/unit/test_page_detect.py` (synthetic low-contrast shadowed photos: line fallback fires, corners within 1% of diagonal, word-box round trip <= 1.5 px, identity on edge-less scans, 90/180 rotated photos upright); bound to `subsystems/preprocessing-agent.md`.
 - Synchronized timestamp for 11 drifted concept(s): data/coordinate-contract.md, data/data-preparation.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/deployment.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/model-client-guard.md, subsystems/preprocessing-agent.md, subsystems/retrieval-qa-agent.md, subsystems/verifier-agent.md.
 - Synchronized workspace frontier mapping in `index.md` (+12 new, -0 removed, 222 already listed; 234 undocumented files mapped).
 - Phone-photo page detection: `image_ops.detect_page_quad` (contour quad kept only if every side is on a paper edge, else the Hough-line fallback `find_page_quad_lines`); trace fields `fallback`, `contour_rejected`, `score`; config keys `quad_fallback*`, `quad_contour_min_side_support`. Dev phone-photo EM 0.500 -> 0.614 (`eval/results/phone_photo_v2.json`). Concept `subsystems/preprocessing-agent.md` updated; source bound: `configs/default.yaml`.

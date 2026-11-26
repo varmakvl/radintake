@@ -13,6 +13,7 @@ sources:
   - src/radintake/tools/image_ops.py
   - src/radintake/tools/ocr.py
   - tests/unit/test_preprocess.py
+  - tests/unit/test_page_detect.py
   - configs/default.yaml
 ---
 
