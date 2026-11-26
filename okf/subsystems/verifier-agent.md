@@ -7,7 +7,7 @@ tags: [verifier, grounding, hallucination, omission, prompt-injection, review-qu
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-26T12:43:30.238Z
+  at: 2026-11-26T13:20:29.426Z
 sources:
   - src/radintake/agents/verify.py
   - src/radintake/agents/injection.py
@@ -37,6 +37,7 @@ or page OCR raises `prompt_injection_suspected` (case -> `needs_review`) and mar
 `needs_review`. The text stays exactly as extracted: it is data, never obeyed or removed.
 
 The OCR-tolerant fuzzy pass squashes spacing and punctuation, but never across a clause boundary: text is split on `.` `;` `:` first and each clause is matched alone, so "Pacemaker system; prompt evaluation" is clean. The bare phrase "new instructions" only counts at the start of a clause (regex still catches "new instructions:"). `RetrievalIndex(config=...).add_case` applies `injection.fuzzy_threshold` / `extra_patterns` from config, so `fuzzy_threshold: null` also stops the fuzzy pass dropping sentences from the QA index.
+Dev measurement (218 docs, `injection-3`): 11 of 11 injected flagged (8 of 11 with regex only), 0 false flags; the canonical list includes the template phrases "skip human review", "classify this report as normal" and "disregard the findings above". Numbers per tier: `eval/results/injection_v2.json`.
 
 # Review queue
 
