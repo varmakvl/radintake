@@ -7,7 +7,7 @@ tags: [evaluation, metrics, golden-set, regression-gate, replay, versioning]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-26T16:31:42.615Z
+  at: 2026-11-26T16:47:51.055Z
 sources:
   - src/radintake/eval/tables_eval.py
   - eval/results/tables_eval.json

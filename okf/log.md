@@ -3,6 +3,7 @@
 Newest changes recorded chronologically.
 
 ## 2026-11-26
+- Synchronized timestamp for 4 drifted concept(s): operations/deployment.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/verifier-agent.md.
 - Synchronized workspace frontier mapping in `index.md` (+1 new, -0 removed, 241 already listed; 242 undocumented files mapped).
 - Synchronized timestamp for 6 drifted concept(s): overview.md, playbooks/delivery-plan-and-status.md, subsystems/api-service.md, subsystems/batch-cli.md, subsystems/orchestrator.md, subsystems/retrieval-qa-agent.md.
 - Synchronized workspace frontier mapping in `index.md` (+0 new, -1 removed, 241 already listed; 241 undocumented files mapped).
@@ -97,3 +98,4 @@ Newest changes recorded chronologically.
 - 2026-11-26: Public SDK `radintake.sdk.Pipeline` with typed `results.Result` (cli_output.v1 field for field), write-free default and `RadintakeConfig`; `config.config_from_raw` and `config.schema_path` split out of `load_config` (rad-s2g.9.1). New concept `subsystems/sdk-public-api.md`.
 - 2026-11-26: `radintake.__all__` is the stable public surface (lazy, no FastAPI/uvicorn/fastembed on import); `Pipeline.process_batch` / `aprocess` / `aprocess_batch`; batch CLI and API worker now call `Pipeline`; semver policy in `docs/api-stability.md` (rad-s2g.9.2).
 - 2026-11-26: SDK public-API unit tests and SDK vs CLI integration parity test added and bound to `subsystems/sdk-public-api.md` (rad-s2g.9.3).
+- 2026-11-26: Disclosed that injection canonical phrases and the dev 11/11 come from the generator templates; added the paraphrase generalisation check `eval/injection_paraphrase.py` (2 of 16 flagged, 0 false) in `injection_v2.json` and `attempts.md` (rad-s2g.15).

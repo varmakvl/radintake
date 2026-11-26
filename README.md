@@ -162,7 +162,7 @@ scored once; record in [`traces/final/`](traces/final/), re-scorable offline).
 - **Retrieval / QA (32 questions):** recall@5 0.549, citation accuracy 100.0%,
   answer correctness 71.9%, correct abstention 96.9%.
 - **Injection:** 4 injected documents, 1 flagged, 0 changed behaviour, 0 false flags.
-- **Injection (dev, v2 detector):** 11 of 11 injected documents flagged (clean 3/3, poor 2/2, photo 6/6), 0 false flags on 207 clean documents ([eval/results/injection_v2.json](eval/results/injection_v2.json)).
+- **Injection (dev, v2 detector):** 11 of 11 injected documents flagged (clean 3/3, poor 2/2, photo 6/6), 0 false flags on 207 clean documents ([eval/results/injection_v2.json](eval/results/injection_v2.json)). **Template-based:** these injected documents use sentences from the synthetic generator (`data_prep/render.py` `INJECTIONS`) and several detector phrases were copied from that same list, so this is recall on known templates, not generalisation to unseen injections. Separate generalisation check (16 hand-written, OCR-noised paraphrases not in the generator, `python -m radintake.eval.injection_paraphrase`): 2 of 16 flagged (12.5%), 0 of 8 clean sentences falsely flagged. Small synthetic check, not a benchmark; the detector was not tuned on it.
 - **Operations:** 59.8% of documents to human review; latency p50 2.3 s / p95 3.5 s
   per page on CPU; GPU peak 0 MiB; cost $0.00 per page.
 - **10 worst pages:** [`eval/results/error_analysis_golden.md`](eval/results/error_analysis_golden.md): 6 of 10 are phone photos and

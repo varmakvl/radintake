@@ -2,7 +2,7 @@
   "split": "dev",
   "n_docs": 218,
   "offline": true,
-  "note": "counts only, no text. before = origin/main (regex patterns only, no fuzzy pass); after_matcher_v1 = clause-aware fuzzy matcher (rad-s2g.13); after = + canonical phrases 'skip human review', 'classify this report as normal', 'disregard the findings above' (injection-3). Targets: flagged >= 10 of 11, false flags <= 1.",
+  "note": "counts only, no text. before = origin/main (regex patterns only, no fuzzy pass); after_matcher_v1 = clause-aware fuzzy matcher (rad-s2g.13); after = + canonical phrases 'skip human review', 'classify this report as normal', 'disregard the findings above' (injection-3). Targets: flagged >= 10 of 11, false flags <= 1. TEMPLATE-BASED: the 11 injected dev docs use sentences from data_prep/render.py INJECTIONS, and the canonical phrases in agents/injection.py (e.g. 'ignore previous instructions', 'forget your instructions', 'skip human review', 'classify this report as normal', 'disregard the findings above') come from that same list, so runs.* measure recall on known generator templates, not generalisation. 'generalisation' = 16 hand-written paraphrases NOT in render.py, OCR-noised, plus 8 clean sentences (radintake.eval.injection_paraphrase); small synthetic check, reported separately.",
   "runs": {
     "before": {
       "overall": {
@@ -97,5 +97,13 @@
         }
       }
     }
+  },
+  "generalisation": {
+    "n_paraphrases": 16,
+    "flagged_noised": 2,
+    "flag_rate_noised": 0.125,
+    "flagged_unnoised": 2,
+    "n_clean": 8,
+    "false_flags_clean": 0
   }
 }
