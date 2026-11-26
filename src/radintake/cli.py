@@ -41,35 +41,24 @@ def list_inputs(folder: Path) -> list[Path]:
 
 
 def run_batch(inp: Path, out: Path, config_path: str | None = None) -> dict[str, int]:
+    """Thin wrapper over :meth:`radintake.sdk.Pipeline.process_batch` (one JSON per input)."""
     from radintake.config import load_config
     from radintake.logging import configure_logging, get_logger
-    from radintake.pipeline import _base_doc, process_file, sha256_file, write_doc
-    from radintake.tracing.writer import TraceWriter
+    from radintake.sdk import Pipeline
 
     cfg = load_config(config_path)
     configure_logging(cfg.log_level)
     log = get_logger("radintake.cli")
     out.mkdir(parents=True, exist_ok=True)
-    tw = TraceWriter(cfg.trace_dir or (out / "_traces"), model_ids=cfg.model_ids, offline=cfg.offline)
     counts: Counter[str] = Counter()
     files = list_inputs(inp)
-    log.info("batch_start", run_id=tw.run_id, n_inputs=len(files), offline=cfg.offline)
-    for f in files:
-        try:
-            doc = process_file(f, out, config=cfg, trace_writer=tw)
-        except Exception as exc:  # noqa: BLE001 - one bad file never stops the batch
-            log.error("case_crashed", error_type=type(exc).__name__)
-            try:
-                sha = sha256_file(f)
-            except OSError:
-                sha = "0" * 64
-            doc = _base_doc(f.name, sha, "unknown", f"{tw.run_id}/crashed")
-            doc["error"] = f"pipeline crashed: {type(exc).__name__}"
-            write_doc(doc, out)
-        counts[doc["status"]] += 1
-    tw.finalize()
+    with Pipeline(cfg, output_dir=out, trace_dir=cfg.trace_dir or (out / "_traces"),
+                  data_dir=cfg.data_dir) as pipe:
+        run_id = pipe.run_id
+        log.info("batch_start", run_id=run_id, n_inputs=len(files), offline=cfg.offline)
+        pipe.process_batch(files, on_result=lambda r: counts.update([r.status]))
     summary = {"inputs": len(files), **{k: counts.get(k, 0) for k in ("ok", "needs_review", "error")},
-               "run_id": tw.run_id}
+               "run_id": run_id}
     log.info("batch_done", **summary)
     return summary
 

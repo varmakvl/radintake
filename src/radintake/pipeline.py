@@ -1,4 +1,5 @@
-"""Per-file pipeline shared by the batch CLI and the API.
+"""Per-file pipeline behind :class:`radintake.sdk.Pipeline` (internal: not covered by the
+API stability policy in ``docs/api-stability.md``; use ``radintake.process`` / ``Pipeline``).
 
 ``process_file(path, out_dir)`` routes the file (fixed step), runs the stage plan for its
 input type under the planner budgets, writes ``<out_dir>/<input-name>.json`` validating

@@ -7,7 +7,7 @@ tags: [architecture, pipeline, agents, phi, overview]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-26T16:31:42.615Z
+  at: 2026-11-26T16:36:54.984Z
 sources:
   - PLAN.md
   - requirements.md

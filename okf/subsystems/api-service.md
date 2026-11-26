@@ -7,10 +7,11 @@ tags: [api, fastapi, service, sqlite, deployment]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-26T16:31:42.615Z
+  at: 2026-11-26T16:36:54.984Z
 sources:
   - src/radintake/api/app.py
   - src/radintake/api/routes.py
+  - src/radintake/sdk.py
   - src/radintake/store/cases.py
   - tests/unit/test_api_basic.py
   - tests/integration/test_api_e2e.py
@@ -64,3 +65,10 @@ so there is one key per patient: `subject_key = HMAC-SHA256(local secret, normal
 Not implemented yet.
 
 Deployment: [Deployment](/operations/deployment.md).
+
+# Processing
+
+The background worker (`routes._process`) runs each case through `radintake.sdk.Pipeline` with
+`output_dir=<case dir>/out`, `trace_dir=RADINTAKE_TRACE_DIR or <out>/_traces` and the service
+`data_dir`, and stores `Result.model_dump(mode="json")` - the same `cli_output.v1` document the CLI
+writes ([SDK Public API](/subsystems/sdk-public-api.md)).

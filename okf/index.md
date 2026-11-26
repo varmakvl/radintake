@@ -74,7 +74,6 @@ reports and DICOM. Start with the [System Overview](/overview.md); the delivery 
 - `.beads/last-touched` — Undocumented codebase file.
 - `.beads/metadata.json` — Undocumented codebase file.
 - `.fleet/kb-canonical.json` — Undocumented codebase file.
-- `src/radintake/__init__.py` — Undocumented codebase file.
 - `src/radintake/agents/__init__.py` — Undocumented codebase file.
 - `src/radintake/api/__init__.py` — Undocumented codebase file.
 - `src/radintake/core/__init__.py` — Undocumented codebase file.

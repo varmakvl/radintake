@@ -32,13 +32,16 @@ def _safe_name(name: str | None) -> str:
 
 
 def _process(app: Any, case_id: str, path: Path) -> None:
-    from radintake.pipeline import process_file
+    from radintake.sdk import Pipeline
 
     store: CaseStore = app.state.store
     cfg = app.state.config
     try:
         store.set_running(case_id)
-        doc = process_file(path, path.parent / "out", config=cfg, input_name=path.name)
+        out = path.parent / "out"
+        pipe = Pipeline(cfg, output_dir=out, trace_dir=cfg.trace_dir or (out / "_traces"),
+                        data_dir=cfg.data_dir)
+        doc = pipe.process(path, input_name=path.name).model_dump(mode="json")
         if doc.get("status") != "error" and doc.get("report"):
             n = app.state.index.add_case(case_id, doc)  # verified section fields only
             log.info("case_indexed", case_id=case_id, chunks=n)

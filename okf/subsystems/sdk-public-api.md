@@ -10,6 +10,8 @@ generated:
   at: 2026-11-26T16:40:00.000Z
 sources:
   - src/radintake/sdk.py
+  - src/radintake/__init__.py
+  - docs/api-stability.md
   - src/radintake/results.py
   - src/radintake/config.py
   - src/radintake/pipeline.py
@@ -36,7 +38,21 @@ r.masked_pages, r.dicom_bytes                        # PHI-masked artefacts in m
 - `Pipeline.process` wraps `pipeline.process_file`; for the same `Config` its document equals
   `process_file`'s except `trace_id` (checked on every integration fixture kind).
 - A bad input file is a `status: "error"` result, never an exception; an unsupported `source`
-  type raises `TypeError`.
+  type raises `UnsupportedInputError` (a `TypeError`).
+- `process_batch(sources, output_dir=, on_result=)` returns one `Result` per source, in order; an
+  unsupported source or an unexpected crash becomes an `error` result (`pipeline crashed: <Type>`,
+  trace id `<run_id>/crashed`) and is written to `output_dir` like any other, so a batch never
+  stops. `aprocess` / `aprocess_batch` / `radintake.aprocess` run the sync path in a worker thread
+  (`asyncio.to_thread`).
+
+# Public surface
+
+`radintake.__all__` is the stable surface (semver policy: `docs/api-stability.md`): `Pipeline`,
+`process`, `aprocess`, `RadintakeConfig`, `BudgetConfig`, `ModelConfig`, `Result` and its
+sub-models, `RadintakeError`, `UnsupportedInputError`, `ConfigError`, `__version__`. They are
+resolved lazily by a module `__getattr__`, so `import radintake` imports no FastAPI, uvicorn or
+fastembed. Every other module is internal. The [Batch CLI](/subsystems/batch-cli.md) and the
+[API Service](/subsystems/api-service.md) are thin wrappers over `Pipeline`.
 
 # Write-free default
 

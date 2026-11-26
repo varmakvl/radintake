@@ -1,5 +1,8 @@
 """Public SDK: run the radintake pipeline from Python, no CLI or server needed.
 
+Stability: only the names re-exported in ``radintake.__all__`` are public (semver, see
+``docs/api-stability.md``); everything else here (``materialise``, helpers) is internal.
+
 ::
 
     from radintake.sdk import Pipeline, RadintakeConfig
@@ -35,11 +38,13 @@ model guard re-reads them at call time.
 
 from __future__ import annotations
 
+import asyncio
 import dataclasses
+import hashlib
 import os
 import tempfile
 import threading
-from collections.abc import Sequence
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 from typing import Any, Literal, Self
 
@@ -49,6 +54,18 @@ from radintake.config import Config, config_from_raw, load_config
 from radintake.results import Result
 
 PathLike = str | os.PathLike[str]
+
+
+class RadintakeError(Exception):
+    """Base class of the public radintake SDK exceptions."""
+
+
+class UnsupportedInputError(RadintakeError, TypeError):
+    """``source`` is not a path, bytes, a PIL image, a numpy array or a list of page images."""
+
+
+class ConfigError(RadintakeError, TypeError):
+    """``config`` is not a :class:`RadintakeConfig`, a ``radintake.config.Config`` or ``None``."""
 
 _SUFFIX = {"dicom": ".dcm", "pdf": ".pdf", "tiff": ".tiff"}
 _PIL_SUFFIX = {"PNG": ".png", "JPEG": ".jpg", "BMP": ".bmp", "WEBP": ".webp", "GIF": ".gif",
@@ -143,7 +160,7 @@ def _to_pil(img: Any) -> Any:
         if arr.dtype != np.uint8:
             arr = np.clip(arr, 0, 255).astype(np.uint8)
         return Image.fromarray(arr)
-    raise TypeError(f"unsupported page image type: {type(img).__name__}")
+    raise UnsupportedInputError(f"unsupported page image type: {type(img).__name__}")
 
 
 def _bytes_suffix(data: bytes) -> str:
@@ -207,7 +224,7 @@ def materialise(source: Any, folder: Path, input_name: str | None = None) -> tup
         dst = folder / (name if Path(name).suffix.lower() == ".png" else name + ".png")
         _to_pil(source).save(dst, format="PNG")
         return dst, name
-    raise TypeError("source must be a path, bytes, a PIL image, a numpy array or a list of page "
+    raise UnsupportedInputError("source must be a path, bytes, a PIL image, a numpy array or a list of page "
                     f"images (got {type(source).__name__})")
 
 
@@ -230,7 +247,7 @@ class Pipeline:
         elif config is None:
             self._config = load_config()
         else:
-            raise TypeError("config must be a RadintakeConfig, a radintake.config.Config or None")
+            raise ConfigError("config must be a RadintakeConfig, a radintake.config.Config or None")
         self.output_dir = Path(output_dir) if output_dir is not None else None
         self.trace_dir = Path(trace_dir) if trace_dir is not None else None
         self.data_dir = Path(data_dir) if data_dir is not None else None
@@ -254,8 +271,9 @@ class Pipeline:
 
     @property
     def run_id(self) -> str | None:
-        """Trace run id (only when tracing to a ``trace_dir``)."""
-        return self._trace_writer.run_id if self._trace_writer is not None else None
+        """Trace run id (only when tracing to a ``trace_dir``; ``None`` otherwise)."""
+        tw = self._shared_trace_writer()
+        return tw.run_id if tw is not None else None
 
     def close(self) -> None:
         """Finalise the trace run manifest (no-op when not tracing)."""
@@ -272,7 +290,8 @@ class Pipeline:
     def process(self, source: Any, *, input_name: str | None = None,
                 output_dir: PathLike | None = None) -> Result:
         """Process one input and return its typed :class:`Result`. Never raises for a bad input
-        file (it becomes ``status: "error"``); raises ``TypeError`` for an unsupported ``source``.
+        file (it becomes ``status: "error"``); raises :class:`UnsupportedInputError` (a
+        ``TypeError``) for an unsupported ``source``.
         """
         from radintake.pipeline import process_file
         from radintake.tracing.writer import TraceWriter
@@ -298,6 +317,65 @@ class Pipeline:
         result.dicom_bytes = dicom_bytes[0] if dicom_bytes else None
         return result
 
+    def process_batch(self, sources: Iterable[Any], *, output_dir: PathLike | None = None,
+                      on_result: Callable[[Result], None] | None = None) -> list[Result]:
+        """Process every source in order; one :class:`Result` per source.
+
+        One bad input never stops the batch: a corrupt file is the usual ``status: "error"``
+        result, and an unsupported source or an unexpected crash becomes an ``error`` result too
+        (written to ``output_dir`` like any other). ``on_result`` is called after each input.
+        """
+        results: list[Result] = []
+        for i, source in enumerate(sources):
+            try:
+                r = self.process(source, output_dir=output_dir)
+            except Exception as exc:  # noqa: BLE001 - one bad input never stops the batch
+                r = self._crash_result(source, i, exc, output_dir)
+            results.append(r)
+            if on_result is not None:
+                on_result(r)
+        return results
+
+    async def aprocess(self, source: Any, *, input_name: str | None = None,
+                       output_dir: PathLike | None = None) -> Result:
+        """:meth:`process` in a worker thread (does not block the event loop)."""
+        return await asyncio.to_thread(self.process, source, input_name=input_name,
+                                       output_dir=output_dir)
+
+    async def aprocess_batch(self, sources: Iterable[Any], *, output_dir: PathLike | None = None,
+                             on_result: Callable[[Result], None] | None = None) -> list[Result]:
+        """:meth:`process_batch` in a worker thread (does not block the event loop)."""
+        return await asyncio.to_thread(self.process_batch, list(sources), output_dir=output_dir,
+                                       on_result=on_result)
+
+    def _crash_result(self, source: Any, index: int, exc: Exception,
+                      output_dir: PathLike | None) -> Result:
+        from radintake.logging import get_logger
+        from radintake.pipeline import _base_doc, sha256_file, write_doc
+
+        get_logger("radintake.sdk").error("case_crashed", error_type=type(exc).__name__)
+        sha = hashlib.sha256(b"").hexdigest()
+        if isinstance(source, (str, os.PathLike)):
+            name = _safe_input_name(Path(source).name, f"input_{index}")
+            try:
+                sha = sha256_file(Path(source))
+            except OSError:
+                pass
+        else:
+            name = f"input_{index}"
+            if isinstance(source, (bytes, bytearray, memoryview)):
+                sha = hashlib.sha256(bytes(source)).hexdigest()
+        trace_id = f"{self.run_id}/crashed" if self.run_id else "crashed"
+        doc = _base_doc(name, sha, "unknown", trace_id)
+        if isinstance(exc, UnsupportedInputError):
+            doc["error"] = f"unsupported source: {type(source).__name__}"
+        else:
+            doc["error"] = f"pipeline crashed: {type(exc).__name__}"
+        out = Path(output_dir) if output_dir is not None else self.output_dir
+        if out is not None:
+            write_doc(doc, out)
+        return Result.model_validate(doc)
+
 
 def _read_artifacts(base: Path, rels: list[str], suffix: str | None) -> list[bytes]:
     out = []
@@ -318,4 +396,10 @@ def process(source: Any, *, config: RadintakeConfig | Config | None = None,
         return pipe.process(source, input_name=input_name, output_dir=output_dir)
 
 
-__all__ = ["BudgetConfig", "ModelConfig", "Pipeline", "RadintakeConfig", "process"]
+async def aprocess(source: Any, **kw: Any) -> Result:
+    """Async :func:`process` (runs in a worker thread)."""
+    return await asyncio.to_thread(process, source, **kw)
+
+
+__all__ = ["BudgetConfig", "ConfigError", "ModelConfig", "Pipeline", "RadintakeConfig",
+           "RadintakeError", "UnsupportedInputError", "aprocess", "process"]

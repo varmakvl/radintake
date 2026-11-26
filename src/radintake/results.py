@@ -1,5 +1,8 @@
 """Typed results of the public SDK (:class:`radintake.sdk.Pipeline`).
 
+Stability: the models re-exported in ``radintake.__all__`` are public (``docs/api-stability.md``);
+``BBox``, ``REPORT_FIELDS`` and the ``_Model`` base are internal.
+
 :class:`Result` mirrors ``schemas/cli_output.v1.json`` field for field (plus the optional
 ``tables`` array of ``schemas/tables.v1.json``), so ``result.model_dump(mode="json")`` is a
 valid ``cli_output.v1`` document - the same document the batch CLI writes to disk.
