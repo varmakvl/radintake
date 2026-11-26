@@ -17,6 +17,8 @@ sources:
   - src/radintake/pipeline.py
   - schemas/cli_output.v1.json
   - tests/unit/test_sdk_pipeline.py
+  - tests/unit/test_sdk_public_api.py
+  - tests/integration/test_sdk_e2e.py
 ---
 
 # Contract
@@ -82,3 +84,13 @@ through `config.schema_path(name)` so packaging can move them into package data 
 - Never change `cli_output.v1`; `Result` follows the schema, not the other way round.
 - Keep `process_file` behaviour-identical: the CLI, the API and eval depend on it.
 - `StageContext.cancelled` is never reset per stage (known constraint) - the SDK does not try to.
+
+# Tests
+
+- `tests/unit/test_sdk_public_api.py`: one test per public entry point; every `Result` dump is
+  validated against `cli_output.v1`; write-free check with cwd, TMP/TEMP, `RADINTAKE_DATA_DIR` and
+  `RADINTAKE_TRACE_DIR` pointed at empty sandboxes (fails if a trace or masked PNG is written by
+  default); `import radintake` checked in a subprocess for FastAPI/uvicorn/fastembed; the model
+  guard still refuses unmasked payloads and offline API models under an SDK-built config.
+- `tests/integration/test_sdk_e2e.py`: SDK vs batch CLI parity (status, flags, input_type, report
+  values) on every synthetic fixture, bytes vs path parity, CLI summary counts.
