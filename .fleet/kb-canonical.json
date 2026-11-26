@@ -3,7 +3,7 @@
   "provenance": {
     "commit": "76ff7ea5322f06bb59648d30e5152ced220d16c2",
     "branch": "main",
-    "entry_count": 6
+    "entry_count": 8
   },
   "entries": [
     {
@@ -81,6 +81,28 @@
       }
     },
     {
+      "id": "5c8ecfd7-6578-419f-95e1-ea8d1e5fbdd1",
+      "type": "learning",
+      "title": "PaddleOCR PP-OCRv4 loses EM to Tesseract on dev due to glued label punctuation",
+      "summary": "On 60 dev docs PaddleOCR had lower CER and higher PHI recall than Tesseract but lower exact match in every tier and input class, mainly because it omits the space after label punctuation ('No.ACC-11144883') and the Tesseract-tuned OCR-first label parser keeps label text in the value.",
+      "symbols": [
+        "OcrFirstExtractor",
+        "split_words"
+      ],
+      "source_files": [
+        "eval/results/ocr_engine_comparison.json",
+        "src/radintake/tools/ocr_paddle.py",
+        "src/radintake/agents/extract_ocr.py"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-26T13:26:14.719Z",
+      "source_file_hashes": {
+        "eval/results/ocr_engine_comparison.json": "6508124632c12d275ce1be777db002306c6dd6a2",
+        "src/radintake/agents/extract_ocr.py": "839b92e9ced0921ab872b02005b3972cf23d0d15",
+        "src/radintake/tools/ocr_paddle.py": "abb31acbcfc2fb00a1b76f23aab79ed0071c2586"
+      }
+    },
+    {
       "id": "63e4ac69-866e-4152-9850-63f0ef1a38b1",
       "type": "knowledge",
       "title": "Golden v2 held-out set: separate lock, guard and corpus from golden v1",
@@ -102,6 +124,35 @@
         "data_prep/heldout.py": "a3c736b6d9f624934f62768aae54863a1f009941",
         "splits/golden_v2.lock": "0b53fd92215f224acc0d5ff8623a71eda1be73ab",
         "src/radintake/eval/run.py": "10fd5a63c9b2e6dc7df5808a99c4d6524092ca22"
+      }
+    },
+    {
+      "id": "8f970897-2a75-4182-9d72-72cf08f83d23",
+      "type": "knowledge",
+      "title": "OCR engine switch: ocr.engine, set_engine pin and models.ocr remap",
+      "summary": "radintake.tools.ocr.ocr() dispatches on set_engine() > RADINTAKE_OCR_ENGINE > ocr.engine > tesseract; process_file pins cfg.ocr_engine per case. load_config pops models.ocr/models.ocr_paddle and exposes the selected engine's spec as models.ocr so manifests name the engine that ran.",
+      "symbols": [
+        "load_config",
+        "active_engine",
+        "set_engine",
+        "ocr",
+        "OcrUnavailable"
+      ],
+      "source_files": [
+        "src/radintake/config.py",
+        "src/radintake/tools/ocr.py",
+        "src/radintake/tools/ocr_paddle.py",
+        "src/radintake/pipeline.py",
+        "configs/models.yaml"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-26T13:26:14.640Z",
+      "source_file_hashes": {
+        "configs/models.yaml": "2dc2a58db188e6c521e86dda031b3516741a315b",
+        "src/radintake/config.py": "19e6554fe4e05530e1ceee39af71543aa57c5db5",
+        "src/radintake/pipeline.py": "2f3485c9038415acb634f751ae7bcfefa2c4fdde",
+        "src/radintake/tools/ocr.py": "ee75755c0001a9dd98d382edafa4abed4c8d7c5d",
+        "src/radintake/tools/ocr_paddle.py": "abb31acbcfc2fb00a1b76f23aab79ed0071c2586"
       }
     },
     {
