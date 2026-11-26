@@ -7,7 +7,7 @@ tags: [extraction, ocr, vlm, hybrid, provenance, report-schema, agent]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-26T12:35:16.930Z
+  at: 2026-11-26T12:39:35.071Z
 sources:
   - src/radintake/agents/extract.py
   - src/radintake/agents/extract_ocr.py

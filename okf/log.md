@@ -3,6 +3,8 @@
 Newest changes recorded chronologically.
 
 ## 2026-11-26
+- Synchronized timestamp for 2 drifted concept(s): playbooks/delivery-plan-and-status.md, subsystems/extraction-agent.md.
+- Synchronized workspace frontier mapping in `index.md` (+1 new, -0 removed, 238 already listed; 239 undocumented files mapped).
 - Synchronized timestamp for 3 drifted concept(s): operations/deployment.md, operations/evaluation-harness.md, subsystems/extraction-agent.md.
 - Synchronized workspace frontier mapping in `index.md` (+1 new, -0 removed, 237 already listed; 238 undocumented files mapped).
 - OCR engine trial on dev (same 60 ids): Tesseract stays the default for every input class (PaddleOCR EM 0.641 -> 0.537, 1.8x slower; higher PHI recall, lower precision). Result `eval/results/ocr_engine_comparison.json` bound to `subsystems/extraction-agent.md`; README results row, `docs/ocr-engine.md` and `eval/results/attempts.md` updated.
