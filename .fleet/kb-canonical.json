@@ -3,7 +3,7 @@
   "provenance": {
     "commit": "76ff7ea5322f06bb59648d30e5152ced220d16c2",
     "branch": "main",
-    "entry_count": 8
+    "entry_count": 10
   },
   "entries": [
     {
@@ -168,6 +168,51 @@
       "updated_at": "2026-11-23T11:52:03.702Z",
       "source_file_hashes": {
         ".gitignore": "7fa27996bc3682d8a48b721f69c1e1e75bbfaabe"
+      }
+    },
+    {
+      "id": "922367db-a704-4c79-99ab-39f30956f47b",
+      "type": "knowledge",
+      "title": "Clause-start anchor still flags clinical sentences starting with new instructions",
+      "summary": "fuzzy_injected only counts bare 'new instructions' within 3 chars of a clause start, so 'New instructions given to patient regarding diet.' is still flagged, while mid-clause uses are clean.",
+      "symbols": [
+        "fuzzy_injected",
+        "_clause_hit",
+        "_ANCHORED_N"
+      ],
+      "source_files": [
+        "src/radintake/agents/injection.py",
+        "tests/unit/test_injection_review.py"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-26T16:56:49.413Z",
+      "source_file_hashes": {
+        "src/radintake/agents/injection.py": "18832ff4ff1873c9b42c5de9e01c55651bd6414f",
+        "tests/unit/test_injection_review.py": "45a7ad9fcf6cc39244b2b0728614c989408bee8f"
+      }
+    },
+    {
+      "id": "9f9573cd-8ee1-47dc-bf75-557a4a594811",
+      "type": "knowledge",
+      "title": "SDK Pipeline is write-free: all case writes go to a per-call TemporaryDirectory",
+      "summary": "radintake.sdk.Pipeline.process sends spooled input, masked PNGs, de-identified DICOM, the per-case trace and the review-queue sqlite to a private temp dir deleted on return, unless output_dir, trace_dir or data_dir is passed. RADINTAKE_TRACE_DIR and RADINTAKE_DATA_DIR do not turn persistence on for the SDK.",
+      "symbols": [
+        "Pipeline.process",
+        "Pipeline.process_batch",
+        "run_batch",
+        "_process"
+      ],
+      "source_files": [
+        "src/radintake/sdk.py",
+        "src/radintake/cli.py",
+        "src/radintake/api/routes.py"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-26T16:56:49.336Z",
+      "source_file_hashes": {
+        "src/radintake/api/routes.py": "3ce20062ab2c79a6ab4e11740354f1f76f11c342",
+        "src/radintake/cli.py": "d56201a48628d748bef3510ad7bea6cc383eb53c",
+        "src/radintake/sdk.py": "f4b6dcb37ee1b000df3ace2ee6bb014940e58003"
       }
     },
     {
