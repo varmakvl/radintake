@@ -2,8 +2,14 @@
 
 Newest changes recorded chronologically.
 
+## 2026-11-26
+- Synchronized timestamp for 11 drifted concept(s): data/coordinate-contract.md, data/data-preparation.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/deployment.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/model-client-guard.md, subsystems/preprocessing-agent.md, subsystems/retrieval-qa-agent.md, subsystems/verifier-agent.md.
+- Synchronized workspace frontier mapping in `index.md` (+12 new, -0 removed, 222 already listed; 234 undocumented files mapped).
+- Phone-photo page detection: `image_ops.detect_page_quad` (contour quad kept only if every side is on a paper edge, else the Hough-line fallback `find_page_quad_lines`); trace fields `fallback`, `contour_rejected`, `score`; config keys `quad_fallback*`, `quad_contour_min_side_support`. Dev phone-photo EM 0.500 -> 0.614 (`eval/results/phone_photo_v2.json`). Concept `subsystems/preprocessing-agent.md` updated; source bound: `configs/default.yaml`.
 
 ## 2026-11-25
+- Synchronized timestamp for 10 drifted concept(s): data/coordinate-contract.md, data/data-preparation.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/deployment.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/model-client-guard.md, subsystems/preprocessing-agent.md, subsystems/retrieval-qa-agent.md.
+- Synchronized workspace frontier mapping in `index.md` (+2 new, -0 removed, 230 already listed; 232 undocumented files mapped).
 - Synchronized timestamp for 10 drifted concept(s): data/data-preparation.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/deployment.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/api-service.md, subsystems/model-client-guard.md, subsystems/retrieval-qa-agent.md, subsystems/verifier-agent.md.
 - Synchronized workspace frontier mapping in `index.md` (+9 new, -0 removed, 220 already listed; 229 undocumented files mapped).
 - Synchronized timestamp for 4 drifted concept(s): data/data-preparation.md, data/dataset-split-and-golden-set.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md.

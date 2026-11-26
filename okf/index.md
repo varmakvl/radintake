@@ -90,3 +90,15 @@ reports and DICOM. Start with the [System Overview](/overview.md); the delivery 
 - `.beads/backup/m53l15dlfldppl96kgqlud1mja1qh8jj.darc` — Undocumented codebase file.
 - `.beads/backup/sca6m7pqilph6032lfs4275qe9go1r33.darc` — Undocumented codebase file.
 - `.beads/backup/u8s0h7mkb7bi3fi81tpvkjm4c45d5se6.darc` — Undocumented codebase file.
+- `.beads/backup/0u8vvopvkjkcprtr0gomd0lf6a1s0nb3.darc` — Undocumented codebase file.
+- `.beads/backup/1fpttv4f8gvpotk36gavg7viq74ojnlh.darc` — Undocumented codebase file.
+- `.beads/backup/2f24arjrrain1ha28ocglr3tmmmsbehn.darc` — Undocumented codebase file.
+- `.beads/backup/8vcbibo0i1qucbtemc3dkq31k76qfmob.darc` — Undocumented codebase file.
+- `.beads/backup/9d0bq14r0hr1cu16koe453qu3icuispn.darc` — Undocumented codebase file.
+- `.beads/backup/ekpve144vcj8t312nqufpt1ad3g0fqdk.darc` — Undocumented codebase file.
+- `.beads/backup/gf9c2ik6lldduoap5p7a26s7kh3gmjui.darc` — Undocumented codebase file.
+- `.beads/backup/hrtlatpddd2jgmu13q68acbel3cebs6k.darc` — Undocumented codebase file.
+- `.beads/backup/ot97vpna0ur01q112cps25muru1emcrt.darc` — Undocumented codebase file.
+- `.beads/backup/qdht4i2i17pvr2cdpndcvf7s1jrpigdl.darc` — Undocumented codebase file.
+- `.fleet-task.md` — Undocumented codebase file.
+- `sprint-logs/sprint_162533.json` — Undocumented codebase file.

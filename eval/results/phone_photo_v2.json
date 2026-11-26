@@ -1,0 +1,163 @@
+{
+ "split": "dev",
+ "pipeline": "ocr_first",
+ "n_docs": 218,
+ "pages_by_tier": {
+  "poor_scan": 90,
+  "clean_scan": 90,
+  "phone_photo": 87
+ },
+ "offline": true,
+ "sample_per_tier": 0,
+ "baseline": {
+  "code": "8a5a9bd (this branch before the fallback detector), run from a git worktree",
+  "run_id": "20261125T203135Z-78b363e7"
+ },
+ "branch": {
+  "code": "sprint/radintake-v2 with the line-based page detector",
+  "run_id": "20261125T203636Z-d2c88952"
+ },
+ "note": "Both full dev runs (218 docs, 267 pages) ran concurrently on the same machine, so latency is pessimistic for both; offline (RADINTAKE_OFFLINE=1). Baseline = commit 8a5a9bd (branch HEAD before the detector) rather than origin/main, so the only code difference is the page detector.",
+ "tiers": {
+  "clean_scan": {
+   "before": {
+    "n_fields": 414,
+    "exact_match": 0.903,
+    "cer": 0.0133,
+    "omission_pct": 0.0,
+    "hallucination_pct": 0.46,
+    "phi_recall": 0.9377,
+    "latency_ms_per_page_p50": 9645.4,
+    "latency_ms_per_page_p95": 17620.0
+   },
+   "after": {
+    "n_fields": 414,
+    "exact_match": 0.903,
+    "cer": 0.0133,
+    "omission_pct": 0.0,
+    "hallucination_pct": 0.46,
+    "phi_recall": 0.9377,
+    "latency_ms_per_page_p50": 9364.4,
+    "latency_ms_per_page_p95": 16633.9
+   },
+   "exact_match_delta": 0.0
+  },
+  "poor_scan": {
+   "before": {
+    "n_fields": 403,
+    "exact_match": 0.5709,
+    "cer": 0.2128,
+    "omission_pct": 8.93,
+    "hallucination_pct": 11.37,
+    "phi_recall": 0.8423,
+    "latency_ms_per_page_p50": 8183.0,
+    "latency_ms_per_page_p95": 16422.2
+   },
+   "after": {
+    "n_fields": 403,
+    "exact_match": 0.5709,
+    "cer": 0.2128,
+    "omission_pct": 8.93,
+    "hallucination_pct": 11.37,
+    "phi_recall": 0.8423,
+    "latency_ms_per_page_p50": 7956.2,
+    "latency_ms_per_page_p95": 14963.2
+   },
+   "exact_match_delta": 0.0
+  },
+  "phone_photo": {
+   "before": {
+    "n_fields": 420,
+    "exact_match": 0.5004,
+    "cer": 0.298,
+    "omission_pct": 15.96,
+    "hallucination_pct": 16.02,
+    "phi_recall": 0.7631,
+    "latency_ms_per_page_p50": 8715.9,
+    "latency_ms_per_page_p95": 19079.4
+   },
+   "after": {
+    "n_fields": 420,
+    "exact_match": 0.6144,
+    "cer": 0.1954,
+    "omission_pct": 6.6,
+    "hallucination_pct": 14.3,
+    "phi_recall": 0.8807,
+    "latency_ms_per_page_p50": 9540.8,
+    "latency_ms_per_page_p95": 19624.9
+   },
+   "exact_match_delta": 0.114
+  },
+  "overall": {
+   "before": {
+    "n_fields": 1237,
+    "exact_match": 0.658,
+    "cer": 0.1751,
+    "omission_pct": 8.34,
+    "hallucination_pct": 8.84,
+    "phi_recall": 0.8482,
+    "latency_ms_per_page_p50": 8724.8,
+    "latency_ms_per_page_p95": 18116.7
+   },
+   "after": {
+    "n_fields": 1237,
+    "exact_match": 0.6967,
+    "cer": 0.14,
+    "omission_pct": 5.14,
+    "hallucination_pct": 8.5,
+    "phi_recall": 0.887,
+    "latency_ms_per_page_p50": 8952.2,
+    "latency_ms_per_page_p95": 17414.4
+   },
+   "exact_match_delta": 0.0387
+  }
+ },
+ "page_detector": {
+  "before": {
+   "pages_dewarped": 81,
+   "pages_fallback": 0,
+   "pages_contour_rejected": 0,
+   "docs_fallback": 0
+  },
+  "after": {
+   "pages_dewarped": 87,
+   "pages_fallback": 70,
+   "pages_contour_rejected": 64,
+   "docs_fallback": 62
+  }
+ },
+ "worst10": {
+  "definition": "omission = omitted / ground-truth-present report fields on the documents of the 10 worst pages (radintake.eval.error_analysis)",
+  "baseline_worst10_pages": [
+   "D0294_p1",
+   "D0313_p1",
+   "D0090_p1",
+   "D0100_p1",
+   "D0079_p1",
+   "D0208_p2",
+   "D0019_p1",
+   "D0089_p1",
+   "D0218_p1",
+   "D0275_p1"
+  ],
+  "omission_on_baseline_worst10": {
+   "before": 0.75,
+   "after": 0.25,
+   "n_fields": 88
+  },
+  "omission_own_worst10": {
+   "before": 0.75,
+   "after": 0.3864
+  },
+  "worst_by_tier": {
+   "before": {
+    "phone_photo": 8,
+    "poor_scan": 2
+   },
+   "after": {
+    "poor_scan": 7,
+    "phone_photo": 3
+   }
+  }
+ }
+}

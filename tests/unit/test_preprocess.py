@@ -209,7 +209,7 @@ def test_dewarp_homography_round_trip_within_1_5px():
     rng = np.random.default_rng(77)
     for seed in range(5):
         img, _g = _shadowed_photo(np.random.default_rng(400 + seed))
-        quad, detector, _s = ops.detect_page_quad(img, {})
+        quad, detector, _s, _r = ops.detect_page_quad(img, {})
         assert detector == "lines"
         out, t = ops.dewarp(img, quad)
         pg = Page(index=1, image=img, original_size=(CW, CH)).with_image(out, t)
@@ -244,5 +244,5 @@ def test_fallback_detector_and_score_in_trace_without_text(tmp_path):
            if json.loads(x)["kind"] == "preprocess_decision"]
     dw = next(d for d in dec if d["op"] == "dewarp")
     assert dw["reason"] == "page_quad_fallback" and dw["fallback"] == 1 and 0.5 <= dw["score"] <= 1.0
-    assert set(dw) == {"op", "reason", "page", "fallback", "score", "out_w", "out_h"}
+    assert set(dw) == {"op", "reason", "page", "fallback", "contour_rejected", "score", "out_w", "out_h"}
     assert all(isinstance(v, (int, float)) for k, v in dw.items() if k not in ("op", "reason"))

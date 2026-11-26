@@ -7,7 +7,7 @@ tags: [config, yaml, environment, offline, budgets, models]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T17:01:04.519Z
+  at: 2026-11-26T06:02:15.459Z
 sources:
   - src/radintake/config.py
   - configs/default.yaml

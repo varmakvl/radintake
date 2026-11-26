@@ -291,34 +291,42 @@ def find_page_quad_lines(img: np.ndarray, *, min_area: float = 0.25, max_area: f
     return q / s, float(best_key[0])
 
 
-def detect_page_quad(img: np.ndarray, p: dict) -> tuple[np.ndarray | None, str, float]:
-    """Primary contour detector, then (if enabled) the line fallback: ``(quad, detector, score)``.
+def quad_side_support(img: np.ndarray, quad: np.ndarray, close_px: int = 17) -> list[float]:
+    """Per side (top, right, bottom, left) fraction of the quad's edge lying on a paper edge."""
+    _smooth, edges, s = _page_edges(img, 800.0, close_px)
+    ed = cv2.dilate(edges, np.ones((3, 3), np.uint8))
+    q = order_quad(quad) * s
+    return [_side_support(ed, q[c], q[(c + 1) % 4]) for c in range(4)]
 
-    ``detector`` is ``"contour"``, ``"lines"`` or ``"none"``; ``score`` is the edge support of
-    the returned quad (0..1; for ``"contour"`` it is ``1 - background/page`` brightness).
+
+def detect_page_quad(img: np.ndarray, p: dict) -> tuple[np.ndarray | None, str, float, int]:
+    """Contour detector first, line detector as fallback: ``(quad, detector, score, contour_rejected)``.
+
+    The line detector runs when the contour detector finds no quad, OR when the contour quad is not
+    backed by paper edges (a side with edge support below ``quad_contour_min_side_support``): with a
+    lighting gradient the global threshold can merge a bright desk into the page and return a wrong
+    quad, which is worse than none. If the line detector then finds nothing the contour quad is kept.
+    ``detector`` is ``"contour"``, ``"lines"`` or ``"none"``; ``score`` is the mean edge support of the
+    returned quad's sides (0..1); ``contour_rejected`` is 1 when a contour quad was replaced.
     """
     quad = find_page_quad(img, min_area=p.get("quad_min_area", 0.25), max_area=p.get("quad_max_area", 0.97),
                           min_bg_contrast=p.get("quad_min_bg_contrast", 0.6))
+    if not p.get("quad_fallback", True):
+        if quad is None:
+            return None, "none", 0.0, 0
+        return quad, "contour", float(np.mean(quad_side_support(img, quad))), 0
+    contour_sup = quad_side_support(img, quad) if quad is not None else None
+    if contour_sup is not None and min(contour_sup) >= p.get("quad_contour_min_side_support", 0.5):
+        return quad, "contour", float(np.mean(contour_sup)), 0
+    lq, score = find_page_quad_lines(img, min_area=p.get("quad_min_area", 0.25),
+                                     max_area=p.get("quad_max_area", 0.97),
+                                     max_side_ratio=p.get("quad_fallback_max_side_ratio", 0.88),
+                                     min_support=p.get("quad_fallback_min_support", 0.5))
+    if lq is not None:
+        return lq, "lines", score, int(quad is not None)
     if quad is not None:
-        return quad, "contour", _contour_score(img, quad)
-    if p.get("quad_fallback", True):
-        quad, score = find_page_quad_lines(img, min_area=p.get("quad_min_area", 0.25),
-                                           max_area=p.get("quad_max_area", 0.97),
-                                           max_side_ratio=p.get("quad_fallback_max_side_ratio", 0.88),
-                                           min_support=p.get("quad_fallback_min_support", 0.5))
-        if quad is not None:
-            return quad, "lines", score
-    return None, "none", 0.0
-
-
-def _contour_score(img: np.ndarray, quad: np.ndarray) -> float:
-    g = to_gray(img)
-    inside = np.zeros(g.shape, np.uint8)
-    cv2.fillConvexPoly(inside, np.rint(quad).astype(np.int32), 255)
-    page_px, bg_px = g[inside > 0], g[inside == 0]
-    if bg_px.size == 0 or page_px.size == 0:
-        return 0.0
-    return float(1.0 - float(bg_px.mean()) / max(float(page_px.mean()), 1.0))
+        return quad, "contour", float(np.mean(contour_sup)), 0
+    return None, "none", 0.0, 0
 
 
 def order_quad(pts: np.ndarray) -> np.ndarray:

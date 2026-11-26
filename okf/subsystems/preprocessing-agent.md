@@ -7,12 +7,13 @@ tags: [preprocessing, image-quality, orientation, deskew, dewarp, agent]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-25T08:12:27.009Z
+  at: 2026-11-26T06:02:15.459Z
 sources:
   - src/radintake/agents/preprocess.py
   - src/radintake/tools/image_ops.py
   - src/radintake/tools/ocr.py
   - tests/unit/test_preprocess.py
+  - configs/default.yaml
 ---
 
 # Policy
@@ -21,7 +22,7 @@ Stage `preprocess` (order 20, `failure_flag: preprocess_failed`). A rule policy,
 decisions are small, numeric and must be reproducible per page (`decision <- metric > threshold`).
 
 ```
-page quad detected (photos)          -> 4-point perspective dewarp
+page quad detected (photos)          -> 4-point perspective dewarp (contour detector, else line fallback)
 background unevenness > 20           -> flat-field illumination correction (divide by background)
 orientation (tools/ocr.orientation)  -> lossless rotate 90/180/270, judged on the flat page
 |skew| > deskew_min_deg (0.3)        -> rotate by measured skew (capped at deskew_max_deg 15)
@@ -33,6 +34,33 @@ Metrics and ops live in `tools/image_ops.py` (Laplacian variance, noise sigma, c
 angle, page-quad detection). Each geometry op returns `(new_image, Transform)` and never modifies
 its input. Thresholds: [Configuration](/operations/configuration.md). Decisions and metric values
 are written to the trace ([Tracing](/subsystems/tracing-and-logging.md)).
+
+# Page detection (contour first, line fallback)
+
+`image_ops.detect_page_quad` returns `(quad, detector, score, contour_rejected)`:
+
+1. **Contour** (`find_page_quad`): Otsu threshold of the whole photo, largest bright region, 4-point
+   approximation, global `background / page < quad_min_bg_contrast (0.6)`.
+2. **Edge check**: the contour quad is kept only if every side lies on a paper edge
+   (`quad_side_support >= quad_contour_min_side_support`, 0.5). A lighting gradient makes one side of
+   the page darker than the desk on the other, so the global threshold either finds nothing or merges
+   a bright desk corner into the page (a WRONG quad, worse than none: dev 64 of 87 photo pages).
+3. **Line fallback** (`find_page_quad_lines`, `quad_fallback: true`): close away dark strokes < 17 px
+   (text, rules, handwriting) at 800 px, Canny, Hough lines; every quad of two near-horizontal and
+   two near-vertical lines is scored by the fraction of its perimeter on an edge (`score`). Accepted
+   only if convex, corners 60-120 degrees, area 0.25-0.97 of the frame, mean support >=
+   `quad_fallback_min_support` (0.5), and EVERY side is a local paper step (grey just outside / just
+   inside <= `quad_fallback_max_side_ratio`, 0.88). The best quad's sides are refit to the edge pixels.
+   A scan without a visible paper edge has no such quad, so it keeps the identity transform.
+
+Trace: the `dewarp` decision carries reason `page_quad_found` (contour) or `page_quad_fallback` (lines)
+and numbers only: `fallback` 0/1, `contour_rejected` 0/1, `score`, `out_w`, `out_h`.
+Do not retry loosening the contour contrast threshold (0.3, 0.15): it found fewer quads (attempts.md).
+
+Measured 2026-11-26 on the full dev set (218 docs, same ids, `eval/results/phone_photo_v2.json`):
+phone-photo EM 0.500 -> 0.614, omission 16.0% -> 6.6%, PHI recall 0.763 -> 0.881; clean and poor
+scans unchanged (no scan is dewarped). Only 6 of 87 photo pages had NO contour quad; 64 had a wrong
+one, which is why the edge check on contour quads matters more than the fallback itself.
 
 # Coordinates
 

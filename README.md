@@ -180,6 +180,24 @@ OCR-first stays the default: hybrid gains 0.9 points of exact match (all on phon
 latency. Raw numbers: [`eval/results/pipeline_comparison.json`](eval/results/pipeline_comparison.json);
 failed attempts: [`eval/results/attempts.md`](eval/results/attempts.md).
 
+### Phone photos: page detection (added after the golden run; dev evidence)
+
+On a lit phone photo the old page detector (one global threshold) often missed the paper edge or
+merged a bright desk corner into the page. A contour quad is now kept only if every side lies on a
+paper edge; otherwise a line-based detector (text closed away, Canny + Hough lines, each side checked
+for a local paper/desk step) supplies the quad. Scans without a paper edge are never dewarped.
+Full dev set, same 218 documents, OCR-first, offline
+([`eval/results/phone_photo_v2.json`](eval/results/phone_photo_v2.json)):
+
+| Dev tier | Exact match before → after | CER | Omission | PHI recall |
+|---|---|---|---|---|
+| Phone photo (dev) | 0.500 → **0.614** | 0.298 → 0.195 | 16.0% → 6.6% | 76.3% → 88.1% |
+| Clean scan (dev) | 0.903 → 0.903 | 0.013 → 0.013 | 0.0% → 0.0% | 93.8% → 93.8% |
+| Poor scan (dev) | 0.571 → 0.571 | 0.213 → 0.213 | 8.9% → 8.9% | 84.2% → 84.2% |
+
+The line detector supplies the quad on 70 of 87 dev photo pages; the 10 worst baseline pages go
+from 75% to 25% of fields omitted. Golden set not re-run (single-use).
+
 ### PDF text layer and tables (added after the golden run; dev and synthetic evidence)
 
 Digital PDFs are now read from their own text layer instead of OCR on a raster. Invisible text

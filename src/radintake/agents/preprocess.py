@@ -7,7 +7,8 @@ latency, nondeterminism and a PHI exposure surface for no accuracy gain.
 Policy (in order, each step only if its metric demands it)::
 
     page quad detected      -> 4-point perspective dewarp (photos); the contour detector runs
-                               first, the edge/Hough-line fallback only when it finds no quad
+                               first, the edge/Hough-line fallback when it finds no quad or a
+                               quad whose sides are not on paper edges
     background unevenness   -> flat-field illumination correction (lighting gradient, shadow)
       > illumination_uneven_max
     orientation (OCR tool)  -> rotate by 90/180/270 (lossless), judged on the flat, even page
@@ -45,6 +46,8 @@ DEFAULTS: dict[str, Any] = {
     "quad_max_area": 0.97,
     "quad_min_bg_contrast": 0.6,
     "quad_fallback": True,              # line-based page detector when the contour one finds no quad
+                                        # or one whose sides are not paper edges
+    "quad_contour_min_side_support": 0.5,  # contour quad kept only if every side is this much on an edge
     "quad_fallback_min_support": 0.5,   # mean fraction of the quad perimeter on a paper edge
     "quad_fallback_max_side_ratio": 0.88,  # every side: grey just outside / just inside at most this
 }
@@ -108,14 +111,17 @@ def preprocess_page(page: Page, *, params: dict[str, Any] | None = None,
 
     # 1. dewarp (photos: a page quad on a darker background) - before orientation, so the
     #    orientation check sees a flat page rather than a skewed photo
-    #    detector: contour (global paper/desk threshold) first; edge/Hough-line fallback when the
-    #    lighting gradient defeats the threshold. Trace: which one fired (fallback 0/1) + its score.
-    quad, detector, score = ops.detect_page_quad(cur.image, p)
+    #    detector: contour (global paper/desk threshold) first; edge/Hough-line fallback when it
+    #    finds no quad or a quad whose sides are not paper edges (a lighting gradient defeats the
+    #    global threshold). Trace: which one fired (fallback 0/1), its edge-support score, and
+    #    whether a contour quad was rejected - numbers only.
+    quad, detector, score, rejected = ops.detect_page_quad(cur.image, p)
     if quad is not None:
         img, t = ops.dewarp(cur.image, quad)
         cur = cur.with_image(img, t)
         record("dewarp", "page_quad_fallback" if detector == "lines" else "page_quad_found",
-               fallback=int(detector == "lines"), score=score, out_w=img.shape[1], out_h=img.shape[0])
+               fallback=int(detector == "lines"), contour_rejected=rejected, score=score,
+               out_w=img.shape[1], out_h=img.shape[0])
 
     # 2. uneven lighting / shadows (photos): Tesseract binarises with one global threshold, so a
     #    lighting gradient turns half the page into noise. Photometric only - geometry unchanged.
