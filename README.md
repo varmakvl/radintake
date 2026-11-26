@@ -198,6 +198,24 @@ Full dev set, same 218 documents, OCR-first, offline
 The line detector supplies the quad on 70 of 87 dev photo pages; the 10 worst baseline pages go
 from 75% to 25% of fields omitted. Golden set not re-run (single-use).
 
+### OCR engine trial: Tesseract vs PaddleOCR (dev evidence)
+
+`ocr.engine` (or `RADINTAKE_OCR_ENGINE`) switches the OCR backend between Tesseract 5 (default) and
+PaddleOCR PP-OCRv4 (optional `[paddle]` extra, pinned in `requirements-paddle.lock`; CI and the Docker
+image stay Tesseract-only). Same 60 dev documents (20 per tier), OCR-first, offline, CPU for both
+([`eval/results/ocr_engine_comparison.json`](eval/results/ocr_engine_comparison.json)):
+
+| Dev tier | Exact match Tesseract / PaddleOCR | CER | PHI recall | PHI precision | p50 / p95 per page |
+|---|---|---|---|---|---|
+| Clean scan | **0.861** / 0.792 | 0.024 / 0.025 | 96.1% / 98.0% | 78.8% / 75.7% | 3.8 s / 4.3 s vs 6.3 s / 10.2 s |
+| Poor scan | **0.511** / 0.402 | 0.251 / 0.204 | 83.2% / 92.9% | 74.2% / 67.4% | 3.0 s / 4.1 s vs 6.4 s / 10.7 s |
+| Phone photo | **0.547** / 0.413 | 0.199 / 0.096 | 87.5% / 90.1% | 79.2% / 70.7% | 3.9 s / 5.1 s vs 6.8 s / 9.8 s |
+
+Tesseract stays the default for every input class: PaddleOCR reads characters better on photos and
+finds more PHI, but loses exact match everywhere (it drops the space after label punctuation, e.g.
+`No.ACC-…`, which the OCR-first label parser keeps in the value) and is about 1.8× slower. Details:
+[`docs/ocr-engine.md`](docs/ocr-engine.md).
+
 ### PDF text layer and tables (added after the golden run; dev and synthetic evidence)
 
 Digital PDFs are now read from their own text layer instead of OCR on a raster. Invisible text

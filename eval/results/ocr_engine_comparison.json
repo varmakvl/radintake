@@ -1,0 +1,313 @@
+{
+ "split": "dev",
+ "pipeline": "ocr_first",
+ "offline": true,
+ "sample_per_tier": 20,
+ "sample_seed": 140,
+ "n_docs": 60,
+ "doc_ids": [
+  "D0001",
+  "D0004",
+  "D0016",
+  "D0025",
+  "D0032",
+  "D0036",
+  "D0047",
+  "D0048",
+  "D0050",
+  "D0055",
+  "D0061",
+  "D0065",
+  "D0071",
+  "D0092",
+  "D0093",
+  "D0095",
+  "D0099",
+  "D0103",
+  "D0107",
+  "D0111",
+  "D0114",
+  "D0120",
+  "D0123",
+  "D0125",
+  "D0126",
+  "D0146",
+  "D0147",
+  "D0153",
+  "D0156",
+  "D0164",
+  "D0168",
+  "D0173",
+  "D0177",
+  "D0183",
+  "D0189",
+  "D0191",
+  "D0194",
+  "D0195",
+  "D0197",
+  "D0202",
+  "D0207",
+  "D0215",
+  "D0216",
+  "D0217",
+  "D0220",
+  "D0225",
+  "D0228",
+  "D0231",
+  "D0242",
+  "D0246",
+  "D0252",
+  "D0254",
+  "D0270",
+  "D0277",
+  "D0282",
+  "D0283",
+  "D0293",
+  "D0299",
+  "D0323",
+  "D0328"
+ ],
+ "commands": [
+  "RADINTAKE_OFFLINE=1 RADINTAKE_OCR_ENGINE=tesseract python -m radintake.eval.run --split dev --sample-per-tier 20 --out runs/ocr_tess",
+  "RADINTAKE_OFFLINE=1 RADINTAKE_OCR_ENGINE=paddle python -m radintake.eval.run --split dev --sample-per-tier 20 --out runs/ocr_paddle  (venv with requirements.lock + requirements-paddle.lock)"
+ ],
+ "note": "Same 60 dev ids (20 per tier, sample seed above), same code (git_sha), run one after the other on the same Windows laptop CPU (no concurrent run). Tier rows and input_class rows are radintake.eval.metrics.aggregate over the subset's score records, so they use the same definitions as metrics.json (exact_match / cer = mean over fields). phi_precision is document-level detection precision of the subset. Latency is wall-clock per page of the whole case (all stages, not OCR alone). GPU: both engines run on CPU; peak = baseline (nothing allocated). input_class is the router's input_type, the only engine-selection key available at run time (quality tier is not).",
+ "engines": {
+  "tesseract": {
+   "run_dir": "runs/ocr_tess",
+   "run_id": "20261126T122104Z-71c82dd0",
+   "git_sha": "a750868b12cc0fea543233740710ce4cf6751bce",
+   "model_id_ocr": "tesseract-5",
+   "ocr_tool_version": "tesseract 5.4.0.20240606",
+   "overall": {
+    "n_docs": 60,
+    "n_pages": 73,
+    "exact_match": 0.6408,
+    "cer": 0.1567,
+    "phi_recall": 0.8889,
+    "phi_precision": 0.7751,
+    "latency_ms_per_page_p50": 3591.6,
+    "latency_ms_per_page_p95": 4805.2
+   },
+   "tiers": {
+    "clean_scan": {
+     "n_docs": 20,
+     "n_pages": 24,
+     "exact_match": 0.8609,
+     "cer": 0.0235,
+     "phi_recall": 0.9605,
+     "phi_precision": 0.7884,
+     "latency_ms_per_page_p50": 3791.2,
+     "latency_ms_per_page_p95": 4263.13
+    },
+    "poor_scan": {
+     "n_docs": 20,
+     "n_pages": 25,
+     "exact_match": 0.511,
+     "cer": 0.2514,
+     "phi_recall": 0.8323,
+     "phi_precision": 0.7419,
+     "latency_ms_per_page_p50": 3036.45,
+     "latency_ms_per_page_p95": 4105.57
+    },
+    "phone_photo": {
+     "n_docs": 20,
+     "n_pages": 24,
+     "exact_match": 0.5465,
+     "cer": 0.1988,
+     "phi_recall": 0.875,
+     "phi_precision": 0.7922,
+     "latency_ms_per_page_p50": 3890.45,
+     "latency_ms_per_page_p95": 5111.78
+    }
+   },
+   "input_class": {
+    "pdf": {
+     "n_docs": 17,
+     "exact_match": 0.6938,
+     "cer": 0.1399,
+     "phi_recall": 0.8931,
+     "phi_precision": 0.7603,
+     "latency_ms_per_page_p50": 3504.2,
+     "latency_ms_per_page_p95": 4211.32
+    },
+    "photo": {
+     "n_docs": 20,
+     "exact_match": 0.5435,
+     "cer": 0.2226,
+     "phi_recall": 0.8643,
+     "phi_precision": 0.7793,
+     "latency_ms_per_page_p50": 4036.65,
+     "latency_ms_per_page_p95": 5111.78
+    },
+    "scan": {
+     "n_docs": 14,
+     "exact_match": 0.743,
+     "cer": 0.0566,
+     "phi_recall": 0.949,
+     "phi_precision": 0.7778,
+     "latency_ms_per_page_p50": 3743.65,
+     "latency_ms_per_page_p95": 4371.28
+    },
+    "tiff": {
+     "n_docs": 9,
+     "exact_match": 0.6088,
+     "cer": 0.1851,
+     "phi_recall": 0.8556,
+     "phi_precision": 0.7889,
+     "latency_ms_per_page_p50": 2991.65,
+     "latency_ms_per_page_p95": 3258.61
+    }
+   },
+   "gpu_peak_mib": 9,
+   "gpu_baseline_mib": 9,
+   "wall_s": 254.8
+  },
+  "paddle": {
+   "run_dir": "runs/ocr_paddle",
+   "run_id": "20261126T122520Z-b8ecd289",
+   "git_sha": "a750868b12cc0fea543233740710ce4cf6751bce",
+   "model_id_ocr": "paddleocr-ppocrv4",
+   "ocr_tool_version": "paddleocr 2.10.0 PP-OCRv4 (paddle 3.0.0)",
+   "overall": {
+    "n_docs": 60,
+    "n_pages": 73,
+    "exact_match": 0.5367,
+    "cer": 0.1072,
+    "phi_recall": 0.9368,
+    "phi_precision": 0.7135,
+    "latency_ms_per_page_p50": 6478.3,
+    "latency_ms_per_page_p95": 10345.83
+   },
+   "tiers": {
+    "clean_scan": {
+     "n_docs": 20,
+     "n_pages": 24,
+     "exact_match": 0.7924,
+     "cer": 0.0245,
+     "phi_recall": 0.9803,
+     "phi_precision": 0.7568,
+     "latency_ms_per_page_p50": 6335.4,
+     "latency_ms_per_page_p95": 10241.51
+    },
+    "poor_scan": {
+     "n_docs": 20,
+     "n_pages": 25,
+     "exact_match": 0.402,
+     "cer": 0.2037,
+     "phi_recall": 0.929,
+     "phi_precision": 0.6743,
+     "latency_ms_per_page_p50": 6414.62,
+     "latency_ms_per_page_p95": 10678.35
+    },
+    "phone_photo": {
+     "n_docs": 20,
+     "n_pages": 24,
+     "exact_match": 0.4127,
+     "cer": 0.0957,
+     "phi_recall": 0.9013,
+     "phi_precision": 0.7066,
+     "latency_ms_per_page_p50": 6759.05,
+     "latency_ms_per_page_p95": 9847.3
+    }
+   },
+   "input_class": {
+    "pdf": {
+     "n_docs": 17,
+     "exact_match": 0.5582,
+     "cer": 0.1322,
+     "phi_recall": 0.9771,
+     "phi_precision": 0.7152,
+     "latency_ms_per_page_p50": 6600.9,
+     "latency_ms_per_page_p95": 8921.7
+    },
+    "photo": {
+     "n_docs": 20,
+     "exact_match": 0.4083,
+     "cer": 0.0953,
+     "phi_recall": 0.8929,
+     "phi_precision": 0.7438,
+     "latency_ms_per_page_p50": 7529.95,
+     "latency_ms_per_page_p95": 10345.83
+    },
+    "scan": {
+     "n_docs": 14,
+     "exact_match": 0.705,
+     "cer": 0.0734,
+     "phi_recall": 0.949,
+     "phi_precision": 0.7143,
+     "latency_ms_per_page_p50": 6335.4,
+     "latency_ms_per_page_p95": 12385.67
+    },
+    "tiff": {
+     "n_docs": 9,
+     "exact_match": 0.5324,
+     "cer": 0.1343,
+     "phi_recall": 0.9333,
+     "phi_precision": 0.6556,
+     "latency_ms_per_page_p50": 5849.3,
+     "latency_ms_per_page_p95": 6648.04
+    }
+   },
+   "gpu_peak_mib": 9,
+   "gpu_baseline_mib": 9,
+   "wall_s": 497.5
+  }
+ },
+ "deltas_paddle_minus_tesseract": {
+  "overall": {
+   "exact_match": -0.1041,
+   "cer": -0.0495,
+   "phi_recall": 0.0479,
+   "phi_precision": -0.0616,
+   "latency_ms_per_page_p50": 2886.7
+  },
+  "tiers": {
+   "clean_scan": {
+    "exact_match": -0.0685,
+    "cer": 0.001,
+    "phi_recall": 0.0198,
+    "phi_precision": -0.0316
+   },
+   "poor_scan": {
+    "exact_match": -0.109,
+    "cer": -0.0477,
+    "phi_recall": 0.0967,
+    "phi_precision": -0.0676
+   },
+   "phone_photo": {
+    "exact_match": -0.1338,
+    "cer": -0.1031,
+    "phi_recall": 0.0263,
+    "phi_precision": -0.0856
+   }
+  },
+  "input_class": {
+   "pdf": {
+    "exact_match": -0.1356,
+    "cer": -0.0077,
+    "phi_recall": 0.084
+   },
+   "photo": {
+    "exact_match": -0.1352,
+    "cer": -0.1273,
+    "phi_recall": 0.0286
+   },
+   "scan": {
+    "exact_match": -0.038,
+    "cer": 0.0168,
+    "phi_recall": 0.0
+   },
+   "tiff": {
+    "exact_match": -0.0764,
+    "cer": -0.0508,
+    "phi_recall": 0.0777
+   }
+  }
+ },
+ "decision": {
+  "default_engine": "tesseract",
+  "engine_by_input_class": null,
+  "reason": "PaddleOCR loses exact match in every quality tier (clean -6.9, poor -10.9, photo -13.4 points) and in every router input class (scan -3.8, photo -13.5, pdf -13.6, tiff -7.6), is 1.8x slower per page (p50 6.5 s vs 3.6 s) and has lower PHI precision (0.714 vs 0.775). Its PHI recall is higher (0.937 vs 0.889) and its photo CER lower, but no input class gains on the primary metric, so nothing is adopted. Main failure seen: PP-OCRv4 drops the space after label punctuation ('Accession No.ACC-11144883'), which the Tesseract-tuned OCR-first label parser keeps in the value."
+ }
+}

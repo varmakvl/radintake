@@ -41,3 +41,22 @@ env > config files. `orientation()` is always Tesseract.
   config loader exposes the selected engine's entry as `models.ocr`, so the run manifest's
   `model_ids["ocr"]` is `tesseract-5` or `paddleocr-ppocrv4`, and every `ocr` `tool_call` event
   carries `tool_version` (`tesseract 5.x` or `paddleocr 2.10.0 PP-OCRv4 (paddle 3.0.0)`).
+
+## Trial result: Tesseract stays the default (dev evidence)
+
+Same 60 dev documents (20 per tier, seed 140), OCR-first, `RADINTAKE_OFFLINE=1`, both on CPU, run one
+after the other ([`eval/results/ocr_engine_comparison.json`](../eval/results/ocr_engine_comparison.json)):
+
+| Engine | EM clean / poor / photo | CER | PHI recall / precision | p50 / p95 per page | GPU |
+|---|---|---|---|---|---|
+| Tesseract 5.4 | **0.861 / 0.511 / 0.547** | 0.157 | 0.889 / **0.775** | **3.6 s / 4.8 s** | 0 |
+| PaddleOCR 2.10 PP-OCRv4 | 0.792 / 0.402 / 0.413 | **0.107** | **0.937** / 0.714 | 6.5 s / 10.3 s | 0 |
+
+Engine choice can only be keyed on what is known at run time (the router's input class, not the
+quality tier). PaddleOCR loses exact match in every input class (scan -3.8, photo -13.5, pdf -13.6,
+tiff -7.6 points), so no `engine_by_input_class` key was added and the default stays Tesseract
+everywhere; the Docker image gets no paddle build arg. Main cause: PP-OCRv4 often omits the space
+after label punctuation (`Accession No.ACC-11144883`), so the OCR-first label parser, tuned on
+Tesseract tokens, keeps label text in the value. Its better character accuracy on photos and higher
+PHI recall make it a candidate again only if the label parser learns to split glued labels.
+

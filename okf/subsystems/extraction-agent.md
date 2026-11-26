@@ -7,7 +7,7 @@ tags: [extraction, ocr, vlm, hybrid, provenance, report-schema, agent]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-26T12:19:16.423Z
+  at: 2026-11-26T12:35:16.930Z
 sources:
   - src/radintake/agents/extract.py
   - src/radintake/agents/extract_ocr.py
@@ -17,6 +17,7 @@ sources:
   - src/radintake/tools/ocr_paddle.py
   - requirements-paddle.lock
   - tests/unit/test_ocr_engines.py
+  - eval/results/ocr_engine_comparison.json
   - src/radintake/models/report.py
   - prompts/extraction_v1.md
   - prompts/crop_transcribe_v1.md
@@ -105,3 +106,10 @@ detected line boxes merged into rows by vertical-centre overlap (one `line_id` p
 words split from each line with boxes proportional to character offsets. Without the optional extra it
 raises `OcrUnavailable` naming `[paddle]` / `requirements-paddle.lock` - no silent Tesseract fallback.
 `orientation()` stays Tesseract. Details: `docs/ocr-engine.md`; contract tests: `tests/unit/test_ocr_engines.py`.
+
+Trial (dev, same 60 ids, OCR-first, offline): Tesseract keeps the default for every router input class -
+PaddleOCR EM 0.641 -> 0.537 (loses in every tier and input class), CER 0.157 -> 0.107, PHI recall
+0.889 -> 0.937 but precision 0.775 -> 0.714, 1.8x slower per page
+(`eval/results/ocr_engine_comparison.json`, `eval/results/attempts.md`). Cause: PP-OCRv4 glues label
+punctuation to the value (`No.ACC-...`), which the Tesseract-tuned label parser keeps in the value.
+No `engine_by_input_class` key and no Docker paddle build arg exist; the default `model_ids["ocr"]` stays `tesseract-5`.

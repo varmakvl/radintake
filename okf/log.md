@@ -3,6 +3,9 @@
 Newest changes recorded chronologically.
 
 ## 2026-11-26
+- Synchronized timestamp for 3 drifted concept(s): operations/deployment.md, operations/evaluation-harness.md, subsystems/extraction-agent.md.
+- Synchronized workspace frontier mapping in `index.md` (+1 new, -0 removed, 237 already listed; 238 undocumented files mapped).
+- OCR engine trial on dev (same 60 ids): Tesseract stays the default for every input class (PaddleOCR EM 0.641 -> 0.537, 1.8x slower; higher PHI recall, lower precision). Result `eval/results/ocr_engine_comparison.json` bound to `subsystems/extraction-agent.md`; README results row, `docs/ocr-engine.md` and `eval/results/attempts.md` updated.
 - Synchronized timestamp for 10 drifted concept(s): data/data-preparation.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/evaluation-harness.md, overview.md, playbooks/delivery-plan-and-status.md, subsystems/extraction-agent.md, subsystems/model-client-guard.md, subsystems/orchestrator.md, subsystems/preprocessing-agent.md.
 - Synchronized workspace frontier mapping in `index.md` (+4 new, -0 removed, 233 already listed; 237 undocumented files mapped).
 - OCR engine switch `ocr.engine` / `RADINTAKE_OCR_ENGINE` (tesseract default | paddle) with the optional PaddleOCR backend `src/radintake/tools/ocr_paddle.py` (extra `[paddle]`, pins in `requirements-paddle.lock`); `models.ocr_paddle` registry entry. Concepts `operations/configuration.md` and `subsystems/extraction-agent.md` updated; sources bound: `ocr_paddle.py`, `requirements-paddle.lock`, `tests/unit/test_ocr_engines.py`.
