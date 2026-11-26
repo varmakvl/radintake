@@ -3,6 +3,9 @@
 Newest changes recorded chronologically.
 
 ## 2026-11-26
+- Synchronized timestamp for 9 drifted concept(s): data/dataset-split-and-golden-set.md, operations/configuration.md, operations/deployment.md, operations/evaluation-harness.md, overview.md, playbooks/delivery-plan-and-status.md, subsystems/api-service.md, subsystems/orchestrator.md, subsystems/retrieval-qa-agent.md.
+- Indexed 1 active concept(s) in `index.md`: subsystems/sdk-public-api.md.
+- Synchronized workspace frontier mapping in `index.md` (+2 new, -0 removed, 240 already listed; 242 undocumented files mapped).
 - Synchronized timestamp for 7 drifted concept(s): data/dataset-split-and-golden-set.md, operations/deployment.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/api-service.md, subsystems/retrieval-qa-agent.md, subsystems/verifier-agent.md.
 - Synchronized timestamp for 6 drifted concept(s): data/dataset-split-and-golden-set.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/api-service.md, subsystems/retrieval-qa-agent.md, subsystems/verifier-agent.md.
 - Synchronized timestamp for 2 drifted concept(s): playbooks/delivery-plan-and-status.md, subsystems/extraction-agent.md.
@@ -88,3 +91,4 @@ Newest changes recorded chronologically.
 - 2026-11-25: Documented the review UI at `/ui` and the PHI-masked page route `GET /cases/{id}/pages/{n}.png` in `subsystems/api-service.md` (sources bound: ui assets, Playwright test).
 - 2026-11-26: Injection fuzzy matcher no longer joins tokens across `. ; :` clause boundaries; bare "new instructions" is clause-start only; `RetrievalIndex.add_case` honours config `injection.fuzzy_threshold` (rad-s2g.13). Documented in `subsystems/verifier-agent.md`.
 - 2026-11-26: Injection detector measured on dev (injection-3): 11 of 11 flagged, 0 false flags, CI gate changed_behaviour 0; results in `eval/results/injection_v2.json` (rad-s2g.6.2).
+- 2026-11-26: Public SDK `radintake.sdk.Pipeline` with typed `results.Result` (cli_output.v1 field for field), write-free default and `RadintakeConfig`; `config.config_from_raw` and `config.schema_path` split out of `load_config` (rad-s2g.9.1). New concept `subsystems/sdk-public-api.md`.

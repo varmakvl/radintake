@@ -124,6 +124,15 @@ class Config:
         return {k: v.id for k, v in self.models.items()}
 
 
+def schema_path(name: str) -> Path:
+    """Path of a bundled JSON schema (``schemas/<name>``).
+
+    The single place schemas are resolved from, so packaging can switch it to
+    ``importlib.resources`` without touching callers.
+    """
+    return REPO_ROOT / "schemas" / name
+
+
 def load_config(path: str | Path | None = None) -> Config:
     """Build the effective config. ``path`` is an optional user YAML (``--config``)."""
     cdir = config_dir()
@@ -134,7 +143,16 @@ def load_config(path: str | Path | None = None) -> Config:
         if not p.is_file():
             raise FileNotFoundError(f"config file not found: {p}")
         raw = _deep_merge(raw, _read_yaml(p))
+    return config_from_raw(raw)
 
+
+def config_from_raw(raw: dict[str, Any]) -> Config:
+    """Build a :class:`Config` from a merged config mapping (no YAML read).
+
+    ``raw`` is laid over ``DEFAULTS``; environment overrides apply exactly as in
+    :func:`load_config`.
+    """
+    raw = _deep_merge(DEFAULTS, raw or {})
     paths, runtime, b = raw["paths"], raw["runtime"], raw["budgets"]
     offline = env_flag("RADINTAKE_OFFLINE", bool(runtime.get("offline", False)))
     forbid = env_flag("RADINTAKE_FORBID_MODEL_CALLS", bool(runtime.get("forbid_model_calls", False)))

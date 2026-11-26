@@ -7,7 +7,7 @@ tags: [config, yaml, environment, offline, budgets, models]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-26T12:19:16.423Z
+  at: 2026-11-26T16:31:42.615Z
 sources:
   - src/radintake/config.py
   - configs/default.yaml
@@ -21,6 +21,11 @@ sources:
 
 `DEFAULTS` in `config.py` < `configs/default.yaml` + `configs/models.yaml` (repo root or
 `RADINTAKE_CONFIG_DIR`) < `--config` YAML < environment.
+
+`load_config()` merges the YAML layers and hands the mapping to `config_from_raw(raw)`, which
+lays it over `DEFAULTS` and applies the environment; code callers (the SDK's `RadintakeConfig`,
+[SDK Public API](/subsystems/sdk-public-api.md)) call `config_from_raw` directly with no YAML.
+JSON schemas are located only through `schema_path(name)`.
 
 # Environment switches
 

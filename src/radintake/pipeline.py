@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from radintake.config import REPO_ROOT, Config, load_config
+from radintake.config import Config, load_config, schema_path
 from radintake.logging import get_logger
 from radintake.orchestrator import stages as stage_registry
 from radintake.orchestrator.planner import Planner
@@ -40,7 +40,7 @@ def _schema_validator():
     if _validator is None:
         from jsonschema import Draft202012Validator
 
-        p = REPO_ROOT / "schemas" / "cli_output.v1.json"
+        p = schema_path("cli_output.v1.json")
         _validator = Draft202012Validator(json.loads(p.read_text(encoding="utf-8"))) if p.is_file() else False
     return _validator or None
 

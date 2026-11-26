@@ -41,6 +41,9 @@ reports and DICOM. Start with the [System Overview](/overview.md); the delivery 
 ## Playbooks
 - [Delivery Plan & Status](/playbooks/delivery-plan-and-status.md) — Priority order, bead map, what is done, what remains, open risks.
 
+## Concepts
+- [SDK Public API](/subsystems/sdk-public-api.md)
+
 ## Not yet specified
 - `.beads/.local_version` — Undocumented codebase file.
 - `.beads/backup/49fcgkkdagptrq9klehrihv9ke6qbllo.darc` — Undocumented codebase file.
@@ -108,3 +111,5 @@ reports and DICOM. Start with the [System Overview](/overview.md); the delivery 
 - `sprint-logs/sprint_123458.json` — Undocumented codebase file.
 - `.beads/backup/83tdq2g2j5p1m5fkk1ovatubmukie912.darc` — Undocumented codebase file.
 - `.beads/backup/21e0jicf3e1ciiep5u6eggcl6j7gq63m.darc` — Undocumented codebase file.
+- `.beads/backup/l7ljfc0co2q9mo96be7vd2bf13dqlcsj.darc` — Undocumented codebase file.
+- `.beads/backup/snkl55t6j3htg4noplkcumgi6q5voofj.darc` — Undocumented codebase file.
