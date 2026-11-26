@@ -24,6 +24,7 @@ from radintake.orchestrator import stages as stage_registry
 from radintake.orchestrator.planner import Planner
 from radintake.orchestrator.router import ROUTER_VERSION, route
 from radintake.orchestrator.stages import DOCUMENT_TYPES, StageContext
+from radintake.tools import ocr as ocr_tool
 from radintake.tracing.writer import CaseTrace, TraceWriter
 
 SCHEMA_VERSION = "cli_output.v1"
@@ -105,6 +106,7 @@ def process_file(path: str | Path, out_dir: str | Path, *, config: Config | None
     """Process one input file and (by default) write its JSON. Never raises for bad inputs."""
     path, out_dir = Path(path), Path(out_dir)
     cfg = config or load_config()
+    ocr_tool.set_engine(cfg.ocr_engine)
     name = input_name or path.name
     if trace_writer is None:
         trace_writer = TraceWriter(cfg.trace_dir or (out_dir / "_traces"), model_ids=cfg.model_ids,

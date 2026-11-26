@@ -11,6 +11,10 @@ models:
     id: tesseract-5
     kind: local
     version: "5.x (pytesseract>=0.3.10; CPU, OEM 1 LSTM, PSM 6, OMP_THREAD_LIMIT=1)"
+  ocr_paddle:             # used only when ocr.engine=paddle; then it is reported as models.ocr (config.py)
+    id: paddleocr-ppocrv4 # PaddleOCR PP-OCRv4 English pipeline, Apache-2.0; CPU; optional extra [paddle]
+    kind: local
+    version: "paddleocr 2.10 / paddlepaddle 3.0 (CPU; PP-OCRv4 en rec + en_PP-OCRv3 det, no angle cls)"
   vlm_page:               # VLM-first page reading + hybrid crop re-reads; only ever sent PHI-masked images.
     id: qwen2.5vl:3b      # Qwen2.5-VL-3B-Instruct, Q4_K_M via Ollama (~3.2 GB); Apache-2.0 family
     kind: local

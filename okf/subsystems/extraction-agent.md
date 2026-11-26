@@ -7,13 +7,16 @@ tags: [extraction, ocr, vlm, hybrid, provenance, report-schema, agent]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T13:16:35.410Z
+  at: 2026-11-26T12:19:16.423Z
 sources:
   - src/radintake/agents/extract.py
   - src/radintake/agents/extract_ocr.py
   - src/radintake/agents/extract_vlm.py
   - src/radintake/agents/extract_hybrid.py
   - src/radintake/tools/ocr.py
+  - src/radintake/tools/ocr_paddle.py
+  - requirements-paddle.lock
+  - tests/unit/test_ocr_engines.py
   - src/radintake/models/report.py
   - prompts/extraction_v1.md
   - prompts/crop_transcribe_v1.md
@@ -91,3 +94,14 @@ text layer, so it is exact.
 - Every field needs provenance with page >= 1 and a non-degenerate box in original coordinates.
 - `models/report.py` and `schemas/report.v1.json` must stay in step (unit-tested).
 - Expect the local VLM to be slow (tens of seconds per page on 4 GB); hybrid limits VLM calls to weak sections, so latency is part of the comparison.
+
+# OCR engine switch
+
+`radintake.tools.ocr.ocr()` dispatches on the active engine: `set_engine()` (pinned per case by
+`pipeline.process_file` from `Config.ocr_engine`) > `RADINTAKE_OCR_ENGINE` > `ocr.engine` > `tesseract`.
+`paddle` runs `tools/ocr_paddle.py` (PaddleOCR 2.10, PP-OCRv4 English rec + PP-OCRv3 det, CPU), which
+returns the same `OcrWord` contract: page-pixel boxes clamped to the image, `conf` 0..1 (line score),
+detected line boxes merged into rows by vertical-centre overlap (one `line_id` per row, `block = par = 1`),
+words split from each line with boxes proportional to character offsets. Without the optional extra it
+raises `OcrUnavailable` naming `[paddle]` / `requirements-paddle.lock` - no silent Tesseract fallback.
+`orientation()` stays Tesseract. Details: `docs/ocr-engine.md`; contract tests: `tests/unit/test_ocr_engines.py`.

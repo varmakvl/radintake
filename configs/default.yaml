@@ -1,7 +1,7 @@
 # radintake default configuration.
 # Precedence (lowest -> highest): this file < --config YAML < environment variables.
 # Environment overrides: RADINTAKE_OFFLINE, RADINTAKE_DATA_DIR, RADINTAKE_TRACE_DIR,
-# RADINTAKE_FORBID_MODEL_CALLS.
+# RADINTAKE_FORBID_MODEL_CALLS, RADINTAKE_OCR_ENGINE.
 
 seed: 140
 
@@ -27,6 +27,11 @@ loader:
     min_chars: 20         # fewer visible characters on a page -> OCR the raster
     min_font_pt: 4.0      # smaller text counts as hidden (dropped, flag hidden_text)
     mixed_ink_threshold: 0.2  # share of text ink outside the layer's words above this -> also OCR
+
+ocr:
+  engine: tesseract       # tesseract | paddle (RADINTAKE_OCR_ENGINE). paddle needs the optional extra:
+                          # pip install -e .[paddle] -r requirements-paddle.lock (docs/ocr-engine.md).
+                          # Missing extra -> OcrUnavailable naming it (no silent Tesseract fallback).
 
 logging:
   level: INFO

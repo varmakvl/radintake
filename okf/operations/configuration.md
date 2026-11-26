@@ -7,7 +7,7 @@ tags: [config, yaml, environment, offline, budgets, models]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-26T06:02:15.459Z
+  at: 2026-11-26T12:19:16.423Z
 sources:
   - src/radintake/config.py
   - configs/default.yaml
@@ -32,6 +32,8 @@ sources:
 | `RADINTAKE_TRACE_DIR` | trace output root |
 | `OLLAMA_HOST` | local Ollama server for the VLM and answer LLM (default `http://127.0.0.1:11434`; Compose uses `host.docker.internal`) |
 | `TESSERACT_CMD` | Tesseract binary when not on PATH |
+| `RADINTAKE_OCR_ENGINE` | `tesseract` (default) or `paddle`; overrides `ocr.engine` ([OCR engine switch](/subsystems/extraction-agent.md)) |
+| `RADINTAKE_PADDLE_MODEL_DIR` | folder with `det/` + `rec/` PaddleOCR inference models (else `~/.paddleocr` cache; never downloaded offline) |
 
 # Key settings (`configs/default.yaml`)
 
@@ -41,7 +43,10 @@ sources:
 ([PDF Text Layer & Table Reading](/subsystems/tables-and-text-layer.md));
 preprocess thresholds ([Preprocessing Agent](/subsystems/preprocessing-agent.md));
 `extraction.pipeline: ocr_first` plus VLM/hybrid knobs ([Extraction Agent](/subsystems/extraction-agent.md));
-verifier thresholds ([Verifier](/subsystems/verifier-agent.md)); `injection.extra_patterns`.
+verifier thresholds ([Verifier](/subsystems/verifier-agent.md)); `injection.extra_patterns`;
+`ocr.engine: tesseract` (`paddle` needs the optional `[paddle]` extra pinned in `requirements-paddle.lock`;
+the selected engine's registry entry - `models.ocr` or `models.ocr_paddle` - is exposed as `models.ocr`, so
+`model_ids["ocr"]` in every manifest names the engine that ran; unknown engine -> `ValueError`).
 Model registry: [Guarded Model Client](/subsystems/model-client-guard.md). Other files:
 `phi.yaml` (anchors/regex), `dicom_profile.yaml` (Basic Profile actions), `degrade_tiers.yaml`.
 

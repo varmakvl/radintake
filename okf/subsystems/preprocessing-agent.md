@@ -7,7 +7,7 @@ tags: [preprocessing, image-quality, orientation, deskew, dewarp, agent]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-26T06:02:15.459Z
+  at: 2026-11-26T12:19:16.423Z
 sources:
   - src/radintake/agents/preprocess.py
   - src/radintake/tools/image_ops.py

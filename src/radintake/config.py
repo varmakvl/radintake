@@ -6,7 +6,12 @@ Precedence (lowest -> highest):
 2. ``configs/default.yaml`` and ``configs/models.yaml`` (repo root, or ``RADINTAKE_CONFIG_DIR``),
 3. an optional user YAML (``--config``),
 4. environment variables ``RADINTAKE_OFFLINE``, ``RADINTAKE_DATA_DIR``, ``RADINTAKE_TRACE_DIR``,
-   ``RADINTAKE_FORBID_MODEL_CALLS``.
+   ``RADINTAKE_FORBID_MODEL_CALLS``, ``RADINTAKE_OCR_ENGINE``.
+
+OCR engine: ``ocr.engine`` (``tesseract`` | ``paddle``) selects the backend of
+``radintake.tools.ocr.ocr``. The registry entry of the selected engine becomes ``models.ocr``
+(``models.ocr_paddle`` holds the PaddleOCR id), so the manifest's ``model_ids["ocr"]`` always names
+the engine that actually ran.
 """
 
 from __future__ import annotations
@@ -33,11 +38,15 @@ DEFAULTS: dict[str, Any] = {
         "case_deadline_s": 900.0,
     },
     "loader": {"pdf_dpi": 200},
+    "ocr": {"engine": "tesseract"},
     "logging": {"level": "INFO"},
     "models": {},
 }
 
 _TRUE = {"1", "true", "yes", "on"}
+OCR_ENGINES = ("tesseract", "paddle")
+# Registry key holding each engine's model id; the selected one is exposed as models["ocr"].
+OCR_ENGINE_MODEL_KEYS = {"tesseract": "ocr", "paddle": "ocr_paddle"}
 
 
 def env_flag(name: str, default: bool = False) -> bool:
@@ -97,6 +106,7 @@ class Config:
     pdf_dpi: int
     seed: int
     log_level: str
+    ocr_engine: str = "tesseract"
     models: dict[str, ModelSpec] = field(default_factory=dict)
     raw: dict[str, Any] = field(default_factory=dict)
 
@@ -141,6 +151,15 @@ def load_config(path: str | Path | None = None) -> Config:
             raise ValueError(f"models.{name}.kind must be 'local' or 'api'")
         models[name] = ModelSpec(name=name, id=str(spec["id"]), kind=kind)
 
+    ocr_engine = (os.environ.get("RADINTAKE_OCR_ENGINE") or str((raw.get("ocr") or {}).get("engine")
+                                                                or "tesseract")).strip().lower()
+    if ocr_engine not in OCR_ENGINES:
+        raise ValueError(f"ocr.engine must be one of {', '.join(OCR_ENGINES)} (got {ocr_engine!r})")
+    engine_specs = {e: models.pop(k, None) for e, k in OCR_ENGINE_MODEL_KEYS.items()}
+    chosen = engine_specs.get(ocr_engine)
+    if chosen is not None:
+        models["ocr"] = ModelSpec(name="ocr", id=chosen.id, kind=chosen.kind)
+
     return Config(
         offline=offline,
         forbid_model_calls=forbid,
@@ -156,6 +175,7 @@ def load_config(path: str | Path | None = None) -> Config:
         pdf_dpi=int(raw["loader"]["pdf_dpi"]),
         seed=int(raw.get("seed", 140)),
         log_level=str(raw["logging"].get("level", "INFO")),
+        ocr_engine=ocr_engine,
         models=models,
         raw=raw,
     )

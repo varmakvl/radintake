@@ -3,6 +3,10 @@
 Newest changes recorded chronologically.
 
 ## 2026-11-26
+- Synchronized timestamp for 10 drifted concept(s): data/data-preparation.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/evaluation-harness.md, overview.md, playbooks/delivery-plan-and-status.md, subsystems/extraction-agent.md, subsystems/model-client-guard.md, subsystems/orchestrator.md, subsystems/preprocessing-agent.md.
+- Synchronized workspace frontier mapping in `index.md` (+4 new, -0 removed, 233 already listed; 237 undocumented files mapped).
+- OCR engine switch `ocr.engine` / `RADINTAKE_OCR_ENGINE` (tesseract default | paddle) with the optional PaddleOCR backend `src/radintake/tools/ocr_paddle.py` (extra `[paddle]`, pins in `requirements-paddle.lock`); `models.ocr_paddle` registry entry. Concepts `operations/configuration.md` and `subsystems/extraction-agent.md` updated; sources bound: `ocr_paddle.py`, `requirements-paddle.lock`, `tests/unit/test_ocr_engines.py`.
+- Synchronized timestamp for 1 drifted concept(s): playbooks/delivery-plan-and-status.md.
 - Synchronized timestamp for 1 drifted concept(s): playbooks/delivery-plan-and-status.md.
 - Synchronized timestamp for 1 drifted concept(s): playbooks/delivery-plan-and-status.md.
 - Phone-photo page-detection tests `tests/unit/test_page_detect.py` (synthetic low-contrast shadowed photos: line fallback fires, corners within 1% of diagonal, word-box round trip <= 1.5 px, identity on edge-less scans, 90/180 rotated photos upright); bound to `subsystems/preprocessing-agent.md`.

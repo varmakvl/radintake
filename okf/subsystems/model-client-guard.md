@@ -7,7 +7,7 @@ tags: [model-client, vlm, phi, offline, cache, cost, trust-boundary]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-26T06:02:15.459Z
+  at: 2026-11-26T12:19:16.423Z
 sources:
   - src/radintake/tools/model_client.py
   - src/radintake/tools/vlm_client.py

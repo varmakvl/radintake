@@ -7,7 +7,7 @@ tags: [orchestrator, router, planner, stages, budgets, retries, timeouts]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T17:01:04.519Z
+  at: 2026-11-26T12:19:16.423Z
 sources:
   - src/radintake/orchestrator/router.py
   - src/radintake/orchestrator/planner.py

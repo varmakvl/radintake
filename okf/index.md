@@ -102,3 +102,7 @@ reports and DICOM. Start with the [System Overview](/overview.md); the delivery 
 - `.beads/backup/qdht4i2i17pvr2cdpndcvf7s1jrpigdl.darc` — Undocumented codebase file.
 - `.fleet-task.md` — Undocumented codebase file.
 - `sprint-logs/sprint_162533.json` — Undocumented codebase file.
+- `.beads/backup/4ovvvdi18c0ttoeqqb9pl5o3lav6r4eh.darc` — Undocumented codebase file.
+- `.beads/backup/86g551it2mm59rctidvg9rdckov47d4o.darc` — Undocumented codebase file.
+- `.beads/backup/dr1hfjnvdptcrc4p5pvorkvie51s3e25.darc` — Undocumented codebase file.
+- `sprint-logs/sprint_123458.json` — Undocumented codebase file.

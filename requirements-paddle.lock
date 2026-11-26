@@ -1,0 +1,32 @@
+# Optional PaddleOCR engine (ocr.engine: paddle) - pins ON TOP OF requirements.lock.
+# Install:  pip install -r requirements.lock -r requirements-paddle.lock && pip install --no-deps -e .[paddle]
+# Never part of CI or the default Docker image (both stay Tesseract-only); requirements.lock is not edited.
+# Resolved with pip 24 on Windows / CPython 3.11 into a venv already holding requirements.lock
+# (pip freeze, minus every package requirements.lock already pins). See docs/ocr-engine.md.
+paddlepaddle==3.0.0
+paddleocr==2.10.0
+albucore==0.0.24
+albumentations==2.0.8
+astor==0.8.1
+beautifulsoup4==4.15.0
+cython==3.3.2
+decorator==5.3.2
+fire==0.7.1
+fonttools==4.69.1
+imageio==2.38.2
+lazy-loader==0.6
+lmdb==3.0.0
+networkx==3.6.1
+opencv-contrib-python==5.1.0.95
+opencv-python==5.1.0.95
+opt-einsum==3.3.0
+pyclipper==1.4.0
+python-docx==1.2.0
+scikit-image==0.26.0
+scipy==1.17.1
+shapely==2.2.0
+simsimd==6.5.16
+soupsieve==4.1.3
+stringzilla==5.3.2
+termcolor==3.3.0
+tifffile==2026.3.3

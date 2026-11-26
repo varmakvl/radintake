@@ -9,6 +9,12 @@ Coordinates: every box is in the pixel grid of the image passed in (``[x0, y0, x
 Map to original page coordinates with ``Page.to_original`` - this tool never rescales.
 
 ``orientation(img)`` returns the clockwise rotation (0/90/180/270) that makes the page upright.
+
+Engine switch: ``ocr()`` dispatches on the active engine - ``set_engine()`` (the pipeline calls it with
+``Config.ocr_engine``), else ``RADINTAKE_OCR_ENGINE``, else ``ocr.engine`` from the config files;
+default ``tesseract``. ``paddle`` runs the optional PaddleOCR backend (``radintake.tools.ocr_paddle``)
+with the same ``OcrWord`` contract and raises ``OcrUnavailable`` naming the extra when it is not
+installed. ``orientation()`` is always Tesseract.
 """
 
 from __future__ import annotations
@@ -33,10 +39,32 @@ os.environ.setdefault("OMP_THREAD_LIMIT", "1")  # determinism: single-threaded T
 
 _configured = False
 _version: str | None = None
+_engine_override: str | None = None
 
 
 class OcrUnavailable(RuntimeError):
-    """Tesseract binary not found."""
+    """The selected OCR engine cannot run (Tesseract binary or the PaddleOCR extra missing)."""
+
+
+def set_engine(name: str | None) -> None:
+    """Pin the OCR engine for this process (``None`` -> back to env/config resolution)."""
+    global _engine_override
+    if name is not None:
+        from radintake.config import OCR_ENGINES
+
+        name = name.strip().lower()
+        if name not in OCR_ENGINES:
+            raise ValueError(f"unknown OCR engine {name!r}; expected one of {', '.join(OCR_ENGINES)}")
+    _engine_override = name
+
+
+def active_engine() -> str:
+    """Engine ``ocr()`` will use: set_engine() > RADINTAKE_OCR_ENGINE > ocr.engine > tesseract."""
+    if _engine_override is not None:
+        return _engine_override
+    from radintake.config import load_config
+
+    return load_config().ocr_engine
 
 
 @dataclass(frozen=True)
@@ -115,6 +143,10 @@ def ocr(page_image: Any, *, lang: str = "eng", psm: int = 6, trace: Any = None) 
     """
     from PIL import Image
 
+    if active_engine() == "paddle":
+        from radintake.tools import ocr_paddle
+
+        return ocr_paddle.ocr(page_image, lang=lang, trace=trace)
     pt = _tess()
     t0 = time.perf_counter()
     arr = _prep(page_image)
