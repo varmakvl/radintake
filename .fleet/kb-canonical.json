@@ -3,7 +3,7 @@
   "provenance": {
     "commit": "76ff7ea5322f06bb59648d30e5152ced220d16c2",
     "branch": "main",
-    "entry_count": 10
+    "entry_count": 12
   },
   "entries": [
     {
@@ -127,6 +127,30 @@
       }
     },
     {
+      "id": "78d3e6b4-5117-437c-bfc6-9783d87562fd",
+      "type": "knowledge",
+      "title": "SDK Pipeline thread-safety is limited by the process-global OCR engine pin",
+      "summary": "Pipeline is documented as thread-safe, but every process() goes through pipeline.process_file, which calls tools.ocr.set_engine(cfg.ocr_engine), a process-global. Pipelines with different ocr engines in parallel threads can run each other's engine.",
+      "symbols": [
+        "Pipeline.process",
+        "process_file",
+        "set_engine",
+        "active_engine"
+      ],
+      "source_files": [
+        "src/radintake/sdk.py",
+        "src/radintake/pipeline.py",
+        "src/radintake/tools/ocr.py"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-27T05:52:04.183Z",
+      "source_file_hashes": {
+        "src/radintake/pipeline.py": "381f4db6132326e584c4e30ddf09eb3a6337d6d1",
+        "src/radintake/sdk.py": "f4b6dcb37ee1b000df3ace2ee6bb014940e58003",
+        "src/radintake/tools/ocr.py": "ee75755c0001a9dd98d382edafa4abed4c8d7c5d"
+      }
+    },
+    {
       "id": "8f970897-2a75-4182-9d72-72cf08f83d23",
       "type": "knowledge",
       "title": "OCR engine switch: ocr.engine, set_engine pin and models.ocr remap",
@@ -235,6 +259,27 @@
       "source_file_hashes": {
         "src/radintake/agents/phi.py": "8bbd89ad95eef361db4b1deb313c3f662ca1d247",
         "src/radintake/agents/phi_vault.py": "ee1f6cdcc4415ebce48fdbca74db16e182524f28"
+      }
+    },
+    {
+      "id": "cfe6e512-684e-4b02-9c30-0f156b9ffe0e",
+      "type": "knowledge",
+      "title": "TCIA DICOM GT text masks cover the whole curated fill band, not only glyph pixels",
+      "summary": "data/dicom_gt masks are the pixels where the evaluation file differs from its curated twin. For DICOM_001 and DICOM_021 that is the whole rectangle the curator filled (about 830x93 px), background included, so text-pixel recall rewards filling the whole text block rather than tight per-word boxes.",
+      "symbols": [
+        "score_dicom",
+        "_merge_blocks",
+        "_dicom_file_row"
+      ],
+      "source_files": [
+        "src/radintake/eval/metrics.py",
+        "src/radintake/agents/dicom_deid.py"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-27T05:52:04.080Z",
+      "source_file_hashes": {
+        "src/radintake/agents/dicom_deid.py": "1eaa6007918b031abb0ae71f2fc7ff3607488efc",
+        "src/radintake/eval/metrics.py": "c4d0db80f7ca2561c6143bd6102434c6d30356b5"
       }
     }
   ]
