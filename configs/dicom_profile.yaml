@@ -128,10 +128,30 @@ deidentification_method: "radintake dicom_deid: PS3.15 Basic Application Confide
 burned_in:
   pad_px: 4               # grow each text box by this many pixels (must stay <= 15)
   threshold: 0.9          # burned-in text candidates: display intensity >= threshold * max
-  min_conf: 0.3           # OCR word confidence (0..1) needed to accept a text region
+  min_conf: 0.3           # OCR word confidence (0..1) for a word to count in the keep-list check
   ocr_scale: 2            # upscale factor for OCR on the binarised text mask
+  # Candidates (independent of OCR word boxes): bright pixels a white top-hat keeps (thin strokes, not
+  # broad bright anatomy), split into character-sized components and grouped into text lines.
+  tophat_px: 21           # top-hat kernel (px); strokes thinner than this survive
+  tophat_min: 0.35        # top-hat response needed, x max display value
+  min_char_px: 6          # glyph height range: min_char_px .. max(40, max_char_frac * rows)
+  max_char_frac: 0.05
+  # A line must sit on a flat field: ring dark (< bg_max x max for >= bg_clean of it), or flat
+  # (10-90 percentile spread <= flat_range x max) and >= min_contrast x max darker than the text.
+  bg_max: 0.5
+  bg_clean: 0.75
+  flat_range: 0.25
+  min_contrast: 0.3
+  # Verification: a word of >= 2 characters at verify_conf (full-frame OCR or line-crop OCR), or for
+  # 1-3 glyph tokens ([M], L, R) a stroke/aspect check plus one character read at short_conf.
+  verify_conf: 0.6
+  short_conf: 0.5
+  max_line_ocr: 60        # line-crop OCR calls per frame
+  merge_lines: true       # redacted lines of one text block are filled as one box
+  merge_gap: 0.8          # ... when the vertical gap is <= merge_gap x line height
   # Text kept on the image: standard radiographic markers carry no identity (TCIA's curated set keeps
-  # them too). A burned-in text line is redacted unless every confident word on it is in this list.
+  # them too). A verified text line is redacted unless every confident word on it is in this list.
   safe_text: [L, R, LT, RT, LEFT, RIGHT, PA, AP, LAT, LATERAL, OBL, OBLIQUE, PORTABLE, UPRIGHT, SEMI-UPRIGHT,
               SUPINE, ERECT, PRONE, DECUBITUS, STANDING, SITTING, INSP, EXP, INSPIRATION, EXPIRATION,
-              CC, MLO, ML, LM, XCCL, SPOT, MAG, AXIAL, SAG, COR, CORONAL, SAGITTAL]
+              CC, MLO, ML, LM, XCCL, SPOT, MAG, AXIAL, SAG, COR, CORONAL, SAGITTAL,
+              LCC, RCC, LMLO, RMLO, LML, RML, LXCCL, RXCCL]

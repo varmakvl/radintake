@@ -2,7 +2,7 @@
  "configs": {
   "default.yaml": "3d9227595307af53c38b967b9280eb9c0bc84d0f7f1f8928aae02ca2af409036",
   "degrade_tiers.yaml": "c77d1c5791fecad0e32f51ddb3be331d56a2b5858da666d124d646eb926dfac1",
-  "dicom_profile.yaml": "17391f6492c82a30e584d5169237e6449c84c393a8b40d3809887c96f081f953",
+  "dicom_profile.yaml": "257fc090c8301857e15232bfeb07141df3e1e8f81f6a038b384ad26faddd3b5c",
   "models.yaml": "5c8a996c6efcdbf026a03f53841be57660cc841993ebaadf25659a83b5244d52",
   "phi.yaml": "5dbd92123b021ae496f8128b69b86c8c3004d17ed16808ce51d9c18820e19fc7"
  },

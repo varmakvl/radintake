@@ -228,3 +228,40 @@ def test_stage_output_and_traces_carry_no_phi(tmp_path, monkeypatch):
     blob = json.dumps(out) + "".join(p.read_text() for p in (tmp_path / "_traces").rglob("*.jsonl"))
     for v in ("Doe^Jane", "PID-0042", "ACC-99887766", "Northgate General Hospital"):
         assert v not in blob, v
+
+
+# --------------------------------------------------------------------------- text candidates (rad-s2g.5.1)
+def _glyph_frame(text: str, org=(40, 60), scale=1.2, size=(120, 320)) -> np.ndarray:
+    import cv2
+
+    img = np.full(size, 20, np.uint8)
+    cv2.putText(img, text, org, cv2.FONT_HERSHEY_SIMPLEX, scale, 255, 2, cv2.LINE_8)
+    return img
+
+
+def test_keep_list_lives_in_profile():
+    safe = {s.upper() for s in dd.load_profile()["burned_in"]["safe_text"]}
+    assert {"PORTABLE", "SEMI-UPRIGHT", "L", "R"} <= safe
+
+
+def test_short_token_found_by_candidates_without_ocr_word_boxes():
+    """Full-frame OCR sees nothing; the top-hat candidate plus a 1-glyph crop read is enough."""
+    img = _glyph_frame("M")
+
+    def ocr_fn(im, *, psm, **kw):
+        return [] if psm == 11 else [OcrWord("M", BBox(0, 0, 10, 10), 0.9, 1, 1, 1, 1)]
+
+    boxes = dd.find_text_boxes(img, dd.load_profile()["burned_in"], ocr_fn=ocr_fn)
+    ys, xs = np.nonzero(img == 255)
+    assert len(boxes) == 1
+    b = boxes[0]
+    assert b.x0 <= xs.min() and b.y0 <= ys.min() and b.x1 >= xs.max() + 1 and b.y1 >= ys.max() + 1
+
+
+def test_safe_marker_line_not_redacted():
+    img = _glyph_frame("L")
+
+    def ocr_fn(im, *, psm, **kw):
+        return [] if psm == 11 else [OcrWord("L", BBox(0, 0, 10, 10), 0.95, 1, 1, 1, 1)]
+
+    assert dd.find_text_boxes(img, dd.load_profile()["burned_in"], ocr_fn=ocr_fn) == []
