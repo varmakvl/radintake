@@ -3,7 +3,7 @@
   "provenance": {
     "commit": "76ff7ea5322f06bb59648d30e5152ced220d16c2",
     "branch": "main",
-    "entry_count": 12
+    "entry_count": 13
   },
   "entries": [
     {
@@ -27,6 +27,24 @@
         "src/radintake/orchestrator/planner.py": "fe318d8dd4b2054c1ebbd62d0e0c2e39e240bb2c",
         "src/radintake/orchestrator/stages.py": "186b1b6ab156b1c85c49807eed7b0c9be01a4819",
         "src/radintake/pipeline.py": "3718409166cdec80ad9e98e9cd636ec99e6063e0"
+      }
+    },
+    {
+      "id": "309ac5d5-1908-486f-b70c-d84f93ce4593",
+      "type": "learning",
+      "title": "transformers starts a hub lookup despite local_files_only when only .bin weights are cached",
+      "summary": "Loading a model whose cache holds only pytorch_model.bin makes transformers 5 start a background safetensors auto-conversion lookup (model_info on huggingface.co) even with local_files_only=True. HF_HUB_OFFLINE set in os.environ after huggingface_hub was imported has no effect.",
+      "symbols": [
+        "_load",
+        "HandwritingReader"
+      ],
+      "source_files": [
+        "src/radintake/tools/handwriting.py"
+      ],
+      "confidence": "CONFIRMED",
+      "updated_at": "2026-11-27T11:27:01.513Z",
+      "source_file_hashes": {
+        "src/radintake/tools/handwriting.py": "02c00972964a49969d5989de447cc90d0bcbba12"
       }
     },
     {
