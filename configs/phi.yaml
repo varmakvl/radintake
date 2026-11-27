@@ -66,6 +66,7 @@ handwriting:
   low_conf: 0.6                    # a sign-off-zone line with a word below this is read
   zone_frac: 0.3                   # sign-off zone when no anchor is found: bottom fraction of the page
   max_crops_per_page: 8
+  max_low_conf_crops_per_page: 2    # dev: low-confidence crops added 0 of 14 detections but ~0.9 s/page
   crop_pad: 0.25                   # crop padding, fraction of the crop height
   word_overlap: 0.4                # a name span must cover this fraction of an OCR word's width
-  max_new_tokens: 32
+  max_new_tokens: 20               # a sign-off is ~10 tokens; caps the cost of illegible crops

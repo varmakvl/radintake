@@ -220,6 +220,28 @@ finds more PHI, but loses exact match everywhere (it drops the space after label
 `No.ACC-…`, which the OCR-first label parser keeps in the value) and is about 1.8× slower. Details:
 [`docs/ocr-engine.md`](docs/ocr-engine.md).
 
+### Handwritten sign-off PHI: local handwriting reader (dev evidence)
+
+Handwritten technologist names were the most-missed PHI. After the masking rules run, the PHI agent
+cuts small crops next to credential anchors (`RT`, `MD` ...) and from low-confidence lines in the
+sign-off zone, reads them with TrOCR-small-handwritten (MIT, local only, CPU) and masks the names it
+finds, in original page coordinates. Optional extra `[handwriting]` (not in `requirements.lock`); the
+weights must already be cached. Without them the stage records a skip and the output is unchanged,
+which is what CI does. Same 60 dev documents (20 per tier), offline
+([`eval/results/handwriting_phi.json`](eval/results/handwriting_phi.json)):
+
+| Dev, 60 documents | Reader off | Reader on |
+|---|---|---|
+| Technologist PHI recall | 58.3% | **78.3%** (clean 90%, poor 75%, photo 70%) |
+| Radiologist PHI recall | 85.0% | 86.7% |
+| Document PHI recall / precision | 88.9% / 77.5% | 91.7% / 77.9% |
+| Latency p50 / p95 per page | 3.4 s / 4.5 s | 3.9 s / 5.9 s |
+| GPU peak | idle | idle (CPU reader) |
+
+All 14 added detections came from crops next to a credential, so most of the gain comes from that
+crop rule; the reader confirms that the crop holds writing. Design and the guard decision for a local
+model reading PHI crops: [`okf/subsystems/phi-agent.md`](okf/subsystems/phi-agent.md).
+
 ### PDF text layer and tables (added after the golden run; dev and synthetic evidence)
 
 Digital PDFs are now read from their own text layer instead of OCR on a raster. Invisible text

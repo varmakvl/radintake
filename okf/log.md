@@ -4,6 +4,7 @@ Newest changes recorded chronologically.
 
 
 ## 2026-11-27
+- Synchronized timestamp for 5 drifted concept(s): operations/configuration.md, operations/deployment.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/phi-agent.md.
 - Synchronized timestamp for 7 drifted concept(s): data/data-preparation.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/model-client-guard.md, subsystems/phi-agent.md.
 - Synchronized workspace frontier mapping in `index.md` (+1 new, -0 removed, 250 already listed; 251 undocumented files mapped).
 - Synchronized timestamp for 7 drifted concept(s): data/data-preparation.md, operations/ci-and-test-strategy.md, operations/configuration.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/model-client-guard.md, subsystems/phi-agent.md.
@@ -112,3 +113,4 @@ Newest changes recorded chronologically.
 - 2026-11-27: DICOM burned-in v2 (`dicom-deid-2`): top-hat text-line candidates, flat-field gate, OCR / short-token verification, profile keep list; 48 TCIA files text-pixel recall 0.614 -> 0.927, precision 0.544 -> 0.825; `metrics.json` `dicom.per_file` rows; results in `eval/results/dicom_redaction_v2.json` (rad-s2g.5.1, rad-s2g.5.2).
 - 2026-11-27: Synthetic burned-in DICOM tests (`tests/unit/test_dicom_deid.py`): name and isolated `[M]` removed, PORTABLE kept, outside pixels identical, valid re-read, header per profile, per-file metric rows; the `[M]` test fails with the dicom-deid-1 detector (rad-s2g.5.3).
 - 2026-11-27: PHI layer 4 - local handwriting reader (`tools/handwriting.py`, `models.hw_reader` TrOCR-small-handwritten) on crops next to credential anchors / sign-off labels and low-confidence sign-off-zone lines, after the masking rules; guard decision: PHI crops only to `kind: local` readers via `PhiCrop`; skips with a recorded reason when transformers / torch / weights are absent (rad-s2g.4.1).
+- 2026-11-27: Handwriting PHI reader measured on dev (60 ids, 20 per tier, CPU): technologist recall 0.583 -> 0.783, PHI precision 0.775 -> 0.779, p50 / p95 per page +0.56 s / +1.46 s; credential-anchor crops get dash / credential context and mask the credential with the name; at most 2 low-confidence crops per page; results in `eval/results/handwriting_phi.json`, `attempts.md`, README (rad-s2g.4.2).

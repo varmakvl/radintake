@@ -7,7 +7,7 @@ tags: [phi, privacy, masking, de-identification, agent, trust-boundary]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-27T10:39:55.720Z
+  at: 2026-11-27T11:12:25.321Z
 sources:
   - src/radintake/agents/phi.py
   - src/radintake/agents/phi_vault.py
@@ -15,6 +15,7 @@ sources:
   - tests/unit/test_phi_docs.py
   - src/radintake/tools/handwriting.py
   - configs/models.yaml
+  - eval/results/handwriting_phi.json
 ---
 
 # Role
@@ -41,21 +42,32 @@ the [Guarded Model Client](/subsystems/model-client-guard.md) refuses every othe
    2026-11-27) - runs AFTER layers 1-3, inside `mask_page`, on the processed page with every rule
    detection already filled. `select_handwriting_crops` picks only (a) credential anchors: the
    unmasked words left of an `RT` / `MD` / ... token back to a separator (dash, `=`, `by`) or a
-   sentence end, at most `max_name_words`, continuing onto the previous line when the name wrapped;
-   plus the unmasked value right of a sign-off label (`Technologist`, `Signed by` ...) when the line
-   has no credential; and (b) lines in the sign-off zone (from the first anchor line down, else the
-   bottom `zone_frac` of the page) with a word below `low_conf`. Each segment is read by the local
-   handwriting model (`models.hw_reader`, TrOCR-small-handwritten) through the guarded reader (see
-   the guard decision in [Guarded Model Client](/subsystems/model-client-guard.md)); the text (with
-   `— ` prefixed when a dash preceded the name) goes back through `PhiDetector`, and each name span
-   is mapped proportionally onto the segment box and snapped to its OCR words, which are masked
-   (one `PERSON` detection per crop, source `handwriting`, bbox in original coordinates).
+   sentence end, at most `max_name_words`, continuing onto the previous line when the name wrapped
+   (trailing separators on that line are skipped); plus the unmasked value right of a sign-off label
+   (`Technologist:`, `Signed by` ...) when the line has no credential; and (b) lines in the sign-off
+   zone (from the first anchor line down, else the bottom `zone_frac` of the page) with a word below
+   `low_conf`, at most `max_low_conf_crops_per_page` (2). The segments of a crop are stitched into one
+   line image and read once by the local handwriting model (`models.hw_reader`,
+   TrOCR-small-handwritten, greyscale input) through the guarded reader (see the guard decision in
+   [Guarded Model Client](/subsystems/model-client-guard.md)). For a credential-anchor crop the read
+   text gets the page structure as context - `— ` before it and the credential OCR saw after it
+   (TrOCR reads `RT` as "It") - and goes back through `PhiDetector`; each name span is mapped
+   proportionally onto the stitched image, then onto the segment boxes, and snapped to their OCR
+   words, which are masked together with the credential (the sign-off "Name, RT" is one detection:
+   `PERSON`, source `handwriting`, bbox in original coordinates).
    `enabled: auto`: used only when `transformers` + `torch` are installed (extra `[handwriting]`,
    not in `requirements.lock`) AND the weights are cached; otherwise a `phi_handwriting` trace event
    records `status: skipped` and the reason (`transformers_missing`, `torch_missing`,
    `weights_not_cached`, `model_calls_forbidden`, `disabled`) and the output is unchanged. A reader
    error mid-case also only records a skip. Per-page `phi_handwriting` events carry crop / read /
-   detection counts, `read_ms` and the model id - never recognised text.
+   detection counts (per crop source), `read_ms` and the model id - never recognised text.
+   Dev (2026-11-27, 60 ids, 20 per tier, CPU reader; `eval/results/handwriting_phi.json`): technologist
+   recall 0.583 -> 0.783, radiologist 0.850 -> 0.867, document PHI recall 0.889 -> 0.917, precision
+   0.775 -> 0.779; latency p50 / p95 per page +0.56 s / +1.46 s; GPU unchanged. All 14 added detections
+   came from credential-anchor crops (low-confidence crops added none), so the gain is mostly the crop
+   rule; the reader confirms the crop holds writing. Remaining technologist misses: sign-offs OCR never
+   segmented next to a credential (rotated / photographed pages) and printed sign-offs the rules found
+   whose box leaves out `, RT` (a layer-3 matter).
 Uncertain spans raise `phi_uncertain` (case -> review).
 
 Words come from the `tables` stage cache when present (PDF text layer, or OCR with re-read table cells),

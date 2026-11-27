@@ -73,7 +73,8 @@ _HW_DEFAULTS: dict[str, Any] = {
     "labels": r"\b(?:technologist|tech|signature|sign-?off)\s*:|\b(?:signed|read|performed|dictated)\s+by\b",
     "separators": r"^(?:[—–~=_|:\-]+|by)$",
     "max_name_words": 4, "low_conf": 0.6, "zone_frac": 0.3, "max_crops_per_page": 8,
-    "crop_pad": 0.25, "word_overlap": 0.4, "max_new_tokens": 32,
+    "max_low_conf_crops_per_page": 2,
+    "crop_pad": 0.25, "word_overlap": 0.4, "max_new_tokens": 20,
 }
 
 
@@ -365,7 +366,8 @@ class HwCrop:
 
     reason: str  # "anchor" (next to a credential / sign-off label) | "low_conf" (sign-off zone line)
     segments: list[tuple[int, list[int]]]  # (line index into the LineHits, word indexes left -> right)
-    prefix: str = ""  # page context put before the read text: "— " after a dash, the label text
+    prefix: str = ""  # page context put before the read text: "— " for a credential anchor, the label
+    suffix: str = ""  # page context put after it: ", RT" - the credential OCR saw, when the read lacks it
 
     def word_ids(self) -> list[int]:
         return [i for _, ids in self.segments for i in ids]
@@ -407,7 +409,7 @@ def select_handwriting_crops(words: Sequence[Any], hits: Sequence[LineHit], hp: 
             if first_signoff is None:
                 first_signoff = li
             segs: list[tuple[int, list[int]]] = []
-            prefix, n = "", 0
+            n = 0
             cur_line, j, cur = li, k - 1, [i]
             while n < max_w:
                 if j < 0:  # reached the line start: the name may have wrapped from the previous line
@@ -418,8 +420,10 @@ def select_handwriting_crops(words: Sequence[Any], hits: Sequence[LineHit], hp: 
                     j = len(order[cur_line]) - 1
                     continue
                 wi = order[cur_line][j]
+                if cur_line != li and not cur and wi not in masked and sep.match(words[wi].text.strip()):
+                    j -= 1  # OCR junk / a dash at the end of the line the name wrapped from ("Johnson, =")
+                    continue
                 if stop(wi):
-                    prefix = "— " if sep.match(words[wi].text.strip()) else ""
                     break
                 cur.insert(0, wi)
                 n += 1
@@ -429,9 +433,10 @@ def select_handwriting_crops(words: Sequence[Any], hits: Sequence[LineHit], hp: 
             name_ids = [w for _, s in segs for w in s if w != i]
             if not name_ids or any(w in used for w in name_ids):
                 continue
-            if re.match(r"^[—–~=_\-]", words[name_ids[0]].text.strip()):  # dash glued to the name ("__S.")
-                prefix = "— "
-            crops.append(HwCrop("anchor", segs, prefix=prefix))
+            # The name sits between a boundary (dash, sentence end, "by") and the credential, so the
+            # credential-anchored rule gets that structure as context: a dash before the read text
+            # and the credential OCR saw after it (TrOCR often reads "RT" as "It").
+            crops.append(HwCrop("anchor", segs, prefix="— ", suffix=", " + words[i].text.strip().rstrip(",.;:")))
             used.update(name_ids)
         if first_signoff is None and label.search(hits[li].text):
             first_signoff = li
@@ -460,7 +465,10 @@ def select_handwriting_crops(words: Sequence[Any], hits: Sequence[LineHit], hp: 
     else:
         zone = list(range(first_signoff, len(order)))
     low = float(hp["low_conf"])
-    for li in zone:  # low-confidence lines inside the sign-off zone
+    n_low = 0
+    for li in zone:  # low-confidence lines inside the sign-off zone, nearest the anchor first
+        if n_low >= int(hp["max_low_conf_crops_per_page"]):
+            break
         ids = order[li]
         lowk = [k for k, i in enumerate(ids) if _conf(words[i]) < low and i not in masked and i not in used]
         if not lowk:
@@ -470,6 +478,7 @@ def select_handwriting_crops(words: Sequence[Any], hits: Sequence[LineHit], hp: 
         if seg:
             crops.append(HwCrop("low_conf", [(li, seg)]))
             used.update(seg)
+            n_low += 1
     return crops[: int(hp["max_crops_per_page"])]
 
 
@@ -532,7 +541,10 @@ def handwriting_spans(crop: HwCrop, text: str, extents: Sequence[tuple[float, fl
     cred = re.compile(hp["credentials"])
     sep = re.compile(hp["separators"], re.IGNORECASE)
     pre = crop.prefix
-    spans = [s for s in detector.detect(pre + text) if s.type in _NAME_TYPES and s.end > len(pre)]
+    # the credential OCR saw is appended only when the read text does not already end the name with one
+    suf = crop.suffix if crop.suffix and not re.search(r"\b" + re.escape(crop.suffix.strip(", ")) + r"\b", text) else ""
+    spans = [s for s in detector.detect(pre + text + suf)
+             if s.type in _NAME_TYPES and s.end > len(pre) and s.start < len(pre) + len(text)]
     picked: dict[int, set[int]] = {}
     for s in spans:
         fa = max(0, s.start - len(pre)) / len(text)
@@ -552,6 +564,13 @@ def handwriting_spans(crop: HwCrop, text: str, extents: Sequence[tuple[float, fl
                 sel = {max(ov, key=ov.get)}
             if sel:
                 picked.setdefault(li, set()).update(sel)
+    if picked and crop.reason == "anchor":
+        # the credential belongs to the sign-off ("L. Brooks, RT"): mask it with the name so the
+        # detection covers the whole sign-off, also when it wrapped onto the next line
+        for li, ids in crop.segments:
+            creds = {i for i in ids if cred.match(words[i].text.strip())}
+            if creds:
+                picked.setdefault(li, set()).update(creds)
     out: list[tuple[int, Span]] = []
     for li, sel in sorted(picked.items()):
         run: list[tuple[int, int]] = []  # one span per contiguous run of picked words on the line
@@ -575,7 +594,7 @@ class HandwritingPass:
         self.skip_reason = skip_reason or (None if reader is not None else "disabled")
         self.trace = trace
         self.stats = {"n_crops": 0, "n_anchor_crops": 0, "n_low_conf_crops": 0, "n_reads": 0,
-                      "n_detections": 0, "read_ms": 0.0}
+                      "n_detections": 0, "n_anchor_detections": 0, "n_low_conf_detections": 0, "read_ms": 0.0}
 
     @property
     def active(self) -> bool:
@@ -617,6 +636,7 @@ class HandwritingPass:
             spans = handwriting_spans(c, text, extents, words, hits, detector, self.hp)
             if spans:
                 out.append((c, spans))
+                self.stats["n_anchor_detections" if c.reason == "anchor" else "n_low_conf_detections"] += 1
         return out
 
 
