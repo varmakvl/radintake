@@ -7,7 +7,7 @@ tags: [phi, privacy, masking, de-identification, agent, trust-boundary]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-27T11:12:25.321Z
+  at: 2026-11-27T11:17:23.654Z
 sources:
   - src/radintake/agents/phi.py
   - src/radintake/agents/phi_vault.py
@@ -16,6 +16,7 @@ sources:
   - src/radintake/tools/handwriting.py
   - configs/models.yaml
   - eval/results/handwriting_phi.json
+  - tests/unit/test_handwriting_phi.py
 ---
 
 # Role
@@ -87,6 +88,9 @@ so digital PDFs are masked on exact word boxes: [PDF Text Layer & Table Reading]
 - No external call may happen before this stage; keep stage order `phi` < `extract`.
 - The handwriting reader must stay `kind: local`, only ever receives `PhiCrop`s cut after the rules
   ran, and must never download weights; it never fails the stage.
+- `tests/unit/test_handwriting_phi.py` (stub reader, no weights): crops only from anchor neighbourhoods and
+  low-confidence sign-off lines, rules run before any read, sign-off masked in original coordinates,
+  missing transformers / torch / weights -> recorded skip with byte-identical output, no read text in traces.
 - Never construct `MaskedPayload(phi_masked=True)` outside this module.
 - Every value entering the vault must be registered with `register_phi`.
 - Integration tests assert header regions are near-uniform after masking and that no synthetic PHI string appears in stdout, stderr or any file under `_traces`.

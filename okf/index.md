@@ -122,3 +122,4 @@ reports and DICOM. Start with the [System Overview](/overview.md); the delivery 
 - `.beads/backup/uirthlke0qtad8stqd4ld1eadivrco72.darc` — Undocumented codebase file.
 - `.beads/backup/urnkaimlm5gr40tellto5t02dp4lol2s.darc` — Undocumented codebase file.
 - `.beads/backup/8n4taf2cjqj0r5059kl0jc73u5ipnhqa.darc` — Undocumented codebase file.
+- `.beads/backup/5ade8ub51d69cacvf8m2c591tc473pmp.darc` — Undocumented codebase file.
