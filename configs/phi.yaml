@@ -48,3 +48,24 @@ honorifics: ['dr', 'doctor', 'prof', 'professor', 'mr', 'mrs', 'ms', 'miss', 'mx
 mask:
   pad_px: 6               # boxes are grown by this many pixels before filling (original coords)
   fill: background        # "background" (page 95th percentile grey) or an integer 0..255
+
+# Layer 4 - handwritten sign-offs (agents/phi.py HandwritingPass, tools/handwriting.py).
+# Runs AFTER layers 1-3 on the page with their detections already filled; reads only crops
+# (a) next to a credential anchor (RT, MD ... / a sign-off label) and (b) of low-confidence lines in
+# the sign-off zone, with a LOCAL handwriting model (models.hw_reader). Recognised text goes back
+# through layers 1-3; names found are masked on the OCR words of the crop (original coords).
+# enabled: auto -> used only when transformers + torch are installed AND the weights are already
+# cached; otherwise the stage records a skip reason and the output is unchanged (CI path).
+handwriting:
+  enabled: auto
+  model: hw_reader                 # registry name in configs/models.yaml (must be kind: local)
+  credentials: '^(?:RT|R\.T\.|RT\(R\)|RRT|ARRT|MD|M\.D\.|DO|RN|NP|PA-C)[,.;:]?$'   # one OCR token, case-sensitive
+  labels: '\b(?:technologist|tech|signature|sign-?off)\s*:|\b(?:signed|read|performed|dictated)\s+by\b'
+  separators: '^(?:[—–~=_|:\-]+|by)$'   # left boundary of a name before a credential
+  max_name_words: 4                # OCR words taken left of a credential (wrapping onto the previous line)
+  low_conf: 0.6                    # a sign-off-zone line with a word below this is read
+  zone_frac: 0.3                   # sign-off zone when no anchor is found: bottom fraction of the page
+  max_crops_per_page: 8
+  crop_pad: 0.25                   # crop padding, fraction of the crop height
+  word_overlap: 0.4                # a name span must cover this fraction of an OCR word's width
+  max_new_tokens: 32

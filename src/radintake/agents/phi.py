@@ -46,23 +46,34 @@ import numpy as np
 import yaml
 
 from radintake.agents.phi_vault import PhiVault
-from radintake.config import config_dir
+from radintake.config import config_dir, env_flag
 from radintake.core.types import BBox, Page
 from radintake.orchestrator.stages import DOCUMENT_TYPES, StageContext, register_stage
-from radintake.tools.model_client import MaskedPayload
+from radintake.tools.model_client import MaskedPayload, ModelCallForbidden
 
 PHI_VERSION = "phi-docs-1"
 HEADER_TYPES = ("PATIENT_NAME", "PATIENT_ID", "DATE_OF_BIRTH", "ACCESSION_NUMBER")
 _NAME_ANCHORS = ("PATIENT_NAME", "REFERRING_PHYSICIAN")
 
 # Overlapping spans keep the type of the most specific layer.
-_PRIORITY = {"anchor": 3, "known": 2, "regex": 1, "ner": 1}
+_PRIORITY = {"anchor": 3, "known": 2, "regex": 1, "ner": 1, "handwriting": 1}
 _TYPE_RANK = {t: 10 for t in HEADER_TYPES} | {"PERSON": 5, "DATE": 4, "ID": 3}
 
 _BUILTIN: dict[str, Any] = {
     "anchors": [], "regex": [], "ner": "fallback",
     "honorifics": ["dr", "doctor", "prof", "professor", "mr", "mrs", "ms", "miss", "mx"],
     "mask": {"pad_px": 6, "fill": "background"},
+    "handwriting": {"enabled": False},
+}
+
+# handwriting pass defaults (configs/phi.yaml `handwriting:` overrides them key by key)
+_HW_DEFAULTS: dict[str, Any] = {
+    "enabled": "auto", "model": "hw_reader",
+    "credentials": r"^(?:RT|R\.T\.|RT\(R\)|RRT|ARRT|MD|M\.D\.|DO|RN|NP|PA-C)[,.;:]?$",
+    "labels": r"\b(?:technologist|tech|signature|sign-?off)\s*:|\b(?:signed|read|performed|dictated)\s+by\b",
+    "separators": r"^(?:[—–~=_|:\-]+|by)$",
+    "max_name_words": 4, "low_conf": 0.6, "zone_frac": 0.3, "max_crops_per_page": 8,
+    "crop_pad": 0.25, "word_overlap": 0.4, "max_new_tokens": 32,
 }
 
 
@@ -83,6 +94,11 @@ def load_params(cfg: Any = None) -> dict[str, Any]:
     for k, v in user.items():
         out[k] = {**out.get(k, {}), **v} if isinstance(v, dict) and isinstance(out.get(k), dict) else v
     return out
+
+
+def handwriting_params(params: dict[str, Any]) -> dict[str, Any]:
+    hw = params.get("handwriting")
+    return {**_HW_DEFAULTS, **(hw if isinstance(hw, dict) else {})}
 
 
 # --------------------------------------------------------------------------- spans
@@ -334,27 +350,346 @@ def detect_words(words: Sequence[Any], detector: PhiDetector,
     return hits
 
 
+# --------------------------------------------------------------------------- handwriting pass
+def _conf(w: Any) -> float:
+    return float(getattr(w, "conf", getattr(w, "confidence", 1.0)))
+
+
+@dataclass
+class HwCrop:
+    """A region the handwriting reader reads: one or two line segments (a wrapped sign-off).
+
+    Segments are stitched side by side into ONE line image and read once, so a name that wrapped
+    ("S. Shep" / "herd, RT") is read as one line.
+    """
+
+    reason: str  # "anchor" (next to a credential / sign-off label) | "low_conf" (sign-off zone line)
+    segments: list[tuple[int, list[int]]]  # (line index into the LineHits, word indexes left -> right)
+    prefix: str = ""  # page context put before the read text: "— " after a dash, the label text
+
+    def word_ids(self) -> list[int]:
+        return [i for _, ids in self.segments for i in ids]
+
+
+def select_handwriting_crops(words: Sequence[Any], hits: Sequence[LineHit], hp: dict[str, Any],
+                             page_h: float) -> list[HwCrop]:
+    """Crops for the handwriting reader, chosen AFTER the masking rules ran (``hits[*].spans``).
+
+    Only two sources: (1) anchors - a credential token (``RT``, ``MD`` ...): the unmasked words
+    between it and the previous separator (dash, ``=``, ``by``) or sentence end, at most
+    ``max_name_words``, continuing onto the previous line when the name wrapped (the credential is
+    kept in the crop so the detector's credential rules can fire); a sign-off label
+    (``Technologist:``, ``Signed by`` ...) on a line without a credential: the unmasked words to its
+    right, unless a rule already masked the first of them. (2) Low-confidence lines in the sign-off
+    zone (from the first anchor line down, else the bottom ``zone_frac`` of the page): the run of
+    words below ``low_conf`` plus one neighbour each side. Words already masked by a rule are never
+    part of a crop, and a word is in at most one crop.
+    """
+    cred = re.compile(hp["credentials"])
+    label = re.compile(hp["labels"], re.IGNORECASE)
+    sep = re.compile(hp["separators"], re.IGNORECASE)
+    max_w = int(hp["max_name_words"])
+    masked = {i for h in hits for s in h.spans for i in h.words_of(s)}
+    order = [[i for _, _, i in h.offsets] for h in hits]
+
+    def stop(i: int) -> bool:  # left boundary of a name: separator, masked word, sentence end
+        t = words[i].text.strip()
+        return (i in masked or bool(sep.match(t)) or bool(cred.match(t))
+                or (len(t) > 3 and t.endswith((".", ";", ":")) and t[:1].islower()))
+
+    crops: list[HwCrop] = []
+    used: set[int] = set()
+    first_signoff: int | None = None
+    for li, ids in enumerate(order):
+        for k, i in enumerate(ids):
+            if not cred.match(words[i].text.strip()):
+                continue
+            if first_signoff is None:
+                first_signoff = li
+            segs: list[tuple[int, list[int]]] = []
+            prefix, n = "", 0
+            cur_line, j, cur = li, k - 1, [i]
+            while n < max_w:
+                if j < 0:  # reached the line start: the name may have wrapped from the previous line
+                    if cur_line != li or cur_line == 0 or not order[cur_line - 1]:
+                        break
+                    segs.insert(0, (cur_line, cur))
+                    cur_line, cur = cur_line - 1, []
+                    j = len(order[cur_line]) - 1
+                    continue
+                wi = order[cur_line][j]
+                if stop(wi):
+                    prefix = "— " if sep.match(words[wi].text.strip()) else ""
+                    break
+                cur.insert(0, wi)
+                n += 1
+                j -= 1
+            if cur:
+                segs.insert(0, (cur_line, cur))
+            name_ids = [w for _, s in segs for w in s if w != i]
+            if not name_ids or any(w in used for w in name_ids):
+                continue
+            if re.match(r"^[—–~=_\-]", words[name_ids[0]].text.strip()):  # dash glued to the name ("__S.")
+                prefix = "— "
+            crops.append(HwCrop("anchor", segs, prefix=prefix))
+            used.update(name_ids)
+        if first_signoff is None and label.search(hits[li].text):
+            first_signoff = li
+    for li, ids in enumerate(order):  # sign-off labels on lines without a credential
+        m = label.search(hits[li].text)
+        if not m or any(cred.match(words[i].text.strip()) for i in ids):
+            continue
+        cur = []
+        for i in [i for a, _, i in hits[li].offsets if a >= m.end()]:
+            t = words[i].text.strip()
+            if not cur and (sep.match(t) or t == ":"):
+                continue
+            if i in masked or i in used:  # the name ends here; right after the label: a rule found it
+                if len(cur) <= 1:  # "Signed by Dr. [masked]": nothing left to read
+                    cur = []
+                break
+            cur.append(i)
+            if len(cur) >= max_w:
+                break
+        if cur:
+            crops.append(HwCrop("anchor", [(li, cur)], prefix=m.group(0) + " "))
+            used.update(cur)
+    if first_signoff is None:
+        zone = [li for li, ids in enumerate(order)
+                if ids and words[ids[0]].bbox.y0 >= (1.0 - float(hp["zone_frac"])) * page_h]
+    else:
+        zone = list(range(first_signoff, len(order)))
+    low = float(hp["low_conf"])
+    for li in zone:  # low-confidence lines inside the sign-off zone
+        ids = order[li]
+        lowk = [k for k, i in enumerate(ids) if _conf(words[i]) < low and i not in masked and i not in used]
+        if not lowk:
+            continue
+        a, b = max(0, lowk[0] - 1), min(len(ids), lowk[-1] + 2)
+        seg = [i for i in ids[a:b] if i not in masked and i not in used][: max_w + 2]
+        if seg:
+            crops.append(HwCrop("low_conf", [(li, seg)]))
+            used.update(seg)
+    return crops[: int(hp["max_crops_per_page"])]
+
+
+def _crop(img: np.ndarray, box: BBox, pad_frac: float) -> np.ndarray:
+    h, w = img.shape[:2]
+    p = pad_frac * box.height
+    x0, y0 = int(max(0, np.floor(box.x0 - p))), int(max(0, np.floor(box.y0 - p)))
+    x1, y1 = int(min(w, np.ceil(box.x1 + p))), int(min(h, np.ceil(box.y1 + p)))
+    return np.ascontiguousarray(img[y0:y1, x0:x1])
+
+
+def crop_line_image(image: np.ndarray, crop: HwCrop, words: Sequence[Any],
+                    pad_frac: float) -> tuple[np.ndarray, list[tuple[float, float]]]:
+    """The crop's segments cut from ``image`` and stitched left -> right into one line image.
+
+    Returns the image and each segment's ``(start, end)`` as fractions of its width.
+    """
+    parts = [_crop(image, _union([words[i].bbox for i in ids]), pad_frac) for _, ids in crop.segments]
+    if len(parts) == 1:
+        return parts[0], [(0.0, 1.0)]
+    hgt = max(p.shape[0] for p in parts)
+    gap = max(4, hgt // 3)
+    fill = _fill_value(image, "background")
+    tiles: list[np.ndarray] = []
+    for k, p in enumerate(parts):
+        t = np.empty((hgt, p.shape[1]) + p.shape[2:], p.dtype)
+        t[...] = fill
+        top = (hgt - p.shape[0]) // 2
+        t[top:top + p.shape[0]] = p
+        if k:
+            g = np.empty((hgt, gap) + p.shape[2:], p.dtype)
+            g[...] = fill
+            tiles.append(g)
+        tiles.append(t)
+    out = np.ascontiguousarray(np.concatenate(tiles, axis=1))
+    ext, x = [], 0
+    for k, p in enumerate(parts):
+        x += gap if k else 0
+        ext.append((x / out.shape[1], (x + p.shape[1]) / out.shape[1]))
+        x += p.shape[1]
+    return out, ext
+
+
+_NAME_TYPES = ("PERSON", "PATIENT_NAME", "REFERRING_PHYSICIAN")
+
+
+def handwriting_spans(crop: HwCrop, text: str, extents: Sequence[tuple[float, float]], words: Sequence[Any],
+                      hits: Sequence[LineHit], detector: PhiDetector, hp: dict[str, Any]) -> list[tuple[int, Span]]:
+    """Run the detector on the recognised crop text; map name spans back to OCR words.
+
+    ``crop.prefix + text`` goes through the detector. A name span's character range (as a fraction
+    of ``text``) is mapped onto the stitched line image, then onto each segment's word box via
+    ``extents``, and snapped to the segment's name words (credential and separator tokens excluded)
+    that it covers by at least ``word_overlap`` of their width. Returns ``(line index, Span over that
+    line's text)`` pairs with ``source="handwriting"``.
+    """
+    text = text.strip()
+    if not text:
+        return []
+    cred = re.compile(hp["credentials"])
+    sep = re.compile(hp["separators"], re.IGNORECASE)
+    pre = crop.prefix
+    spans = [s for s in detector.detect(pre + text) if s.type in _NAME_TYPES and s.end > len(pre)]
+    picked: dict[int, set[int]] = {}
+    for s in spans:
+        fa = max(0, s.start - len(pre)) / len(text)
+        fb = min(len(text), s.end - len(pre)) / len(text)
+        for (li, ids), (g0, g1) in zip(crop.segments, extents):
+            a, b = max(fa, g0), min(fb, g1)
+            if b <= a:
+                continue
+            box = _union([words[i].bbox for i in ids])
+            xa = box.x0 + (a - g0) / (g1 - g0) * box.width
+            xb = box.x0 + (b - g0) / (g1 - g0) * box.width
+            cand = [i for i in ids if not cred.match(words[i].text.strip()) and not sep.match(words[i].text.strip())]
+            ov = {i: max(0.0, min(xb, words[i].bbox.x1) - max(xa, words[i].bbox.x0)) / max(words[i].bbox.width, 1e-6)
+                  for i in cand}
+            sel = {i for i, f in ov.items() if f >= float(hp["word_overlap"])}
+            if not sel and ov and max(ov.values()) > 0:
+                sel = {max(ov, key=ov.get)}
+            if sel:
+                picked.setdefault(li, set()).update(sel)
+    out: list[tuple[int, Span]] = []
+    for li, sel in sorted(picked.items()):
+        run: list[tuple[int, int]] = []  # one span per contiguous run of picked words on the line
+        for a, b, i in hits[li].offsets:
+            if i in sel:
+                run.append((a, b))
+            elif run:
+                out.append((li, Span(run[0][0], run[-1][1], "PERSON", "handwriting")))
+                run = []
+        if run:
+            out.append((li, Span(run[0][0], run[-1][1], "PERSON", "handwriting")))
+    return out
+
+
+class HandwritingPass:
+    """Per-case state of the handwriting pass: the reader (or why it is skipped) and counters."""
+
+    def __init__(self, reader: Any, hp: dict[str, Any], *, skip_reason: str | None = None, trace: Any = None):
+        self.reader = reader
+        self.hp = hp
+        self.skip_reason = skip_reason or (None if reader is not None else "disabled")
+        self.trace = trace
+        self.stats = {"n_crops": 0, "n_anchor_crops": 0, "n_low_conf_crops": 0, "n_reads": 0,
+                      "n_detections": 0, "read_ms": 0.0}
+
+    @property
+    def active(self) -> bool:
+        return self.reader is not None and self.skip_reason is None
+
+    def run(self, page: Page, words: Sequence[Any], hits: list[LineHit], detector: PhiDetector,
+            image: np.ndarray) -> list[tuple[HwCrop, list[tuple[int, Span]]]]:
+        """Read the crops of one page; ``image`` is the processed page with rule detections FILLED."""
+        from radintake.tools.handwriting import HandwritingUnavailable, PhiCrop
+
+        if not self.active:
+            return []
+        crops = select_handwriting_crops(words, hits, self.hp, float(page.image.shape[0]))
+        out: list[tuple[HwCrop, list[tuple[int, Span]]]] = []
+        for c in crops:
+            self.stats["n_crops"] += 1
+            self.stats["n_anchor_crops" if c.reason == "anchor" else "n_low_conf_crops"] += 1
+            t0 = time.perf_counter()
+            try:
+                img, extents = crop_line_image(image, c, words, float(self.hp["crop_pad"]))
+                payload = PhiCrop(img, phi_crop=True, meta={"page": page.index, "reason": c.reason})
+                text = self.reader.read(payload, trace=self.trace)
+                self.stats["n_reads"] += 1
+            except HandwritingUnavailable as exc:
+                self.skip_reason = exc.reason
+                return out
+            except ModelCallForbidden:
+                self.skip_reason = "model_calls_forbidden"
+                return out
+            except Exception as exc:  # noqa: BLE001 - a failing reader never fails the PHI stage
+                self.skip_reason = f"error:{type(exc).__name__}"
+                return out
+            finally:
+                self.stats["read_ms"] += (time.perf_counter() - t0) * 1000.0
+            if text.strip():  # recognised text is PHI: scrub it from any log / trace
+                from radintake.logging import register_phi
+
+                register_phi(text.strip())
+            spans = handwriting_spans(c, text, extents, words, hits, detector, self.hp)
+            if spans:
+                out.append((c, spans))
+        return out
+
+
+def make_handwriting_pass(params: dict[str, Any], config: Any = None, trace: Any = None) -> HandwritingPass:
+    """Build the pass from ``phi.handwriting``; never raises (an unusable reader -> skip reason)."""
+    hp = handwriting_params(params)
+    enabled = hp.get("enabled", "auto")
+    if enabled is False or str(enabled).lower() in ("false", "off", "0", "no"):
+        return HandwritingPass(None, hp, skip_reason="disabled", trace=trace)
+    try:
+        from radintake.tools.handwriting import HandwritingReader
+
+        reader = HandwritingReader(str(hp["model"]), config=config, trace=trace,
+                                   max_new_tokens=int(hp["max_new_tokens"]))
+    except Exception as exc:  # noqa: BLE001 - unknown model / bad registry -> skip
+        return HandwritingPass(None, hp, skip_reason=f"reader_error:{type(exc).__name__}", trace=trace)
+    reason = reader.unavailable_reason()
+    if reason is None and env_flag("RADINTAKE_FORBID_MODEL_CALLS", bool(getattr(config, "forbid_model_calls", False))):
+        reason = "model_calls_forbidden"
+    return HandwritingPass(None if reason else reader, hp, skip_reason=reason, trace=trace)
+
+
 def mask_page(page: Page, original: Page | None, words: Sequence[Any], detector: PhiDetector,
               vault: PhiVault, *, pad: float = 6, fill: Any = "background",
-              known_tokens: Iterable[str] = ()) -> PageMaskResult:
-    """Detect PHI on ``words`` (processed-page coords) and mask both page images and the text."""
+              known_tokens: Iterable[str] = (), handwriting: HandwritingPass | None = None) -> PageMaskResult:
+    """Detect PHI on ``words`` (processed-page coords) and mask both page images and the text.
+
+    The masking rules run first; when ``handwriting`` is active its reader then sees only crops
+    of the processed page with every rule detection already filled, and adds name detections.
+    """
     original = original or page
     dets: list[Detection] = []
     masked_words: set[int] = set()
     lines_out: list[str] = []
-    for h in detect_words(words, detector, known_tokens):
+    hits = detect_words(words, detector, known_tokens)
+    hw_groups: list[list[tuple[int, Span]]] = []
+    if handwriting is not None and handwriting.active:
+        rule_boxes = [words[i].bbox for h in hits for s in h.spans for i in h.words_of(s)]
+        rule_masked = mask_image(page.image, rule_boxes, pad=pad, fill=fill)
+        for _crop_, spans in handwriting.run(page, words, hits, detector, rule_masked):
+            for li, s in spans:
+                hits[li].spans = _merge_spans(hits[li].spans + [s])
+            hw_groups.append(spans)
+    hw_dets: dict[tuple[int, int, int], int] = {}  # (line, start, end) of a handwriting span -> group
+    for g, spans in enumerate(hw_groups):
+        for li, s in spans:
+            hw_dets[(li, s.start, s.end)] = g
+    group_words: dict[int, list[int]] = {}
+    group_ph: dict[int, str] = {}
+    for li, h in enumerate(hits):
         parts, pos = [], 0
         for s in h.spans:
             idx = h.words_of(s)
             ph = vault.placeholder(s.type, h.text[s.start:s.end])
-            cur = _union([words[i].bbox for i in idx])
-            conf = float(min(getattr(words[i], "conf", getattr(words[i], "confidence", 1.0)) for i in idx))
-            dets.append(Detection(s.type, page.index, page.to_original(cur), cur, s.source, ph, conf))
+            g = hw_dets.get((li, s.start, s.end)) if s.source == "handwriting" else None
+            if g is not None:  # one detection per handwriting crop (a wrapped name spans two lines)
+                group_words.setdefault(g, []).extend(idx)
+                group_ph.setdefault(g, ph)
+            else:
+                cur = _union([words[i].bbox for i in idx])
+                conf = float(min(_conf(words[i]) for i in idx))
+                dets.append(Detection(s.type, page.index, page.to_original(cur), cur, s.source, ph, conf))
             masked_words.update(idx)
             parts += [h.text[pos:s.start], ph]
             pos = s.end
         parts.append(h.text[pos:])
         lines_out.append("".join(parts))
+    for g, idx in sorted(group_words.items()):
+        cur = _union([words[i].bbox for i in idx])
+        dets.append(Detection("PERSON", page.index, page.to_original(cur), cur, "handwriting", group_ph[g],
+                              float(min(_conf(words[i]) for i in idx))))
+    if handwriting is not None:
+        handwriting.stats["n_detections"] += len(group_words)
     # mask every detected WORD box (not only the union) so gaps between lines stay intact
     cur_boxes = [words[i].bbox for i in sorted(masked_words)]
     masked_original = mask_image(original.image, [page.to_original(b) for b in cur_boxes], pad=pad, fill=fill)
@@ -384,6 +719,10 @@ def phi_stage(ctx: StageContext) -> dict[str, Any]:
     pad, fill = float(mcfg.get("pad_px", 6)), mcfg.get("fill", "background")
     detector = PhiDetector(params)
     vault = PhiVault()
+    hw = make_handwriting_pass(params, ctx.config, ctx.trace)
+    if not hw.active:
+        ctx.trace.event("phi_handwriting", status="skipped", reason=hw.skip_reason,
+                        model_id=str(hw.hp.get("model")))
     pages: list[Page] = list(ctx.data.get("pages") or [])
     originals = {p.index: p for p in (ctx.data.get("original_pages") or pages)}
     rel_dir = f"{ctx.input_name}.masked"
@@ -404,8 +743,15 @@ def phi_stage(ctx: StageContext) -> dict[str, Any]:
         ocr_words[pg.index] = words
         if not words:
             flags.add("phi_uncertain")  # nothing readable: cannot vouch for this page
+        was_active = hw.active
+        before = dict(hw.stats)
         res = mask_page(pg, originals.get(pg.index), words, detector, vault, pad=pad, fill=fill,
-                        known_tokens=known)
+                        known_tokens=known, handwriting=hw)
+        if was_active:  # counts, timings and the model id only - never recognised text
+            delta = {k: (round(v - before[k], 3) if isinstance(v, float) else v - before[k])
+                     for k, v in hw.stats.items()}
+            ctx.trace.event("phi_handwriting", page=pg.index, status="ok" if hw.active else "skipped",
+                            reason=hw.skip_reason, model_id=getattr(hw.reader, "model_id", None), **delta)
         known |= name_tokens(vault.values_of("PATIENT_NAME"))
         rel = f"{rel_dir}/page_{pg.index}.png"
         _save_png(res.masked_original, Path(ctx.out_dir) / rel)

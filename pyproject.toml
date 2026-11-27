@@ -33,6 +33,10 @@ dev = ["pytest>=8.2", "pytest-timeout>=2.3", "httpx>=0.27", "ruff>=0.5", "img2pd
 # Optional OCR engine (ocr.engine: paddle). Pins in requirements-paddle.lock, NOT requirements.lock:
 # CI and the default Docker image stay Tesseract-only. See docs/ocr-engine.md.
 paddle = ["paddlepaddle>=3.0,<3.1", "paddleocr>=2.10,<2.11"]
+# Optional handwritten sign-off reader for the PHI agent (models.hw_reader, TrOCR-small-handwritten).
+# NOT in requirements.lock: CI runs without it and the PHI stage records a skip. Weights must be cached
+# beforehand (never downloaded at run time). See okf/subsystems/phi-agent.md.
+handwriting = ["torch>=2.2", "transformers>=4.40", "sentencepiece>=0.2"]  # tested: torch 2.15 CPU, transformers 5.24
 # Dataset generation only (python -m data_prep.*); not needed by the service or CI.
 data = ["playwright>=1.47", "faker>=30", "jinja2>=3.1", "datasketch>=1.6", "scikit-learn>=1.5", "img2pdf>=0.5"]
 

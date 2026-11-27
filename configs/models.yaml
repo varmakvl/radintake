@@ -27,6 +27,10 @@ models:
     id: qwen2.5:3b
     kind: local
     backend: ollama
+  hw_reader:              # handwritten sign-off reader for PHI crops (agents/phi.py layer 4). Reads crops that are
+    id: microsoft/trocr-small-handwritten   # PHI by design, so it must stay kind: local; ~62M params, MIT. Used
+    kind: local                             # only when transformers + torch are installed (extra [handwriting])
+    backend: transformers                   # AND the weights are already in the local HF cache (never downloaded)
   embedder:
     id: sentence-transformers/all-MiniLM-L6-v2
     kind: local

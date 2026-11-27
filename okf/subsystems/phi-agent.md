@@ -7,12 +7,14 @@ tags: [phi, privacy, masking, de-identification, agent, trust-boundary]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T17:01:04.519Z
+  at: 2026-11-27T10:39:55.720Z
 sources:
   - src/radintake/agents/phi.py
   - src/radintake/agents/phi_vault.py
   - configs/phi.yaml
   - tests/unit/test_phi_docs.py
+  - src/radintake/tools/handwriting.py
+  - configs/models.yaml
 ---
 
 # Role
@@ -35,6 +37,25 @@ the [Guarded Model Client](/subsystems/model-client-guard.md) refuses every othe
    because OCR of handwritten sign-offs rarely yields a clean "Initial. Last" ("— L. Broo ks, RT").
    Dev (2026-11-24): document PHI recall 0.83 / precision 0.81; technologist 0.52, radiologist 0.74 -
    the remaining misses are mostly handwritten sign-offs OCR cannot read (see the step inspector).
+4. **Handwritten sign-offs** (`HandwritingPass`, `phi.handwriting` in `configs/phi.yaml`, added
+   2026-11-27) - runs AFTER layers 1-3, inside `mask_page`, on the processed page with every rule
+   detection already filled. `select_handwriting_crops` picks only (a) credential anchors: the
+   unmasked words left of an `RT` / `MD` / ... token back to a separator (dash, `=`, `by`) or a
+   sentence end, at most `max_name_words`, continuing onto the previous line when the name wrapped;
+   plus the unmasked value right of a sign-off label (`Technologist`, `Signed by` ...) when the line
+   has no credential; and (b) lines in the sign-off zone (from the first anchor line down, else the
+   bottom `zone_frac` of the page) with a word below `low_conf`. Each segment is read by the local
+   handwriting model (`models.hw_reader`, TrOCR-small-handwritten) through the guarded reader (see
+   the guard decision in [Guarded Model Client](/subsystems/model-client-guard.md)); the text (with
+   `— ` prefixed when a dash preceded the name) goes back through `PhiDetector`, and each name span
+   is mapped proportionally onto the segment box and snapped to its OCR words, which are masked
+   (one `PERSON` detection per crop, source `handwriting`, bbox in original coordinates).
+   `enabled: auto`: used only when `transformers` + `torch` are installed (extra `[handwriting]`,
+   not in `requirements.lock`) AND the weights are cached; otherwise a `phi_handwriting` trace event
+   records `status: skipped` and the reason (`transformers_missing`, `torch_missing`,
+   `weights_not_cached`, `model_calls_forbidden`, `disabled`) and the output is unchanged. A reader
+   error mid-case also only records a skip. Per-page `phi_handwriting` events carry crop / read /
+   detection counts, `read_ms` and the model id - never recognised text.
 Uncertain spans raise `phi_uncertain` (case -> review).
 
 Words come from the `tables` stage cache when present (PDF text layer, or OCR with re-read table cells),
@@ -52,6 +73,8 @@ so digital PDFs are masked on exact word boxes: [PDF Text Layer & Table Reading]
 # Guardrails & Anti-Regression Checklist
 
 - No external call may happen before this stage; keep stage order `phi` < `extract`.
+- The handwriting reader must stay `kind: local`, only ever receives `PhiCrop`s cut after the rules
+  ran, and must never download weights; it never fails the stage.
 - Never construct `MaskedPayload(phi_masked=True)` outside this module.
 - Every value entering the vault must be registered with `register_phi`.
 - Integration tests assert header regions are near-uniform after masking and that no synthetic PHI string appears in stdout, stderr or any file under `_traces`.

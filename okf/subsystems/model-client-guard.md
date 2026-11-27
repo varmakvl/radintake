@@ -7,7 +7,7 @@ tags: [model-client, vlm, phi, offline, cache, cost, trust-boundary]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-26T12:19:16.423Z
+  at: 2026-11-27T10:39:55.720Z
 sources:
   - src/radintake/tools/model_client.py
   - src/radintake/tools/vlm_client.py
@@ -16,6 +16,7 @@ sources:
   - tests/unit/test_extract_vlm_hybrid.py
   - prompts/extraction_v1.md
   - tests/unit/test_core_contracts.py
+  - src/radintake/tools/handwriting.py
 ---
 
 # ModelClient.call — checks in order
@@ -52,12 +53,30 @@ No paid API and no budget. Registry (`configs/models.yaml`), sized for a 4 GB RT
 | `vlm_page` | Qwen2.5-VL-3B (`qwen2.5vl:3b`, Q4 via Ollama, ~3.2 GB) | GPU, partly CPU-offloaded |
 | `vlm_local` | Florence-2-base (0.23B) | GPU/CPU, crop fallback |
 | `llm_answer` | Qwen2.5-3B (`qwen2.5:3b`, Ollama) | GPU |
+| `hw_reader` | TrOCR-small-handwritten (62M, MIT) | CPU / GPU, PHI sign-off crops only |
 | `embedder` | all-MiniLM-L6-v2 | CPU |
 
 Cost per page is $0 in API terms; the report gives GPU-seconds and peak GPU memory instead. PHI
 masking is still enforced before the VLM even though it is local: the guard does not depend on
 where a model runs. The `api` kind and its offline refusal stay in the base class so a remote
 model can never be added silently.
+
+# Decision: a LOCAL model may read PHI crops for the PHI agent (2026-11-27)
+
+The handwriting reader (`tools/handwriting.py`, `HandwritingReader`) reads crops of handwritten
+sign-offs so the [Document PHI Agent](/subsystems/phi-agent.md) can find the name in them: the crop
+is PHI by design, so `phi_masked=True` cannot apply. Its `check()` replaces rule 3 with:
+
+1. `RADINTAKE_FORBID_MODEL_CALLS=1` -> `ModelCallForbidden` (unchanged).
+2. The model must be `kind: local`; an `api` model is refused with `NonLocalPhiReader` whatever
+   `RADINTAKE_OFFLINE` says - nothing that may hold PHI ever leaves the machine.
+3. The payload must be a `PhiCrop` stamped `phi_crop=True` by the PHI agent (never a page, a
+   `MaskedPayload` or a raw array) -> else `UnmaskedPayloadError`.
+
+The crop is cut from the processed page AFTER the masking rules filled their detections, so the
+reader only ever sees what the rules could not place. Weights load with `local_files_only=True` and
+`HF_HUB_OFFLINE=1`. The trace gets the usual model id, prompt id/hash, payload hash, output hash and
+timing - never the recognised text, which is also registered with the PHI scrubber.
 
 # Guardrails & Anti-Regression Checklist
 
