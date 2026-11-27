@@ -265,3 +265,99 @@ def test_safe_marker_line_not_redacted():
         return [] if psm == 11 else [OcrWord("L", BBox(0, 0, 10, 10), 0.95, 1, 1, 1, 1)]
 
     assert dd.find_text_boxes(img, dd.load_profile()["burned_in"], ocr_fn=ocr_fn) == []
+
+
+# --------------------------------------------------------------------------- burned-in v2 on a synthetic DICOM (rad-s2g.5.3)
+_NAME_BOX = (20, 14, 330, 50)    # x0, y0, x1, y1 of the synthetic patient-name line
+_TOKEN_BOX = (492, 118, 552, 156)  # "[M]" alone on its row (right border)
+_MARKER_BOX = (20, 214, 200, 252)  # keep-list marker "PORTABLE"
+
+
+def _synthetic_burned_dicom(path) -> tuple[FileDataset, np.ndarray]:
+    """12-bit MONOCHROME2 'radiograph': textured anatomy in the middle, dark borders carrying burned-in
+    text drawn with cv2.putText at full intensity (no TCIA data)."""
+    import cv2
+
+    rng = np.random.default_rng(11)
+    h, w = 272, 560
+    img = np.full((h, w), 60, np.float64)
+    yy, xx = np.mgrid[0:h, 0:w]
+    body = ((xx - w / 2) / 200.0) ** 2 + ((yy - h / 2) / 90.0) ** 2 <= 1.0
+    img[body] = 1400 + 900 * np.sin(xx[body] / 9.0) * np.cos(yy[body] / 13.0)
+    img += rng.normal(0, 25, img.shape)
+    arr = np.clip(img, 0, 3000).astype(np.uint16)
+    ink = np.zeros((h, w), np.uint8)  # cv2.putText draws on 8-bit images only
+    for text, (x0, y0, x1, y1) in (("DOE JOHN 01.02.1970", _NAME_BOX), ("[M]", _TOKEN_BOX),
+                                   ("PORTABLE", _MARKER_BOX)):
+        cv2.putText(ink, text, (x0 + 4, y1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.9, 255, 2, cv2.LINE_8)
+    arr[ink > 0] = 4095
+    ds = _ds(path, study_uid=generate_uid(), burned=True)
+    ds.Rows, ds.Columns = h, w
+    ds.BitsAllocated, ds.BitsStored, ds.HighBit = 16, 12, 11
+    ds.PatientName, ds.PatientID, ds.AccessionNumber = "DOE^JOHN", "PID-77001", "ACC-5512"
+    ds.PixelData = arr.tobytes()
+    ds.save_as(str(path), enforce_file_format=True)
+    return ds, arr
+
+
+def _ink(arr: np.ndarray, box) -> int:
+    x0, y0, x1, y1 = box
+    return int((arr[y0:y1, x0:x1] >= 4000).sum())
+
+
+@needs_ocr
+def test_v2_name_and_short_token_removed_marker_kept_outside_identical(tmp_path):
+    src = tmp_path / "burned.dcm"
+    _, arr = _synthetic_burned_dicom(src)
+    assert _ink(arr, _NAME_BOX) > 300 and _ink(arr, _TOKEN_BOX) > 50 and _ink(arr, _MARKER_BOX) > 300
+    res = dd.deidentify_file(src, tmp_path / "burned.deid.dcm", remap=dd.UidRemapper(b"t"))
+    out = pydicom.dcmread(str(res.output))
+    red = dicom_io.frames(out)[0]
+    assert _ink(red, _NAME_BOX) == 0, "synthetic patient name left in the pixels"
+    assert _ink(red, _TOKEN_BOX) == 0, "short token [M] left in the pixels"
+    x0, y0, x1, y1 = _MARKER_BOX
+    assert np.array_equal(red[y0:y1, x0:x1], arr[y0:y1, x0:x1]), "keep-list marker PORTABLE was altered"
+    assert _outside_equal(arr[None], red[None], res.regions)
+
+
+@needs_ocr
+def test_v2_output_valid_dicom_same_pixels_layout_and_header_profile(tmp_path):
+    src = tmp_path / "burned.dcm"
+    _synthetic_burned_dicom(src)
+    src_ds = pydicom.dcmread(str(src))
+    res = dd.deidentify_file(src, tmp_path / "burned.deid.dcm", remap=dd.UidRemapper(b"t"))
+    out = pydicom.dcmread(str(res.output))
+    assert res.valid and res.regions and not res.uncertain
+    assert out.pixel_array.shape == src_ds.pixel_array.shape and out.pixel_array.dtype == src_ds.pixel_array.dtype
+    assert str(out.file_meta.TransferSyntaxUID) == str(src_ds.file_meta.TransferSyntaxUID)
+    assert out.PhotometricInterpretation == src_ds.PhotometricInterpretation
+    assert len(out.PixelData) == len(src_ds.PixelData)
+    assert out.BurnedInAnnotation == "NO" and out.PatientIdentityRemoved == "YES"
+    assert [c.CodeValue for c in out.DeidentificationMethodCodeSequence] == ["113100", "113101"]
+    # header PHI handled per configs/dicom_profile.yaml (Z = zero-length)
+    actions = dd.load_profile()["actions"]
+    for kw in ("PatientName", "PatientID", "AccessionNumber"):
+        assert actions[kw] == "Z" and str(getattr(out, kw)) == ""
+    assert out.StudyInstanceUID != src_ds.StudyInstanceUID
+
+
+def test_metrics_aggregate_lists_per_file_dicom_rows():
+    from radintake.eval.metrics import aggregate
+
+    base = {"kind": "dicom", "valid": True, "phi_tags": 4, "uids": 2, "uids_kept": 0, "burned_gt": 1}
+    recs = [{**base, "dicom_id": "DICOM_A", "modality": "CR", "phi_tags_removed": 4, "leaked_tags": [],
+             "burned_hit": 1, "burned_text_px": 100, "burned_text_px_removed": 90,
+             "burned_px_changed": 120, "burned_px_changed_in_gt": 96},
+            {**base, "dicom_id": "DICOM_B", "modality": "MG", "phi_tags_removed": 3, "leaked_tags": ["StudyDate"],
+             "burned_hit": 0, "burned_px_changed": 0, "burned_px_changed_in_gt": 0}]  # legacy: no text mask
+    rows = {r["dicom_id"]: r for r in aggregate(recs)["dicom"]["per_file"]}
+    assert set(rows) == {"DICOM_A", "DICOM_B"}
+    a, b = rows["DICOM_A"], rows["DICOM_B"]
+    assert (a["text_pixel_recall"], a["text_pixel_precision"], a["residual_text_px"]) == (0.9, 0.8, 10)
+    assert a["changed_px_outside_gt"] == 24 and a["modality"] == "CR" and a["leaked_tags"] == []
+    assert b["text_pixel_recall"] is None and b["text_pixel_precision"] is None and b["residual_text_px"] == 0
+    assert b["leaked_tags"] == ["StudyDate"]
+    for r in rows.values():  # PHI-free: ids, numbers and tag keywords only
+        assert set(r) == {"dicom_id", "modality", "valid", "burned_gt_boxes", "burned_hit", "text_pixel_recall",
+                          "text_pixel_precision", "residual_text_px", "changed_px", "changed_px_outside_gt",
+                          "leaked_tags"}
