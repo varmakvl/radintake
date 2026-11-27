@@ -246,6 +246,25 @@ def field_table(recs: list[dict], tier: str | None = None) -> dict[str, dict]:
     return rows
 
 
+def _dicom_file_row(r: dict) -> dict[str, Any]:
+    """PHI-free per-file DICOM row: ids, counts and rates only (no header or pixel values).
+
+    ``text_pixel_recall`` = GT text pixels changed / GT text pixels (None without a GT mask);
+    ``text_pixel_precision`` = changed pixels inside GT boxes / changed pixels (None when nothing
+    changed); ``residual_text_px`` = GT text pixels left unchanged. Older score records without the
+    pixel fields re-score with None / 0.
+    """
+    txt, rem = r.get("burned_text_px"), r.get("burned_text_px_removed")
+    chg = r.get("burned_px_changed", 0)
+    return {"dicom_id": r["dicom_id"], "modality": r.get("modality"), "valid": bool(r.get("valid")),
+            "burned_gt_boxes": r.get("burned_gt", 0), "burned_hit": r.get("burned_hit", 0),
+            "text_pixel_recall": _rate(rem or 0, txt) if txt is not None else None,
+            "text_pixel_precision": _rate(r.get("burned_px_changed_in_gt", 0), chg),
+            "residual_text_px": int(txt - (rem or 0)) if txt is not None else 0,
+            "changed_px": int(chg), "changed_px_outside_gt": int(chg - r.get("burned_px_changed_in_gt", 0)),
+            "leaked_tags": list(r.get("leaked_tags") or [])}
+
+
 def aggregate(recs: Iterable[dict], timings: dict | None = None) -> dict[str, Any]:
     recs = list(recs)
     docs = [r for r in recs if r["kind"] == "doc"]
@@ -291,7 +310,8 @@ def aggregate(recs: Iterable[dict], timings: dict | None = None) -> dict[str, An
                                                              sum(r.get("burned_text_px", 0) for r in dc)),
                         "n_burned_in_boxes": gt_b,
                         "residual": [{"dicom_id": r["dicom_id"], "modality": r["modality"], "leaked_tags": r.get("leaked_tags")}
-                                     for r in dc if r.get("leaked_tags")]}
+                                     for r in dc if r.get("leaked_tags")],
+                        "per_file": [_dicom_file_row(r) for r in dc]}
     qa = qa_table(recs)
     if qa:
         out["qa"] = qa

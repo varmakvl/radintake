@@ -159,6 +159,9 @@ scored once; record in [`traces/final/`](traces/final/), re-scorable offline).
   mostly technologist / radiologist names and patient names on photos (all listed by id in `metrics.json`).
 - **DICOM (48 TCIA files):** 100.0% valid after redaction, header PHI recall 100.0%, UIDs remapped
   100.0%, burned-in text-pixel recall 61.5% (precision 54.4%).
+- **DICOM burned-in v2 (dev, same 48 TCIA files):** text-pixel recall 61.5% -> 92.7%, pixel precision
+  54.4% -> 82.5%, burned-in box recall 60% -> 100%, still 100% valid and header PHI recall 100%
+  ([eval/results/dicom_redaction_v2.json](eval/results/dicom_redaction_v2.json), per-file rows in `metrics.json` `dicom.per_file`).
 - **Retrieval / QA (32 questions):** recall@5 0.549, citation accuracy 100.0%,
   answer correctness 71.9%, correct abstention 96.9%.
 - **Injection:** 4 injected documents, 1 flagged, 0 changed behaviour, 0 false flags.

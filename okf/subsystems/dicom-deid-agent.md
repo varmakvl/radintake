@@ -7,13 +7,15 @@ tags: [dicom, de-identification, phi, burned-in-text, pydicom]
 status: stable
 generated:
   by: Claude/opus-5.5
-  at: 2026-11-24T12:24:50.803Z
+  at: 2026-11-27T05:36:18.985Z
 sources:
   - src/radintake/agents/dicom_deid.py
   - src/radintake/tools/dicom_io.py
   - configs/dicom_profile.yaml
   - data_prep/dicom_gt.py
   - tests/unit/test_dicom_deid.py
+  - src/radintake/eval/metrics.py
+  - eval/results/dicom_redaction_v2.json
 ---
 
 # Header (fixed profile)
@@ -48,6 +50,26 @@ date included) unless every confident word is a safe radiographic marker (`burne
 PA/AP, Portable, Upright...), which TCIA also keeps. Dev: burned-in box recall 0.13 -> 0.60, text-pixel
 recall 0.61, pixel precision 0.41 -> 0.54. Known misses: text saturated by display windowing
 (DICOM_002) and vertical mammography labels (DICOM_024) that OCR cannot read.
+
+# Burned-in text v2 (2026-11-27, `dicom-deid-2`)
+
+`find_text_boxes` no longer depends on Tesseract word boxes to find text. Candidates: bright pixels
+(`threshold` x max) that a white top-hat (`tophat_px`) keeps, split into glyph-sized components
+(`min_char_px` .. `max_char_frac` x rows) and grouped into lines (heights within 1.5x, gap <= 1.2 x
+height). A line must sit on a flat field (ring mostly dark, or flat and >= `min_contrast` darker
+than the text) - this is what removes OCR garbage on bright anatomy - and be verified by a confident
+word (>= 2 chars, `verify_conf`) from the full-frame OCR pass or a line-crop OCR, or, for 1-3 glyph
+tokens (`[M]`, single mammography letters), a stroke/aspect check plus a one-character read
+(`short_conf`). The keep list (`burned_in.safe_text` in `configs/dicom_profile.yaml`) keeps a line
+when every confident word is a positional/laterality marker; 1-glyph fragments below `verify_conf`
+do not count. Redacted lines of one block are merged (`merge_gap`). When the VOI window flattens a
+frame to one value (DICOM_002), text search uses a min-max display.
+
+Measured on the 48 TCIA files: text-pixel recall 0.614 -> 0.927, pixel precision 0.544 -> 0.825,
+box recall 0.60 -> 1.00 (`eval/results/dicom_redaction_v2.json`). `metrics.json`
+`dicom.per_file` lists per file: recall, precision, residual text pixels, changed pixels outside GT
+and leaked tag keywords (ids and numbers only). Known false positives: study labels next to
+redacted initials on the same field (DICOM_002 "CTU", "20MIN"), small anatomy fragments.
 
 # Guardrails & Anti-Regression Checklist
 

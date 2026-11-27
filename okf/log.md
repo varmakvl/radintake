@@ -2,6 +2,11 @@
 
 Newest changes recorded chronologically.
 
+
+## 2026-11-27
+- Synchronized timestamp for 5 drifted concept(s): operations/configuration.md, operations/deployment.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/dicom-deid-agent.md.
+- Synchronized workspace frontier mapping in `index.md` (+4 new, -0 removed, 242 already listed; 246 undocumented files mapped).
+
 ## 2026-11-26
 - Synchronized timestamp for 4 drifted concept(s): operations/deployment.md, operations/evaluation-harness.md, playbooks/delivery-plan-and-status.md, subsystems/verifier-agent.md.
 - Synchronized workspace frontier mapping in `index.md` (+1 new, -0 removed, 241 already listed; 242 undocumented files mapped).
@@ -99,3 +104,4 @@ Newest changes recorded chronologically.
 - 2026-11-26: `radintake.__all__` is the stable public surface (lazy, no FastAPI/uvicorn/fastembed on import); `Pipeline.process_batch` / `aprocess` / `aprocess_batch`; batch CLI and API worker now call `Pipeline`; semver policy in `docs/api-stability.md` (rad-s2g.9.2).
 - 2026-11-26: SDK public-API unit tests and SDK vs CLI integration parity test added and bound to `subsystems/sdk-public-api.md` (rad-s2g.9.3).
 - 2026-11-26: Disclosed that injection canonical phrases and the dev 11/11 come from the generator templates; added the paraphrase generalisation check `eval/injection_paraphrase.py` (2 of 16 flagged, 0 false) in `injection_v2.json` and `attempts.md` (rad-s2g.15).
+- 2026-11-27: DICOM burned-in v2 (`dicom-deid-2`): top-hat text-line candidates, flat-field gate, OCR / short-token verification, profile keep list; 48 TCIA files text-pixel recall 0.614 -> 0.927, precision 0.544 -> 0.825; `metrics.json` `dicom.per_file` rows; results in `eval/results/dicom_redaction_v2.json` (rad-s2g.5.1, rad-s2g.5.2).
